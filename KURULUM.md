@@ -177,4 +177,4 @@ TV Modu penceresinde yazan adresi (`http://PC_IP:47800/`) aynı Wi-Fi'deki telef
   - LG paketi: `tv/build-webos.sh` (gerekli araç: `npm i -g @webos-tools/cli`).
   - Android TV: `gradle -p tv/android assembleDebug`.
   - Samsung: yukarıdaki 3C adımları.
-- **GitHub üzerinden:** Her yüklemede GitHub Actions bunları kendiliğinden derler. `v` ile başlayan bir etiket (ör. `v1.0.0`) yüklenince dosyalar **Releases** sayfasına konur.
+- **GitHub üzerinden:** `main` dalına her yüklemede GitHub Actions bunları kendiliğinden derler ve **Releases** sayfasına koyar. Sürüm numarası `VERSION` dosyasındadır.

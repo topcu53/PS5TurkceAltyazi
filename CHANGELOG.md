@@ -9,7 +9,7 @@
   yavaş bir ekran artık programı bekletmez (ekran başına gönderim kuyruğu). LG TV SSH kimliği ilk bağlantıda sabitlenir.
   TV IP adresleri doğrulanır.
 - LG geliştirici modu süresi 12 saatte bir uzatılır (önceden haftada bir).
-- GitHub Actions: her yüklemede Windows .exe + Android .apk derlenir; `v*` etiketiyle Releases'e konur.
+- GitHub Actions: her yüklemede Windows .exe + Android .apk derlenir ve Releases'e konur (sürüm: VERSION dosyası).
 - Kurulum kılavuzu: KURULUM.md.
 
 ## v0.13 – Yalnızca oynanış ekranı, tuş simgeleri korunuyor
