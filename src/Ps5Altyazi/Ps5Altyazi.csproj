@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- Windows Graphics Capture API'leri için Windows SDK projeksiyonu -->
+    <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
+    <!-- Çalışma için en düşük sürüm: Windows 10 2004 (19041) -->
+    <SupportedOSPlatformVersion>10.0.19041.0</SupportedOSPlatformVersion>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>AltyaziPlus</AssemblyName>
+    <RootNamespace>Ps5Altyazi</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Version>1.0.0</Version>
+    <Product>Altyazı+</Product>
+    <Authors>Burak Topcu</Authors>
+    <Company>Burak Topcu</Company>
+    <Copyright>© 2026 Burak Topcu</Copyright>
+    <Description>Altyazı+ – PS5 oyunları için canlı Türkçe çeviri</Description>
+    <Description>Aşama 8 – TV modu (LG webOS)</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Çeviri önbelleği (SQLite) ve API anahtarının Windows DPAPI ile şifrelenmesi -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
+    <!-- LG webOS TV'ye uygulama kurmak için (geliştirici modu SSH, port 9922) -->
+    <PackageReference Include="SSH.NET" Version="2024.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- TV uygulamaları programın içine gömülür; kullanıcı ayrı dosya indirmez -->
+    <EmbeddedResource Include="..\..\tv\tr.ps5altyazi.tv_1.0.6_all.ipk" LogicalName="tvapp.webos.ipk" />
+    <EmbeddedResource Include="Resources\en_words.txt.gz" LogicalName="en_words.txt.gz" />
+  </ItemGroup>
+
+</Project>

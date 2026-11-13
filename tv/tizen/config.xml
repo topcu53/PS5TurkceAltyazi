@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Altyazı+ – Samsung Tizen TV uygulaması. Yapımcı: Burak Topcu.
+     Paketlemek için: tizen/README.md (Tizen Studio + Samsung sertifikası gerekir). -->
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://github.com/topcu53/PS5TurkceAltyazi" version="1.0.6" viewmodes="maximized">
+    <tizen:application id="PS5TRalt01.PS5TurkceAltyazi" package="PS5TRalt01" required_version="2.3"/>
+    <content src="index.html"/>
+    <name>Altyazı+</name>
+    <icon src="icon.png"/>
+    <author href="https://github.com/topcu53">Burak Topcu</author>
+    <description>PS5 oyunlarının İngilizce altyazılarını ve tuş ipuçlarını Türkçe olarak HDMI görüntüsünün üstünde gösterir.</description>
+    <feature name="http://tizen.org/feature/screen.size.all"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.window"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://tizen.org/privilege/system"/>
+    <access origin="*" subdomains="true"/>
+    <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable"
+                   encryption="disable" install-location="auto" hwkey-event="enable"/>
+    <tizen:metadata key="http://samsung.com/tv/metadata/prelaunch.support" value="false"/>
+</widget>

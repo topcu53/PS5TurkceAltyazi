@@ -1,0 +1,91 @@
+# Altyazı+ (Burak Topcu) – otomatik derleme.
+# Her yüklemede: Windows programı (AltyaziPlus.exe) + Android TV uygulaması (.apk) derlenir.
+# "v" ile başlayan bir etiket (ör. v1.0.0) yüklenince bunlar GitHub "Releases" sayfasına konur.
+name: Derle
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows programı
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Derle (tek dosya .exe)
+        run: dotnet publish src\Ps5Altyazi\Ps5Altyazi.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AltyaziPlus-Windows
+          path: publish\AltyaziPlus.exe
+
+  android:
+    name: Android TV uygulaması
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Derle (.apk)
+        run: |
+          gradle -p tv/android assembleDebug --no-daemon
+          cp tv/android/app/build/outputs/apk/debug/app-debug.apk AltyaziPlus-AndroidTV.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AltyaziPlus-AndroidTV
+          path: AltyaziPlus-AndroidTV.apk
+
+  tv-paketleri:
+    name: LG ve Samsung paketleri
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Samsung (Tizen) kaynak paketi
+        run: |
+          mkdir -p out/AltyaziPlus-Samsung
+          cp tv/web/index.html tv/web/app.js tv/tizen/config.xml tv/tizen/icon.png out/AltyaziPlus-Samsung/
+          cd out && zip -r AltyaziPlus-Samsung-Tizen.zip AltyaziPlus-Samsung
+      - name: LG (webOS) paketi
+        run: cp tv/*.ipk out/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AltyaziPlus-TV-Paketleri
+          path: |
+            out/*.zip
+            out/*.ipk
+
+  release:
+    name: Sürüm yayınla
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, android, tv-paketleri]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Altyazı+ ${{ github.ref_name }}
+          body: |
+            **Altyazı+** – PS5 oyunları için canlı Türkçe çeviri. Yapımcı: Burak Topcu.
+            Kurulum: depodaki KURULUM.md dosyasına bakın.
+            - AltyaziPlus.exe – Windows programı (PC)
+            - AltyaziPlus-AndroidTV.apk – Android TV / Google TV uygulaması
+            - tr.ps5altyazi.tv_*.ipk – LG webOS uygulaması (PC programı kendisi kurar)
+            - AltyaziPlus-Samsung-Tizen.zip – Samsung TV uygulaması (Tizen Studio ile kurulur)
+          files: dist/*

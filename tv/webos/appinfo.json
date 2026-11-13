@@ -1,0 +1,12 @@
+{
+  "id": "tr.ps5altyazi.tv",
+  "version": "1.0.6",
+  "vendor": "Burak Topcu",
+  "type": "web",
+  "main": "index.html",
+  "title": "Altyazı+",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}

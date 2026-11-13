@@ -1,0 +1,35 @@
+// Altyazı+ – Android TV / Google TV uygulaması. Yapımcı: Burak Topcu.
+// Ek kütüphane yok: yalnızca Android SDK. Arayüz, LG/Samsung ile ortak olan ../../web klasöründen gelir.
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'tr.altyaziplus.tv'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'tr.altyaziplus.tv'
+        minSdk 23
+        targetSdk 33
+        versionCode 6
+        versionName '1.0.6'
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs = ['../../web']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}

@@ -1,0 +1,19 @@
+# Derleme çıktıları
+bin/
+obj/
+publish/
+tv/build/
+tv/android/.gradle/
+tv/android/app/build/
+tv/android/build/
+tv/android/local.properties
+*.apk
+*.user
+.vs/
+.idea/
+# Kişisel / gizli dosyalar asla yüklenmesin
+settings.json
+*.log
+*.db
+*.pem
+webos_rsa
