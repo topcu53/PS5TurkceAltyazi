@@ -1,0 +1,9 @@
+Altyazı+ ile gelen yazı tipleri ücretsiz ve açık lisanslıdır (Google Fonts, Fontsource paketleri üzerinden):
+
+SIL Open Font License 1.1 (https://openfontlicense.org):
+  Noto Sans, Noto Serif, Open Sans, Barlow, Barlow Semi Condensed, Barlow Condensed, Montserrat,
+  Oswald
+Apache License 2.0: Roboto, Roboto Condensed
+
+Türkçe karakterler için "latin" ve "latin-ext" alt kümeleri tek dosyada birleştirilmiştir (değiştirilmiş sürüm).
+Oyunların kendi yazı tipleri programla DAĞITILMAZ; kullanıcı kendi sahip olduğu font dosyasını ekleyebilir.

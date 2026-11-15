@@ -124,9 +124,10 @@ public sealed class SubtitleServer : IDisposable
     }
 
     /// <summary>font: 1080p ekranda piksel; bg: 0–1; bottom/width: ekran yüzdesi; cover: İngilizce altyazıyı ört.</summary>
-    public void Style(double font, double bg, double bottom, double width, bool cover, bool match)
+    /// <param name="gameFont">Oyuna benzetilen yazı tipi (null = varsayılan): css, file, bold, em (yazı boyu / yükseklik), color.</param>
+    public void Style(double font, double bg, double bottom, double width, bool cover, bool match, object? gameFont = null)
     {
-        _lastStyle = JsonSerializer.Serialize(new { t = "style", font = Math.Round(font), bg = Math.Round(bg, 2), bottom, width = Math.Round(width), cover, match });
+        _lastStyle = JsonSerializer.Serialize(new { t = "style", font = Math.Round(font), bg = Math.Round(bg, 2), bottom, width = Math.Round(width), cover, match, gf = gameFont });
         Broadcast(_lastStyle);
     }
 
@@ -293,6 +294,16 @@ public sealed class SubtitleServer : IDisposable
                 byte[] body = Encoding.UTF8.GetBytes(PhonePage.Html);
                 string resp = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=utf-8\r\nCache-Control: no-store\r\n" +
                               $"Content-Length: {body.Length}\r\nConnection: close\r\n\r\n";
+                await stream.WriteAsync(Encoding.ASCII.GetBytes(resp), ct);
+                await stream.WriteAsync(body, ct);
+            }
+            else if (path.StartsWith("/fonts/") && Fonts.FontCatalog.ServeablePath(path["/fonts/".Length..].Split('?')[0]) is { } fontPath)
+            {
+                // Oyuna benzetilen yazı tipi (TV / telefon indirir). Yalnızca fonts klasöründeki, adı güvenli dosyalar.
+                byte[] body = await File.ReadAllBytesAsync(fontPath, ct);
+                string type = fontPath.EndsWith(".otf", StringComparison.OrdinalIgnoreCase) ? "font/otf" : "font/ttf";
+                string resp = $"HTTP/1.1 200 OK\r\nContent-Type: {type}\r\nAccess-Control-Allow-Origin: *\r\n" +
+                              $"Cache-Control: max-age=86400\r\nContent-Length: {body.Length}\r\nConnection: close\r\n\r\n";
                 await stream.WriteAsync(Encoding.ASCII.GetBytes(resp), ct);
                 await stream.WriteAsync(body, ct);
             }

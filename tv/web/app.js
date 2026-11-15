@@ -106,8 +106,22 @@
   }
 
   // ───── Altyazı çizimi ─────
+  // ───── Oyunun yazı tipi (PC ölçer, en benzer fontu seçer; font dosyası PC'den indirilir) ─────
+  var loadedFonts = {};
+  function ensureFont(gf) {
+    if (!gf || !gf.css || !gf.file || loadedFonts[gf.css] || !state.server) return;
+    if (!/^[A-Za-z0-9.-]+$/.test(gf.file) || !/^[A-Za-z0-9-]+$/.test(gf.css)) return;
+    loadedFonts[gf.css] = true;
+    var st = document.createElement('style');
+    st.textContent = "@font-face{font-family:'" + gf.css + "';src:url('http://" + state.server + ":47800/fonts/" + gf.file +
+      "');font-display:swap;}";
+    document.head.appendChild(st);
+  }
+
   function render() {
     var s = state.style;
+    var gf = s.gf || null;
+    ensureFont(gf);
     var showText = state.text && !state.muted;
     var noticeText = sub.getAttribute('data-notice') || '';
     var text = showText ? state.text : noticeText;
@@ -115,13 +129,20 @@
 
     var anchor = showText ? (state.mask || state.lastMask || (s.cover ? state.cover : null)) : null;
     var base = Math.round(s.font * state.fontScale);
-    if (anchor && s.match !== false && state.lineH > 0) {
+    if (anchor && s.match !== false && gf && gf.em > 0) {
+      // Oyunun yazı tipiyle ölçülmüş boy: harfler orijinalle aynı yükseklikte
+      base = Math.round(gf.em * 1080 * state.fontScale);
+    } else if (anchor && s.match !== false && state.lineH > 0) {
       // Orijinal İngilizce altyazıyla aynı boy
       base = Math.round(state.lineH * 1080 * 0.95 * state.fontScale);
     }
 
     sub.className = showText ? '' : 'notice';
     sub.textContent = text;
+    // Oyunun yazı tipi, kalınlığı ve rengi (yalnızca altyazıda; bildirimler varsayılan yazıyla)
+    sub.style.fontFamily = showText && gf ? "'" + gf.css + "', 'LG Smart UI', 'Samsung One', Roboto, Arial, sans-serif" : '';
+    sub.style.fontWeight = showText && gf ? (gf.bold ? 'bold' : 'normal') : '';
+    sub.style.color = showText && gf && /^#[0-9A-Fa-f]{6}$/.test(gf.color) ? gf.color : '';
     // Örtme modunda zemin tam opak: İngilizce alttan görünmesin
     sub.style.background = anchor ? '#000' : 'rgba(0,0,0,' + s.bg + ')';
     sub.style.fontSize = showText ? base + 'px' : '';

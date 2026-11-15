@@ -150,6 +150,23 @@ public sealed class SubtitleWindow : Window
         ApplyLayout();
     }
 
+    private Brush? _gameColor;
+    private double _gameEmPx;
+
+    /// <summary>
+    /// Oyunun altyazı yazısına benzetilen yazı tipi. <paramref name="emPx"/>: yazı boyu, oyun karesinin pikseli
+    /// cinsinden (örtme + "orijinalle aynı boy" açıkken kullanılır). Null → varsayılan (Segoe UI Bold, beyaz).
+    /// </summary>
+    public void SetGameFont(FontFamily? family, bool bold, double emPx, Color? color)
+    {
+        _text.FontFamily = family ?? new FontFamily("Segoe UI");
+        _text.FontWeight = family == null || bold ? FontWeights.Bold : FontWeights.Normal;
+        _gameEmPx = family == null ? 0 : emPx;
+        _gameColor = color is { } c ? new SolidColorBrush(c) : null;
+        _gameColor?.Freeze();
+        Render();
+    }
+
     public void SetMatchOriginalSize(bool on)
     {
         _matchSize = on;
@@ -247,7 +264,7 @@ public sealed class SubtitleWindow : Window
 
         bool isNotice = !showSub && _notice.Length > 0;
         _text.Text = shown;
-        _text.Foreground = isNotice ? Brushes.Gold : Brushes.White;
+        _text.Foreground = isNotice ? Brushes.Gold : (_gameColor ?? Brushes.White);
         _text.FontSize = isNotice ? Math.Max(16, _baseFontSize * 0.55) : FitFontSize(shown, CurrentBaseSize());
         _box.BorderBrush = _editMode ? Brushes.Gold : null;
         _box.BorderThickness = new Thickness(_editMode ? 2 : 0);
@@ -257,11 +274,13 @@ public sealed class SubtitleWindow : Window
     /// <summary>Örtme modunda ve "orijinalle aynı boy" açıkken İngilizce satır yüksekliğinden, değilse ayardan.</summary>
     private double CurrentBaseSize()
     {
-        if (_coverMode && _matchSize && _coverPx != null && _coverLineHeightPx > 0)
+        if (_coverMode && _matchSize && _coverPx != null && (_gameEmPx > 0 || _coverLineHeightPx > 0))
         {
             double sy = 1;
             try { sy = VisualTreeHelper.GetDpi(this).DpiScaleY; } catch { }
-            return Math.Clamp(_coverLineHeightPx / sy * 0.95, 12, 120);
+            // Oyunun yazı tipi ölçüldüyse onun boyu (harfler orijinalle aynı yükseklikte), değilse satır yüksekliğinden
+            double px = _gameEmPx > 0 ? _gameEmPx : _coverLineHeightPx * 0.95;
+            return Math.Clamp(px / sy, 10, 140);
         }
         return _baseFontSize;
     }
@@ -273,7 +292,7 @@ public sealed class SubtitleWindow : Window
         double size = baseSize;
         double ppd = 1.0;
         try { ppd = VisualTreeHelper.GetDpi(this).PixelsPerDip; } catch { }
-        var typeface = new Typeface(_text.FontFamily, FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
+        var typeface = new Typeface(_text.FontFamily, FontStyles.Normal, _text.FontWeight, FontStretches.Normal);
 
         for (int i = 0; i < 10; i++)
         {

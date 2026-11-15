@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Ps5Altyazi.Fonts;
 using Ps5Altyazi.Settings;
 
 namespace Ps5Altyazi;
@@ -19,9 +21,20 @@ public sealed class SubtitleSettingsWindow : Window
     private const string SampleText = "Ah, sen de mi? Bırakın beni rahat, hepiniz.";
 
     public event Action? Changed;
+    /// <summary>Yazı tipi ayarı değişti (true = başka oyuna geçildi).</summary>
+    public event Action<bool>? FontChanged;
 
-    public SubtitleSettingsWindow(AppSettings settings, SubtitleWindow sub)
+    private readonly Func<string> _describeFont;
+    private readonly TextBlock _fontInfo = new() { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 4, 0, 0) };
+    private readonly ComboBox _gameBox = new() { IsEditable = true, MinWidth = 200 };
+    private readonly ComboBox _fontBox = new() { MinWidth = 260 };
+    private bool _loadingFont;
+
+    private const string AutoLabel = "Otomatik – oyunun altyazısına en benzer";
+
+    public SubtitleSettingsWindow(AppSettings settings, SubtitleWindow sub, Func<string> describeFont)
     {
+        _describeFont = describeFont;
         _s = settings;
         _sub = sub;
         Title = "Altyazı Görünümü";
@@ -64,6 +77,8 @@ public sealed class SubtitleSettingsWindow : Window
         match.Unchecked += (_, _) => { _s.SubtitleMatchOriginalSize = false; Changed?.Invoke(); };
         root.Children.Add(match);
 
+        root.Children.Add(FontSection());
+
         _editCheck.Checked += (_, _) => _sub.SetEditMode(true);
         _editCheck.Unchecked += (_, _) => _sub.SetEditMode(false);
         root.Children.Add(_editCheck);
@@ -97,6 +112,118 @@ public sealed class SubtitleSettingsWindow : Window
             _sub.SetEditMode(false);
             if (_sub.CurrentText == SampleText) _sub.ShowSubtitle("");
         };
+    }
+
+    // ───────── Yazı tipi (oyun başına) ─────────
+
+    private FrameworkElement FontSection()
+    {
+        var panel = new StackPanel { Margin = new Thickness(0, 14, 0, 0) };
+        panel.Children.Add(new TextBlock { Text = "Yazı tipi (oyunun altyazısına benzet)", FontWeight = FontWeights.Bold });
+        panel.Children.Add(new TextBlock
+        {
+            Text = "Program oyunun altyazısını ölçer ve Türkçeyi en benzer yazı tipiyle, aynı harf boyunda ve renkte yazar. " +
+                   "Her oyun için ayrı hatırlanır. Oyunun kendi font dosyası sizde varsa 'Dosyadan ekle' ile kullanabilirsiniz.",
+            TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 2, 0, 6)
+        });
+
+        var gameRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0) };
+        gameRow.Children.Add(new TextBlock { Text = "Oyun:", Width = 70, VerticalAlignment = VerticalAlignment.Center });
+        foreach (var name in _s.GameFonts.Keys.Append("Genel").Append(_s.ActiveGame).Distinct().OrderBy(n => n)) _gameBox.Items.Add(name);
+        _gameBox.Text = _s.ActiveGame;
+        _gameBox.ToolTip = "Oyunun adını yazın ya da listeden seçin (ör. RDR2, GTA 6). Her oyunun yazı tipi ayrı öğrenilir.";
+        _gameBox.SelectionChanged += (_, _) => { if (_gameBox.SelectedItem is string g) Dispatcher.BeginInvoke(() => SwitchGame(g)); };
+        _gameBox.LostKeyboardFocus += (_, _) => SwitchGame(_gameBox.Text);
+        _gameBox.KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Enter) SwitchGame(_gameBox.Text); };
+        gameRow.Children.Add(_gameBox);
+        panel.Children.Add(gameRow);
+
+        var fontRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 0) };
+        fontRow.Children.Add(new TextBlock { Text = "Yazı tipi:", Width = 70, VerticalAlignment = VerticalAlignment.Center });
+        _fontBox.SelectionChanged += (_, _) => OnFontPicked();
+        fontRow.Children.Add(_fontBox);
+        var add = new Button { Content = "Dosyadan ekle…", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(8, 0, 0, 0) };
+        add.Click += (_, _) => AddFontFile();
+        fontRow.Children.Add(add);
+        panel.Children.Add(fontRow);
+        panel.Children.Add(_fontInfo);
+
+        FillFonts();
+        return panel;
+    }
+
+    private GameFontProfile Profile
+    {
+        get
+        {
+            if (!_s.GameFonts.TryGetValue(_s.ActiveGame, out var p)) { p = new GameFontProfile(); _s.GameFonts[_s.ActiveGame] = p; }
+            return p;
+        }
+    }
+
+    private void FillFonts()
+    {
+        _loadingFont = true;
+        _fontBox.Items.Clear();
+        _fontBox.Items.Add(new ComboBoxItem { Content = AutoLabel, Tag = "auto" });
+        foreach (var f in FontCatalog.All.OrderBy(f => f.Custom ? 0 : 1).ThenBy(f => f.DisplayName))
+        {
+            var item = new ComboBoxItem { Content = f.DisplayName, Tag = f.Key };
+            try
+            {
+                var uri = new Uri(FontCatalog.Folder.TrimEnd('\\', '/') + System.IO.Path.DirectorySeparatorChar);
+                item.FontFamily = new FontFamily(uri, "./" + f.File + "#" + f.Family);
+                item.FontWeight = f.IsBold ? FontWeights.Bold : FontWeights.Normal;
+            }
+            catch { }
+            _fontBox.Items.Add(item);
+        }
+        string key = Profile.FontKey;
+        _fontBox.SelectedItem = _fontBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == key) ?? _fontBox.Items[0];
+        _loadingFont = false;
+        _fontInfo.Text = _describeFont();
+    }
+
+    private void SwitchGame(string? name)
+    {
+        name = (name ?? "").Trim();
+        if (name.Length == 0 || name.Length > 40 || name == _s.ActiveGame) return;
+        _s.ActiveGame = name;
+        _ = Profile; // yoksa oluştur
+        if (!_gameBox.Items.Contains(name)) _gameBox.Items.Add(name);
+        FontChanged?.Invoke(true);
+        FillFonts();
+    }
+
+    private void OnFontPicked()
+    {
+        if (_loadingFont || _fontBox.SelectedItem is not ComboBoxItem item) return;
+        string key = (string)item.Tag;
+        if (key == Profile.FontKey) return;
+        Profile.FontKey = key;
+        FontChanged?.Invoke(false);
+        _fontInfo.Text = _describeFont();
+    }
+
+    private void AddFontFile()
+    {
+        var dlg = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Yazı tipi dosyası seçin",
+            Filter = "Yazı tipi (*.ttf;*.otf)|*.ttf;*.otf"
+        };
+        if (dlg.ShowDialog(this) != true) return;
+        try
+        {
+            var f = FontCatalog.AddCustom(dlg.FileName);
+            Profile.FontKey = f.Key;
+            FontChanged?.Invoke(false);
+            FillFonts();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, ex.Message, "Yazı tipi eklenemedi", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
     }
 
     private FrameworkElement SliderRow(string label, double min, double max, double value, Func<double, string> fmt, Action<double> apply)

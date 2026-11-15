@@ -49,6 +49,10 @@ public sealed class AppSettings
     public bool SubtitleCoverOriginal { get; set; } = false;
     /// <summary>Örtme modunda (PC ve TV) Türkçe yazı boyutu orijinal İngilizce altyazıyla aynı olsun.</summary>
     public bool SubtitleMatchOriginalSize { get; set; } = true;
+
+    // Oyunun yazı tipi (oyun başına): "auto" = altyazıya en benzer font otomatik seçilir; ya da sabit bir font anahtarı
+    public string ActiveGame { get; set; } = "Genel";
+    public System.Collections.Generic.Dictionary<string, GameFontProfile> GameFonts { get; set; } = new();
     public bool AutoStart { get; set; } = true;
 
     // ── TV modu / ağ yayını (Aşama 8) ──
@@ -125,4 +129,16 @@ public sealed class AppSettings
             Log.Error($"Ayarlar kaydedilemedi: {ex.Message}");
         }
     }
+}
+
+/// <summary>Bir oyunun yazı tipi ayarı ve öğrenilmiş altyazı görünümü.</summary>
+public sealed class GameFontProfile
+{
+    /// <summary>"auto" ya da katalogdaki font anahtarı (ör. "barlow-600", "custom-...").</summary>
+    public string FontKey { get; set; } = "auto";
+    public string? LearnedKey { get; set; }
+    public double LearnedEm { get; set; }
+    public string LearnedColor { get; set; } = "#FFFFFF";
+    public bool LearnedOutline { get; set; }
+    public int LearnedSamples { get; set; }
 }

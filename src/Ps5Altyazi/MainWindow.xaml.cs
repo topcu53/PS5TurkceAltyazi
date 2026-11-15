@@ -140,7 +140,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.0 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v1.1 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -163,6 +163,7 @@ public partial class MainWindow : Window
         InitTranslation();
         InitSubtitleWindow();
         InitScreenTranslation();
+        InitGameFont();
         LgWebOsTv.GetPinnedHostKey = ip => _settings.TvHostKeys.TryGetValue(ip, out var fp) ? fp : null;
         LgWebOsTv.SavePinnedHostKey = (ip, fp) => Dispatcher.Invoke(() => { _settings.TvHostKeys[ip] = fp; SaveSettings(); });
         TvServerCheck.IsChecked = _settings.TvServerEnabled;
@@ -956,6 +957,8 @@ public partial class MainWindow : Window
             _ocrMsSum += output.Milliseconds;
             var norm = CoverNormOf(job.Game, job.Lines);
             ApplyOcr(job.Seq, output, job.ChangeStart, engine.Name, CoverRectOf(job.Game, job.Lines), norm, norm[4] * job.Game.Height);
+            // Oyunun altyazı yazısını ölç (yazı tipi + boy + renk), yalnızca gerçek altyazı okunduysa
+            if (SubtitleText.IsPlausible(SubtitleText.Normalize(output.Lines))) LearnGameFont(job.Game, job.Lines, output.Lines);
         }
         catch (Exception ex)
         {
@@ -1589,7 +1592,8 @@ public partial class MainWindow : Window
             bottom: 6,
             width: _settings.SubtitleWidthFraction * 100,
             cover: _settings.SubtitleCoverOriginal,
-            match: _settings.SubtitleMatchOriginalSize);
+            match: _settings.SubtitleMatchOriginalSize,
+            gameFont: GameFontForScreens());
     }
 
     private void TvServerCheck_Changed(object sender, RoutedEventArgs e)
@@ -1685,7 +1689,8 @@ public partial class MainWindow : Window
         {
             SubtitleWindowCheck.IsChecked = true; // ayarlar görülebilsin
         }
-        var dlg = new SubtitleSettingsWindow(_settings, _subWin) { Owner = this };
+        var dlg = new SubtitleSettingsWindow(_settings, _subWin, DescribeGameFont) { Owner = this };
+        dlg.FontChanged += gameChanged => { OnFontSettingChanged(gameChanged); SaveSettings(); };
         dlg.Changed += () =>
         {
             _subWin.ApplyAppearance(_settings.SubtitleFontSize, _settings.SubtitleBackgroundOpacity,

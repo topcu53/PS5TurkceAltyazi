@@ -54,6 +54,11 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 7. **Oyunda altyazıları açın:** Oyunun kendi ayarlarından altyazıları açın.
 8. **Altyazı yerini tanıtın (bir kez):** Biri konuşurken **Otomatik Bul**'a basın. Ya da **Elle Seç** ile altyazının çıktığı bölgeyi fareyle çizin.
 
+9. **Yazı tipi (isteğe bağlı):** **Altyazı Görünümü…** → **Oyun** kutusuna oynadığınız oyunun adını yazın (ör. *RDR2*).
+   Program birkaç altyazıdan sonra oyunun yazısına en benzer yazı tipini, harf boyunu ve rengini kendisi bulur ve bu oyun için
+   hatırlar. İsterseniz listeden başka bir font seçebilir ya da oyunun kendi font dosyası sizdeyse **Dosyadan ekle…** ile
+   kullanabilirsiniz. (Oyunların kendi fontları lisanslı olduğu için programla birlikte gelmez.)
+
 ### Kısayollar (her pencerede çalışır)
 
 | Tuş | İşlev |

@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.1 – Oyunun yazı tipiyle altyazı
+
+- Türkçe altyazı, **oyunun altyazı yazısına en benzer yazı tipiyle**, orijinal harflerle **aynı boyda** ve **aynı renkte** yazılır
+  (PC ve TV). Program altyazının harf kalınlığını, genişliğini ve x-yüksekliğini ölçer; programla gelen 30 açık lisanslı,
+  Türkçe karakterli yazı tipi arasından en benzerini seçer.
+- Her oyun için ayrı hatırlanır (Altyazı Görünümü → Oyun). Font elle de seçilebilir ya da oyunun kendi font dosyası
+  (sizde varsa, .ttf/.otf) "Dosyadan ekle" ile kullanılabilir.
+- TV, yazı tipini PC'den indirir (yalnızca fonts klasöründeki dosyalar sunulur). TV uygulaması 1.0.7.
+
 ## v1.0 – İlk genel sürüm
 
 - Ad: **Altyazı+** (yapımcı: Burak Topcu). Ayarlar ve çeviri hafızası eski sürümlerle uyumlu.
