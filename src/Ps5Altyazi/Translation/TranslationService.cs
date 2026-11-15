@@ -32,6 +32,22 @@ public sealed class TranslationService : IDisposable
 {
     /// <summary>Tek bir motor denemesi için süre sınırı (altyazı ekranda kısa kalır).</summary>
     public static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(3);
+    /// <summary>Birinci servis bu sürede yanıt vermezse yedek servis AYNI ANDA denenir; önce gelen kullanılır.</summary>
+    public static readonly TimeSpan HedgeDelay = TimeSpan.FromMilliseconds(700);
+    public long HedgeWins { get; private set; }
+
+    /// <summary>Sıradaki çeviri servisinin bağlantısını açık / sıcak tutar (hata olursa sessizce geçer).</summary>
+    public async Task WarmUpAsync()
+    {
+        var slot = _slots.FirstOrDefault(s => s.IsUsable(DateTime.Now));
+        if (slot?.Translator is not IWarmable w) return;
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await w.WarmUpAsync(cts.Token);
+        }
+        catch { /* ısıtma isteğe bağlı */ }
+    }
 
     private readonly TranslationCache _cache;
     private List<EngineSlot> _slots = new();
@@ -102,8 +118,9 @@ public sealed class TranslationService : IDisposable
             throw new TranslationException("Hiç çeviri servisi ayarlanmadı. 'Çeviri Ayarları…' düğmesini kullanın.", TranslationErrorKind.Auth);
 
         var errors = new List<string>();
-        foreach (var slot in _slots)
+        for (int si = 0; si < _slots.Count; si++)
         {
+            var slot = _slots[si];
             var now = DateTime.Now;
             if (!slot.IsUsable(now)) continue;
             ct.ThrowIfCancellationRequested();
@@ -120,7 +137,39 @@ public sealed class TranslationService : IDisposable
             attemptCts.CancelAfter(AttemptTimeout);
             try
             {
-                string result = await slot.Translator.TranslateAsync(text, context, attemptCts.Token);
+                var primary = slot.Translator.TranslateAsync(text, context, attemptCts.Token);
+
+                // Yedekli deneme: birinci servis HedgeDelay içinde yanıt vermezse sıradaki servis de başlatılır
+                var backup = _slots.Skip(si + 1).FirstOrDefault(s2 => s2.IsUsable(now));
+                if (backup != null)
+                {
+                    var first = await Task.WhenAny(primary, Task.Delay(HedgeDelay, ct));
+                    ct.ThrowIfCancellationRequested();
+                    if (first != primary)
+                    {
+                        using var backupCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                        backupCts.CancelAfter(AttemptTimeout);
+                        var bsw = Stopwatch.StartNew();
+                        var second = backup.Translator.TranslateAsync(text, context, backupCts.Token);
+                        var done = await Task.WhenAny(primary, second);
+                        if (done == second && second.Status == TaskStatus.RanToCompletion && !string.IsNullOrWhiteSpace(second.Result))
+                        {
+                            attemptCts.Cancel(); // yavaş kalan birinci istek bırakılır
+                            Observe(primary);
+                            backup.Calls++;
+                            backup.Chars += text.Length;
+                            backup.MsSum += bsw.Elapsed.TotalMilliseconds;
+                            backup.ConsecutiveFailures = 0;
+                            HedgeWins++;
+                            _cache.Put(text, second.Result, backup.Translator.Name);
+                            return new TranslationOutcome(second.Result, false, false, sw.Elapsed.TotalMilliseconds, backup.Translator.Name);
+                        }
+                        backupCts.Cancel();
+                        Observe(second);
+                    }
+                }
+
+                string result = await primary;
                 attemptSw.Stop();
                 slot.Calls++;
                 slot.Chars += text.Length;
@@ -239,6 +288,9 @@ public sealed class TranslationService : IDisposable
         }
         return (results, fromCache, engine, sw.Elapsed.TotalMilliseconds);
     }
+
+    private static void Observe(Task t) =>
+        t.ContinueWith(x => _ = x.Exception, CancellationToken.None, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Default);
 
     private void NoteActive(EngineSlot slot)
     {

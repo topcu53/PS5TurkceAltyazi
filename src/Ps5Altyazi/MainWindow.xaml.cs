@@ -79,6 +79,8 @@ public partial class MainWindow : Window
     private PixelRect? _lastGameRect;
 
     private int _fpsCount;
+    private DateTime _lastPreviewDraw;
+    private string? _lastSkippedText;
     private DateTime _fpsStart = DateTime.Now;
     private double _fps;
     private long _total, _valid, _black, _uniform, _frozen;
@@ -140,14 +142,14 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.1 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v1.2 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
         _settings = AppSettings.Load();
         MigrateSettings();
         MethodCombo.SelectedIndex = Math.Clamp(_settings.CaptureMethod, 0, 1);
-        FpsCombo.SelectedIndex = Math.Max(0, new[] { 5, 10, 15, 30 }.ToList().IndexOf(_settings.Fps));
+        FpsCombo.SelectedIndex = Math.Max(0, new[] { 5, 10, 15, 30, 60 }.ToList().IndexOf(_settings.Fps));
         CropCheck.IsChecked = _settings.CropToGame;
         _cropToGame = _settings.CropToGame;
         var saved = _settings.GetRegion();
@@ -382,6 +384,7 @@ public partial class MainWindow : Window
         _noFrameWarned = false;
         _minimizedWarned = false;
         _captureStart = DateTime.Now;
+        WarmTranslation(force: true);
         _lastFrameTime = DateTime.MinValue;
         _lastSummary = DateTime.Now;
         _fpsCount = 0;
@@ -419,12 +422,13 @@ public partial class MainWindow : Window
             return;
         }
 
+        // En yüksek öncelik: altyazı karesi arayüzdeki diğer işlerin (çizim vb.) önüne geçsin
         Dispatcher.InvokeAsync(() =>
         {
             try { HandleResult(result, live: true); }
             catch (Exception ex) { Log.Error($"Önizleme hatası: {ex.Message}"); }
             finally { Interlocked.Exchange(ref _uiPending, 0); }
-        });
+        }, System.Windows.Threading.DispatcherPriority.Send);
     }
 
     /// <summary>Kırpma, kare analizi, altyazı alanı ve otomatik bulma (arka plan iş parçacığı).</summary>
@@ -543,6 +547,18 @@ public partial class MainWindow : Window
             }
         }
 
+        // ÖNCE altyazı (gecikme kritik), sonra önizleme / durum yazıları
+        UpdatePresence(r, live);
+        if (live) TrackSubtitle(r);
+        else if (r.Presence is { HasText: true } && _ocr != null) _ = RecognizeOnceAsync(r);
+        UpdateOverlay();
+        if (live) ScreenTick(r);
+
+        // Önizleme görüntüleri ve durum yazıları saniyede en çok ~8 kez (her karede 1080p görüntü çizmek
+        // arayüz iş parçacığını meşgul eder ve altyazının işlenmesini geciktirir)
+        if (live && (DateTime.Now - _lastPreviewDraw).TotalMilliseconds < 125 && !r.AutoTried) return;
+        _lastPreviewDraw = DateTime.Now;
+
         // Ana önizleme (yalnızca oyun alanı)
         WriteFrame(ref _preview, PreviewImage, f.Pixels, f.Width, f.Height, f.Stride);
         PreviewPlaceholder.Visibility = Visibility.Collapsed;
@@ -559,11 +575,6 @@ public partial class MainWindow : Window
         else
             MaskImage.Source = null;
 
-        UpdatePresence(r, live);
-        UpdateOverlay();
-        if (live) ScreenTick(r);
-        if (live) TrackSubtitle(r);
-        else if (r.Presence is { HasText: true } && _ocr != null) _ = RecognizeOnceAsync(r);
 
         // Otomatik bulma sonucu
         if (r.AutoTried && _autoDetectActive && r.Auto != null)
@@ -1002,8 +1013,12 @@ public partial class MainWindow : Window
         _hideTimer.Stop(); // yeni metin geldi: bekleyen gizleme iptal
         if (!SubtitleText.IsPlausible(text))
         {
+            // Altyazı henüz belirme (fade-in) aşamasında olabilir: bir sonraki karede yeniden okunsun
+            // (önceden aynı görüntü tekrar okunmuyordu → Türkçe ancak altyazı değişince geliyordu)
+            if (_currentText == null) { _lastOcrFp = null; _changeStart ??= changeStart; }
             _ocrSkipped++;
-            if (text.Length > 0) Log.Info($"OCR anlamsız sonucu atlandı: \"{text}\"");
+            if (text.Length > 0 && text != _lastSkippedText) Log.Info($"OCR anlamsız sonucu atlandı: \"{text}\"");
+            _lastSkippedText = text;
             return;
         }
 
@@ -1512,6 +1527,13 @@ public partial class MainWindow : Window
             _settings.SettingsVersion = 3;
             _settings.Save();
         }
+        if (_settings.SettingsVersion < 4)
+        {
+            // v1.2: en düşük gecikme için 60 FPS (Remote Play "Yüksek" kare hızında 60 kare gönderir)
+            if (_settings.Fps == 30) { _settings.Fps = 60; Log.Info("Hedef FPS 60'a çıkarıldı (en düşük altyazı gecikmesi)."); }
+            _settings.SettingsVersion = 4;
+            _settings.Save();
+        }
     }
 
     // ───────────────────────────── TV / telefon yayını (Aşama 8) ─────────────────────────────
@@ -1776,8 +1798,20 @@ public partial class MainWindow : Window
 
     // ───────────────────────────── Zamanlayıcı ─────────────────────────────
 
+    private DateTime _lastWarm;
+
+    /// <summary>Çeviri bağlantısını sıcak tut: boşta kalan bağlantı kapanırsa ilk altyazı ~200 ms daha geç çevrilir.</summary>
+    private void WarmTranslation(bool force = false)
+    {
+        if (_translation == null || TranslateCheck.IsChecked != true) return;
+        if (!force && (DateTime.Now - _lastWarm).TotalSeconds < 40) return;
+        _lastWarm = DateTime.Now;
+        _ = _translation.WarmUpAsync();
+    }
+
     private void Timer_Tick(object? sender, EventArgs e)
     {
+        if (_capture != null) WarmTranslation();
         DateTime now = DateTime.Now;
 
         if (_target != null && _capture != null)
@@ -1880,6 +1914,7 @@ public partial class MainWindow : Window
             Log.Info($"Çeviri özeti: {_trCount} çeviri | API {_translation.ApiCalls} çağrı, ort. {_translation.ApiMsSum / Math.Max(1, _translation.ApiCalls):F0} ms, " +
                      $"{_translation.CharsSent} karakter | önbellekten {_translation.CacheHits} | hata {_trErrors} | " +
                      $"ort. toplam gecikme (metin değişiminden Türkçeye) {_trTotalLatencySum / Math.Max(1, _trCount):F0} ms | önbellekte {_translation.CacheCount} kayıt" +
+                     (_translation.HedgeWins > 0 ? $" | yedek servis {_translation.HedgeWins} kez daha hızlı yanıt verdi" : "") +
                      $" | servisler: {string.Join(", ", _translation.Slots.Select(x => $"{x.Translator.Name} {x.Calls} çağrı/{x.Chars} kr."))}");
     }
 

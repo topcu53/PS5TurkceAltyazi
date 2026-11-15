@@ -17,6 +17,12 @@ public interface ITranslator
     Task<string> TranslateAsync(string text, string? context, CancellationToken ct);
 }
 
+/// <summary>Bağlantısı önceden açılabilen motor (ilk çeviri gecikmesini önlemek için).</summary>
+public interface IWarmable
+{
+    Task WarmUpAsync(CancellationToken ct);
+}
+
 /// <summary>Tek istekte birden çok metni çevirebilen motor (ekran çevirisi: menüdeki bütün öğeler bir seferde).</summary>
 public interface IBatchTranslator
 {
@@ -53,9 +59,21 @@ public sealed class TranslationException : Exception
 /// Free anahtarlar ":fx" ile biter ve api-free.deepl.com adresini kullanır.
 /// Önceki altyazılar "context" olarak gönderilir (DeepL bunu ücretlendirmez) → daha tutarlı, bağlama uygun çeviri.
 /// </summary>
-public sealed class DeepLTranslator : ITranslator, IBatchTranslator
+public sealed class DeepLTranslator : ITranslator, IBatchTranslator, IWarmable
 {
-    internal static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(8) };
+    /// <summary>
+    /// Ortak HTTP istemcisi. Bağlantılar uzun süre açık tutulur (TLS el sıkışması her altyazıda tekrarlanmasın:
+    /// ilk istek ~150-300 ms daha yavaştır). Altyazı akışında bağlantı ayrıca düzenli "ısıtılır" (WarmUpAsync).
+    /// </summary>
+    internal static readonly HttpClient Http = new(new SocketsHttpHandler
+    {
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(10),
+        PooledConnectionLifetime = TimeSpan.FromMinutes(30),
+        ConnectTimeout = TimeSpan.FromSeconds(4),
+        MaxConnectionsPerServer = 8,
+        AutomaticDecompression = System.Net.DecompressionMethods.All
+    })
+    { Timeout = TimeSpan.FromSeconds(8) };
 
     private readonly string _key;
     private readonly Uri _base;
@@ -135,6 +153,9 @@ public sealed class DeepLTranslator : ITranslator, IBatchTranslator
     }
 
     /// <summary>Bu ayki kullanım (karakter) ve sınır.</summary>
+    /// <summary>Bağlantıyı açık / sıcak tutar (kotadan düşmez: yalnızca kullanım sorgusu).</summary>
+    public async Task WarmUpAsync(CancellationToken ct) => await GetUsageAsync(ct).ConfigureAwait(false);
+
     public async Task<(long Used, long Limit)> GetUsageAsync(CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, new Uri(_base, "v2/usage"));

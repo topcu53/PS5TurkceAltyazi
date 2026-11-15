@@ -122,12 +122,14 @@ public sealed class WgcCaptureSource : ICaptureSource
                     .CreateCopyFromSurfaceAsync(frame.Surface, BitmapAlphaMode.Ignore)
                     .AsTask().GetAwaiter().GetResult();
 
-                using SoftwareBitmap bgra = bmp.BitmapPixelFormat == BitmapPixelFormat.Bgra8
-                    ? SoftwareBitmap.Copy(bmp)
+                // Yüzey zaten BGRA8 ise ara kopya yapmadan doğrudan diziye al (kare başına bir tam kopya az)
+                using SoftwareBitmap? converted = bmp.BitmapPixelFormat == BitmapPixelFormat.Bgra8
+                    ? null
                     : SoftwareBitmap.Convert(bmp, BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore);
+                SoftwareBitmap bgra = converted ?? bmp;
 
                 int w = bgra.PixelWidth, h = bgra.PixelHeight;
-                var pixels = new byte[w * h * 4];
+                var pixels = GC.AllocateUninitializedArray<byte>(w * h * 4);
                 bgra.CopyToBuffer(pixels.AsBuffer());
 
                 // WGC pencere karesi, DWM'nin görünür pencere sınırlarına karşılık gelir.

@@ -1,5 +1,15 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.2 – En düşük gecikme
+
+- Yakalama 60 FPS (önceden 30): altyazı en geç ~17 ms içinde görülür. Kare başına bir tam görüntü kopyası daha az.
+- Altyazı işleme, arayüzdeki diğer işlerin önüne alındı (en yüksek öncelik); önizleme görüntüleri saniyede en çok 8 kez
+  çiziliyor (önceden her karede 1080p çizim altyazıyı bekletiyordu).
+- Altyazı belirirken (fade-in) ilk kare okunamazsa sonraki karede hemen yeniden okunuyor (önceden aynı altyazı tekrar
+  okunmuyor, Türkçe gecikiyor / hiç gelmiyordu).
+- Çeviri bağlantısı sürekli açık / sıcak tutuluyor (ilk çeviride ~150-300 ms'lik bağlantı kurma süresi yok).
+- Yedekli çeviri: DeepL 0,7 sn içinde yanıt vermezse yedek servis aynı anda denenir, önce gelen kullanılır.
+
 ## v1.1 – Oyunun yazı tipiyle altyazı
 
 - Türkçe altyazı, **oyunun altyazı yazısına en benzer yazı tipiyle**, orijinal harflerle **aynı boyda** ve **aynı renkte** yazılır

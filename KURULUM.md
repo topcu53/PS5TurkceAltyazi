@@ -160,7 +160,7 @@ TV Modu penceresinde yazan adresi (`http://PC_IP:47800/`) aynı Wi-Fi'deki telef
 | TV uygulaması bağlanmıyor | PC ve TV aynı ağda olmalı. Windows Güvenlik Duvarı sorarsa **Özel ağlar**a izin verin (port 47800). |
 | LG: "TV'ye ulaşılamadı" | Developer Mode uygulamasında **Key Server** açık olmalı ve uygulama ekranda kalmalı. |
 | LG: "SSH anahtarı değişmiş" | TV sıfırlandıysa TV Modu'nda **Bağlan** ile yeniden eşleştirin. |
-| Türkçe geç geliyor | PC ve PS5'i kabloyla bağlayın. Remote Play kare hızını **Yüksek** yapın. |
+| Türkçe geç geliyor | PS5 ve PC'yi **kabloyla** (Ethernet) bağlayın. Remote Play ayarları: çözünürlük **1080p**, kare hızı **Yüksek**. Programda **Hedef FPS: 60**. Windows'ta güç modunu **En iyi performans** yapın. Dizüstünde şarj kablosu takılı olsun. |
 | Kayıtlar (log) | Programdaki **Klasörü Aç** düğmesi → `logs` klasörü. Sorun bildirirken bu dosyayı ekleyin. |
 
 ---

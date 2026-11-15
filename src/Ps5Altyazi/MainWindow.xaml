@@ -34,6 +34,7 @@
                 <ComboBoxItem Content="10"/>
                 <ComboBoxItem Content="15"/>
                 <ComboBoxItem Content="30"/>
+                <ComboBoxItem Content="60"/>
             </ComboBox>
         </WrapPanel>
 

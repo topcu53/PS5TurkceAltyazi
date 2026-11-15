@@ -13,7 +13,7 @@ namespace Ps5Altyazi.Settings;
 public sealed class AppSettings
 {
     public int CaptureMethod { get; set; } = 0;
-    public int Fps { get; set; } = 30;
+    public int Fps { get; set; } = 60;
     public bool CropToGame { get; set; } = true;
 
     /// <summary>Oyun alanına göre oransal altyazı alanı: [x, y, genişlik, yükseklik].</summary>
