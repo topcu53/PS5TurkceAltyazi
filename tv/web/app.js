@@ -129,8 +129,8 @@
 
     var anchor = showText ? (state.mask || state.lastMask || (s.cover ? state.cover : null)) : null;
     var base = Math.round(s.font * state.fontScale);
-    if (anchor && s.match !== false && gf && gf.em > 0) {
-      // Oyunun yazı tipiyle ölçülmüş boy: harfler orijinalle aynı yükseklikte
+    if (showText && s.match !== false && gf && gf.em > 0) {
+      // Oyunun yazı tipiyle ölçülmüş boy: harfler orijinalle aynı yükseklikte (örtme kapalıyken de)
       base = Math.round(gf.em * 1080 * state.fontScale);
     } else if (anchor && s.match !== false && state.lineH > 0) {
       // Orijinal İngilizce altyazıyla aynı boy
@@ -157,28 +157,24 @@
       // Maskeyle birebir aynı kutu (maske: rect + 10 px kenar payı)
       var c = anchor, pad = 10; // oyun alanına göre 0..1 (HDMI görüntüsü = oyun alanı)
       sub.style.left = ((c.x + c.w / 2) * 1920) + 'px';
-      sub.style.bottom = Math.max(0, (1 - c.y - c.h) * 1080 - pad) + 'px';
+      // Üstten sabit: uzun çeviri orijinal satırın yerinden başlayıp aşağıya doğru satır satır iner
+      sub.style.bottom = 'auto';
+      sub.style.top = Math.max(0, c.y * 1080 - pad) + 'px';
       sub.style.minWidth = (c.w * 1920 + 2 * pad) + 'px';
       sub.style.minHeight = (c.h * 1080 + 2 * pad) + 'px';
       sub.style.maxWidth = Math.max(c.w * 1920 + 2 * pad, s.width / 100 * 1920) + 'px';
     } else {
       sub.style.left = '50%';
+      sub.style.top = 'auto';
       sub.style.bottom = (s.bottom / 100 * 1080) + 'px';
       sub.style.maxWidth = (s.width / 100 * 1920) + 'px';
     }
     sub.style.display = 'block';
-    fitTwoLines(showText);
-  }
-
-  // Metin 2 satırı aşarsa yazıyı küçült (en az %60)
-  function fitTwoLines(isSub) {
-    if (!isSub) return;
-    var base = parseInt(sub.getAttribute('data-base'), 10) || Math.round(state.style.font * state.fontScale), size = base;
-    for (var i = 0; i < 8; i++) {
-      var lines = (sub.offsetHeight - 14) / (size * 1.15 + 1);
-      if (lines <= 2.6 || size <= base * 0.6) break;
-      size = Math.round(size * 0.92);
-      sub.style.fontSize = size + 'px';
+    // Yazı küçültülmez (orijinalle aynı boy); uzun metin satır satır aşağı iner.
+    // Ekranın altından taşarsa kutu yalnızca gerektiği kadar yukarı kaydırılır.
+    if (anchor) {
+      var top = parseFloat(sub.style.top) || 0, h = sub.offsetHeight;
+      if (top + h > 1072) sub.style.top = Math.max(0, 1072 - h) + 'px';
     }
   }
 

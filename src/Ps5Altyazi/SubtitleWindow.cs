@@ -90,7 +90,7 @@ public sealed class SubtitleWindow : Window
             _normalBottom = _bottom = Top + ActualHeight;
             PositionChanged?.Invoke(_normalLeft, _normalBottom);
         };
-        SizeChanged += (_, _) => { if (_placed) Top = _bottom - ActualHeight; };
+        SizeChanged += (_, _) => { if (_placed) PlaceVertically(); };
         SourceInitialized += (_, _) => ApplyWindowStyles();
         _noticeTimer.Tick += (_, _) => { _noticeTimer.Stop(); _notice = ""; Render(); };
     }
@@ -197,6 +197,7 @@ public sealed class SubtitleWindow : Window
             Width = w;
             Left = cx - w / 2;
             _bottom = (px.Y + px.Height) / sy + 6;
+            _coverTop = px.Y / sy - 6;
             _box.MinWidth = px.Width / sx + 30;
             _box.MinHeight = px.Height / sy + 12;
             _box.Background = Brushes.Black; // tam örtücü: İngilizce alttan görünmesin
@@ -211,8 +212,25 @@ public sealed class SubtitleWindow : Window
             _box.Background = _userBackground;
         }
         _text.MaxWidth = Math.Max(100, Width - 60);
-        Top = _bottom - Math.Max(ActualHeight, 10);
+        PlaceVertically();
         Render();
+    }
+
+    private double _coverTop;
+
+    /// <summary>
+    /// Örtme modunda kutu İngilizce altyazının üst kenarından başlar; uzun çeviri aşağıya doğru satır satır iner
+    /// (ekranın altından taşarsa yalnızca gerektiği kadar yukarı kayar). Normal modda alt kenar sabittir.
+    /// </summary>
+    private void PlaceVertically()
+    {
+        double h = Math.Max(ActualHeight, 10);
+        if (_coverMode && _coverPx != null)
+        {
+            double screenBottom = SystemParameters.VirtualScreenTop + SystemParameters.VirtualScreenHeight;
+            Top = Math.Min(_coverTop, screenBottom - h - 4);
+        }
+        else Top = _bottom - h;
     }
 
     // ───────── Metin ─────────
@@ -274,7 +292,7 @@ public sealed class SubtitleWindow : Window
     /// <summary>Örtme modunda ve "orijinalle aynı boy" açıkken İngilizce satır yüksekliğinden, değilse ayardan.</summary>
     private double CurrentBaseSize()
     {
-        if (_coverMode && _matchSize && _coverPx != null && (_gameEmPx > 0 || _coverLineHeightPx > 0))
+        if (_matchSize && (_gameEmPx > 0 || (_coverMode && _coverPx != null && _coverLineHeightPx > 0)))
         {
             double sy = 1;
             try { sy = VisualTreeHelper.GetDpi(this).DpiScaleY; } catch { }
@@ -285,28 +303,10 @@ public sealed class SubtitleWindow : Window
         return _baseFontSize;
     }
 
-    /// <summary>Metin en fazla 2 satıra sığacak şekilde yazı boyutunu seçer (en az %60).</summary>
-    private double FitFontSize(string text, double baseSize)
-    {
-        double maxWidth = _text.MaxWidth;
-        double size = baseSize;
-        double ppd = 1.0;
-        try { ppd = VisualTreeHelper.GetDpi(this).PixelsPerDip; } catch { }
-        var typeface = new Typeface(_text.FontFamily, FontStyles.Normal, _text.FontWeight, FontStretches.Normal);
-
-        for (int i = 0; i < 10; i++)
-        {
-            var one = new FormattedText("Ağ", CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, size, Brushes.White, ppd);
-            var ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight, typeface, size, Brushes.White, ppd)
-            {
-                MaxTextWidth = Math.Max(50, maxWidth),
-                TextAlignment = TextAlignment.Center
-            };
-            if (ft.Height <= one.Height * 2.2 || size <= baseSize * 0.6) break;
-            size *= 0.92;
-        }
-        return size;
-    }
+    /// <summary>
+    /// Yazı küçültülmez: altyazı her zaman orijinal boyunda kalır, sığmayan metin alt satırlara kayar (satır sınırı yok).
+    /// </summary>
+    private static double FitFontSize(string text, double baseSize) => baseSize;
 
     // ───────── Tıklama geçirme (Remote Play'i engellememek için) ─────────
 

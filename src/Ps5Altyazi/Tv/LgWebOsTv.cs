@@ -25,7 +25,7 @@ namespace Ps5Altyazi.Tv;
 public sealed class LgWebOsTv
 {
     public const string AppId = "tr.ps5altyazi.tv";
-    public const string AppVersion = "1.0.7";
+    public const string AppVersion = "1.0.8";
     private const string LunaSend = "/usr/bin/luna-send-pub";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(6) };
 

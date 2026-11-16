@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.4 – Altyazı her zaman orijinal boyunda
+
+- Yazı artık hiç küçültülmüyor: uzun çeviriler orijinal boyda kalır ve **aşağıya doğru satır satır** iner
+  (satır sınırı yok). Ekranın altından taşarsa kutu yalnızca gerektiği kadar yukarı kayar. PC ve TV.
+- "Orijinalle aynı boy" artık örtme modu kapalıyken de oyunun ölçülen yazı boyunu kullanır.
+- Yazı boyu kararlı: ölçüm büyük/küçük harf satırları arasında gidip gelmiyor; yeterli ölçümden sonra
+  %7'den küçük oynamalarda boy sabit kalır (bir altyazı büyük, öteki küçük olmuyor).
+- TV uygulaması 1.0.8 (program açılışta LG TV'yi kendiliğinden günceller).
+
 ## v1.3 – Google Gemini çeviri servisi
 
 - Yeni isteğe bağlı çeviri servisi: **Google Gemini** (Google AI Studio anahtarı, kart gerekmez). Sıra:

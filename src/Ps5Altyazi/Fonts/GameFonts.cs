@@ -250,7 +250,9 @@ public sealed class SubtitleFontMatcher
     private bool Choose(double frameH)
     {
         if (frameH <= 0) return false;
-        bool useCaps = _caps.Count > _lower.Count;
+        // Küçük harfli satırlar daha güvenilir (x-yüksekliği); büyük harfe yalnızca küçük harf ölçümü yoksa geçilir.
+        // (Eskiden sayıya göre gidip gelince yazı boyu bir büyüyüp bir küçülüyordu.)
+        bool useCaps = _lower.Count < 3 && _caps.Count >= 3;
         var src = useCaps ? _caps : _lower;
         if (src.Count < 3) return false;
 
@@ -287,6 +289,10 @@ public sealed class SubtitleFontMatcher
 
         double perEm = useCaps ? chosen.CapPerEm : chosen.XhPerEm;
         double em = xh / Math.Max(0.2, perEm) / frameH;
+        // Boy kararlılığı: yeterli ölçüm varsa küçük oynamalarda eski boy korunur (yazı her altyazıda aynı boyda kalsın)
+        if (Current != null && Current.EmNorm > 0 && Current.Font.Key == chosen.Key && Current.Samples >= 6 &&
+            Math.Abs(Current.EmNorm - em) < Current.EmNorm * 0.07)
+            em = Current.EmNorm;
         var next = new GameFontChoice(chosen, em, color, outline, src.Count);
         bool changed = Current == null || Current.Font.Key != next.Font.Key || Math.Abs(Current.EmNorm - em) > Current.EmNorm * 0.03 ||
                        Current.ColorHex != color || Current.Outline != outline;
