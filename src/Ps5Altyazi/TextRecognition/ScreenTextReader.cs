@@ -294,7 +294,7 @@ public static class ScreenTextReader
             if (prevWord != null)
             {
                 double gap = w.X - prevWord.Right;
-                if (pendingIcon || gap > 1.0 * medH)
+                if (pendingIcon || gap > 1.8 * medH) // geniş harf aralıklı yazılarda (RDR2) kelime boşluğu simge sanılmasın
                 {
                     // Simge kutusu: OCR okuduysa onun kutusu, yoksa iki kelime arasındaki boşluk
                     var ib = pendingIconBox ?? new OcrWordBox("", prevWord.Right + 0.15 * medH, w.CenterY - 0.65 * medH,

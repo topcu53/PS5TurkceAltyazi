@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.13 – Ekran çevirisi: çift kutular, kırmızı menüler, at adı
+
+- Aynı yazının iki kez okunması (biri iki satırı kapsayan büyük kutu) artık iki ayrı Türkçe kutu çizmiyor.
+- Ekran değişimi, yazının rengine bakmadan algılanıyor: RDR2'nin kırmızı üstüne koyu menüsü kaydırılınca eski
+  çeviriler kalkıyor (önceden yalnızca beyaz yazılar izleniyordu).
+- Sözlükte olmayan okumalar (oyuncunun ata verdiği ad "Ay Parçası" → "PARGASİ@)") çevrilmiyor.
+- Geniş harf aralıklı yazılarda kelime boşluğu tuş simgesi sanılmıyor ("PHOTO MODE"un yarısı açıkta kalmıyor).
+
 ## v1.12 – Ekran çevirisi: ekran değişince kalkar, yazılar orijinal boyda
 
 - F7 çevirisi ekrandayken menü kaydırılır ya da ipucu değişirse, yazısı değişen kutular kendiliğinden kalkar;

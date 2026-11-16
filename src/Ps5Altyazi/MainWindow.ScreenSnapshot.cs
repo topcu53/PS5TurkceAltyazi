@@ -20,6 +20,37 @@ namespace Ps5Altyazi;
 public partial class MainWindow
 {
     private List<ScreenItem>? _snapItems;
+    private readonly Dictionary<ScreenItem, byte[]> _snapSig = new();
+
+    /// <summary>Kutunun kaba gri görüntüsü (24×4): yazının rengi ne olursa olsun (kırmızı menü, beyaz ipucu) değişimi yakalar.</summary>
+    private static byte[] BoxSignature(CapturedFrame f, PixelRect r)
+    {
+        const int GW = 24, GH = 4;
+        var sig = new byte[GW * GH];
+        for (int j = 0; j < GH; j++)
+        for (int i = 0; i < GW; i++)
+        {
+            int x0 = r.X + i * r.Width / GW, x1 = Math.Max(x0 + 1, r.X + (i + 1) * r.Width / GW);
+            int y0 = r.Y + j * r.Height / GH, y1 = Math.Max(y0 + 1, r.Y + (j + 1) * r.Height / GH);
+            long sum = 0; int n = 0;
+            for (int y = Math.Max(0, y0); y < Math.Min(f.Height, y1); y += 2)
+            for (int x = Math.Max(0, x0); x < Math.Min(f.Width, x1); x += 2)
+            {
+                int p = y * f.Stride + x * 4;
+                sum += (f.Pixels[p] * 29 + f.Pixels[p + 1] * 150 + f.Pixels[p + 2] * 77) >> 8;
+                n++;
+            }
+            sig[j * GW + i] = (byte)(n == 0 ? 0 : sum / n);
+        }
+        return sig;
+    }
+
+    private static double SigDiff(byte[] a, byte[] b)
+    {
+        double s = 0;
+        for (int i = 0; i < a.Length; i++) s += Math.Abs(a[i] - b[i]);
+        return s / a.Length;
+    }
     private CancellationTokenSource? _snapCts;
     private DispatcherTimer? _snapTimer;
 
@@ -47,7 +78,13 @@ public partial class MainWindow
             var res = await Task.Run(() => ScreenTextReader.ReadAsync(engine, game, exclude, fullFrame: true), cts.Token);
             if (cts.IsCancellationRequested) return;
 
-            var items = res.Blocks.Select(b => new ScreenItem
+            // Üst üste binen okumalar (aynı yazı iki kez / iki satırı kapsayan blok): tek satırlıyı ve anlamlıyı tut.
+            // Sözlükte olmayan okumalar (oyuncunun koyduğu at adı "Ay Parçası" → "AY PARGASI") çevrilmez.
+            var blocks = new List<ScreenTextBlock>();
+            foreach (var b in res.Blocks.Where(b => b.Known >= 0.5)
+                                        .OrderBy(b => b.LineCount).ThenByDescending(b => b.Known).ThenBy(b => b.Bounds.Y))
+                if (!blocks.Any(k => Overlap(k.Bounds, b.Bounds) >= 0.25)) blocks.Add(b);
+            var items = blocks.Select(b => new ScreenItem
             {
                 Block = b,
                 FrameW = game.Width,
@@ -55,7 +92,7 @@ public partial class MainWindow
                 IconPngs = b.Icons.Select(ic => IconPng(game, ic)).ToArray()
             }).ToList();
             // Her yazının "parmak izi": ekran değişince (menü kaydırıldı, ipucu kapandı) o çeviri kaldırılır
-            foreach (var it in items) (it.Mask, it.MaskCount) = ScreenTextReader.TextMask(game, it.Px);
+            foreach (var it in items) _snapSig[it] = BoxSignature(game, it.Px);
             if (items.Count == 0)
             {
                 Notify("Ekranda çevrilecek yazı bulunamadı");
@@ -121,9 +158,8 @@ public partial class MainWindow
         foreach (var it in _snapItems.ToList())
         {
             if (it.FrameW != game.Width || it.FrameH != game.Height) { ClearSnapshot("pencere değişti"); return; }
-            if (it.MaskCount < 4) continue;
-            var (mask, count) = ScreenTextReader.TextMask(game, it.Px);
-            bool diff = count < it.MaskCount * 0.5 || ScreenTextReader.MaskDistance(mask, it.Mask) > 0.35;
+            if (!_snapSig.TryGetValue(it, out var sig0)) continue;
+            bool diff = SigDiff(BoxSignature(game, it.Px), sig0) > 18; // ortalama 18 gri seviyesinden fazla değişti
             it.MaskBad = diff ? it.MaskBad + 1 : 0;
             if (it.MaskBad >= 4) // ~0,07 sn sürekli farklı: gerçekten değişti
             {
@@ -142,6 +178,7 @@ public partial class MainWindow
         _snapTimer = null;
         if (_snapItems == null) return;
         _snapItems = null;
+        _snapSig.Clear();
         PushScreen(force: true);
         if (why == "F7") Notify("Ekran çevirisi kaldırıldı");
     }
