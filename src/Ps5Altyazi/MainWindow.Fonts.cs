@@ -42,9 +42,11 @@ public partial class MainWindow
         // Tamamen otomatik: oyun adı / font seçimi yok. Tek profil; oyun değişince eşleştirici bunu kendisi fark eder.
         _settings.ActiveGame = "Genel";
         var p = ActiveFontProfile;
-        p.FontKey = "auto";
         _fontMatcher.Reset();
-        _fontMatcher.Fixed = null;
+        // "auto" = oyuna göre otomatik; başka bir değer = kullanıcının seçtiği sabit yazı tipi (boy yine ölçülür)
+        _fontMatcher.Fixed = p.FontKey == "auto" ? null : FontCatalog.Find(p.FontKey);
+        if (p.FontKey != "auto" && _fontMatcher.Fixed == null) p.FontKey = "auto"; // dosya silinmiş
+        if (_fontMatcher.Fixed != null) Log.Info($"Sabit yazı tipi: {_fontMatcher.Fixed.DisplayName} (boyut oyundan ölçülür).");
         _fontMatcher.FamilyHint = null;
         var learned = FontCatalog.Find(p.LearnedKey);
         var font = _fontMatcher.Fixed ?? learned;

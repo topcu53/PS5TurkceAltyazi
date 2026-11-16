@@ -120,26 +120,69 @@ public sealed class SubtitleSettingsWindow : Window
     private FrameworkElement FontSection()
     {
         var panel = new StackPanel { Margin = new Thickness(0, 14, 0, 0) };
-        panel.Children.Add(new TextBlock { Text = "Yazı tipi: otomatik", FontWeight = FontWeights.Bold });
+        panel.Children.Add(new TextBlock { Text = "Yazı tipi", FontWeight = FontWeights.Bold });
+
+        var auto = new RadioButton { Content = "Otomatik – oyunun altyazısına en benzer yazı tipi", Margin = new Thickness(0, 6, 0, 0),
+                                     IsChecked = Profile.FontKey == "auto", GroupName = "fontmode" };
+        var fixedRb = new RadioButton { Content = "Sabit yazı tipi – her oyunda aynı", Margin = new Thickness(0, 6, 0, 0),
+                                        IsChecked = Profile.FontKey != "auto", GroupName = "fontmode" };
+        var pick = new Button { Content = "Yazı tipi dosyası seç (.ttf / .otf)…", HorizontalAlignment = HorizontalAlignment.Left,
+                                Margin = new Thickness(26, 6, 0, 0) };
+        pick.Click += (_, _) => AddFontFile();
+        auto.Checked += (_, _) =>
+        {
+            if (Profile.FontKey == "auto") return;
+            Profile.FontKey = "auto";
+            FontChanged?.Invoke(false);
+            _fontInfo.Text = _describeFont();
+        };
+        fixedRb.Checked += (_, _) =>
+        {
+            if (Profile.FontKey != "auto") return;
+            // Daha önce eklenmiş bir dosya varsa onu kullan, yoksa dosya seçtir
+            var last = FontCatalog.All.LastOrDefault(f => f.Custom);
+            if (last != null) { Profile.FontKey = last.Key; FontChanged?.Invoke(false); _fontInfo.Text = _describeFont() + TurkishNote(last); }
+            else AddFontFile();
+            if (Profile.FontKey == "auto") auto.IsChecked = true;
+        };
+        panel.Children.Add(auto);
+        panel.Children.Add(fixedRb);
+        panel.Children.Add(pick);
         panel.Children.Add(new TextBlock
         {
-            Text = "Bir şey seçmenize gerek yok. Program oyunun altyazısını ölçer; Türkçeyi en benzer yazı tipiyle, aynı harf " +
-                   "boyunda ve renkte yazar. Başka bir oyuna geçtiğinizde bunu kendisi fark eder ve birkaç altyazıda yeni oyuna uyar.",
-            TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 6)
+            Text = "Yazı boyu her iki modda da oyundaki İngilizce altyazıdan ölçülür. Seçtiğiniz dosya yalnızca bu bilgisayarda " +
+                   "kalır (TV'ye de buradan gönderilir).",
+            TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 6, 0, 6)
         });
-        _fontInfo.Text = _describeFont();
+        var cur = FontCatalog.Find(Profile.FontKey);
+        _fontInfo.Text = _describeFont() + (cur != null ? TurkishNote(cur) : "");
         panel.Children.Add(_fontInfo);
-        var relearn = new Button { Content = "Baştan öğren", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 6, 0, 0),
-                                   HorizontalAlignment = HorizontalAlignment.Left,
-                                   ToolTip = "Yazı tipi ya da boy tutmadıysa: öğrenileni siler, sonraki altyazılardan yeniden ölçer." };
+        var relearn = new Button { Content = "Boyu baştan öğren", Margin = new Thickness(0, 6, 0, 0), HorizontalAlignment = HorizontalAlignment.Left,
+                                   ToolTip = "Yazı boyu tutmadıysa: öğrenileni siler, sonraki altyazılardan yeniden ölçer." };
         relearn.Click += (_, _) =>
         {
+            string key = Profile.FontKey;
             _s.GameFonts.Clear();
+            Profile.FontKey = key;
             FontChanged?.Invoke(true);
             _fontInfo.Text = "Sıfırlandı: sonraki birkaç altyazıdan yeniden ölçülecek.";
         };
         panel.Children.Add(relearn);
         return panel;
+    }
+
+    /// <summary>Fontta Türkçe harflerden eksik olan var mı? (eksikler otomatik olarak yedek yazı tipiyle çizilir)</summary>
+    private static string TurkishNote(FontEntry f)
+    {
+        try
+        {
+            var gt = new GlyphTypeface(new Uri(FontCatalog.PathOf(f)));
+            var missing = "çğıİöşüÇĞÖŞÜ".Where(c => !gt.CharacterToGlyphMap.ContainsKey(c)).ToArray();
+            return missing.Length == 0
+                ? "\n✔ Türkçe harflerin hepsi var."
+                : $"\n⚠ Bu fontta şu Türkçe harfler yok: {string.Join(" ", missing)} – bunlar benzer bir yedek yazı tipiyle gösterilir.";
+        }
+        catch { return ""; }
     }
 
     private GameFontProfile Profile
@@ -208,7 +251,7 @@ public sealed class SubtitleSettingsWindow : Window
             var f = FontCatalog.AddCustom(dlg.FileName);
             Profile.FontKey = f.Key;
             FontChanged?.Invoke(false);
-            FillFonts();
+            _fontInfo.Text = _describeFont() + TurkishNote(f);
         }
         catch (Exception ex)
         {

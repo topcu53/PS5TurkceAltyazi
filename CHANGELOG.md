@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.4 – Sabit yazı tipi
+
+- Altyazı Görünümü'nde "Otomatik" / "Sabit yazı tipi" seçimi: kendi .ttf/.otf dosyanızı (ör. Mirisch) seçin, her oyunda o
+  yazı tipi kullanılır (PC ve TV); boyut yine oyundaki altyazıdan ölçülür. Dosya yalnızca bilgisayarınızda kalır.
+- Seçilen fontta eksik Türkçe harf (ğ, ş, ı, İ…) varsa bildirilir; eksik harfler yedek yazı tipiyle gösterilir.
+
 ## v2.3 – Modern tema
 
 - Logoya uygun yeni renkler: gece laciverti zemin, elektrik mavisi → camgöbeği vurgular.
