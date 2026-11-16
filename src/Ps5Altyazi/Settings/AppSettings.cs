@@ -30,6 +30,8 @@ public sealed class AppSettings
     public string? AzureRegion { get; set; }
 
     /// <summary>Yedek 2: MyMemory (anahtarsız). E-posta verilirse günlük sınır ~10 kat artar.</summary>
+    /// <summary>Programın yanındaki font dosyası bir kez uygulandı mı (ad|boyut).</summary>
+    public string? BesideExeFont { get; set; }
     public string? GeminiKeyProtected { get; set; }
     public string? GeminiModel { get; set; }
     public bool MyMemoryEnabled { get; set; } = true;

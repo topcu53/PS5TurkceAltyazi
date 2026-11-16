@@ -42,6 +42,7 @@ public partial class MainWindow
         // Tamamen otomatik: oyun adı / font seçimi yok. Tek profil; oyun değişince eşleştirici bunu kendisi fark eder.
         _settings.ActiveGame = "Genel";
         var p = ActiveFontProfile;
+        UseFontBesideExe(p);
         _fontMatcher.Reset();
         // "auto" = oyuna göre otomatik; başka bir değer = kullanıcının seçtiği sabit yazı tipi (boy yine ölçülür)
         _fontMatcher.Fixed = p.FontKey == "auto" ? null : FontCatalog.Find(p.FontKey);
@@ -61,6 +62,32 @@ public partial class MainWindow
         Log.Info($"Oyun: \"{_settings.ActiveGame}\" – yazı tipi: " +
                  (_fontMatcher.Fixed != null ? $"{_fontMatcher.Fixed.DisplayName} (sabit)" :
                   learned != null ? $"otomatik (öğrenilmiş: {learned.DisplayName})" : "otomatik (ilk altyazılardan öğrenilecek)"));
+    }
+
+    /// <summary>
+    /// Programın yanına (AltyaziPlus.exe ile aynı klasöre) bir .ttf/.otf konduysa onu sabit yazı tipi yapar.
+    /// Her dosya için bir kez uygulanır; kullanıcı sonra "Otomatik"e dönerse buna saygı gösterilir.
+    /// </summary>
+    private void UseFontBesideExe(GameFontProfile p)
+    {
+        try
+        {
+            string dir = AppContext.BaseDirectory;
+            var file = System.IO.Directory.EnumerateFiles(dir)
+                .FirstOrDefault(f => f.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".otf", StringComparison.OrdinalIgnoreCase));
+            if (file == null) return;
+            string stamp = System.IO.Path.GetFileName(file) + "|" + new System.IO.FileInfo(file).Length;
+            if (_settings.BesideExeFont == stamp && FontCatalog.Find(p.FontKey) != null) return;
+            var f = FontCatalog.AddCustom(file);
+            p.FontKey = f.Key;
+            _settings.BesideExeFont = stamp;
+            _settings.Save();
+            Log.Success($"Programın yanındaki yazı tipi kullanılıyor: {f.DisplayName} ({System.IO.Path.GetFileName(file)}).");
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Programın yanındaki yazı tipi yüklenemedi: {ex.Message}");
+        }
     }
 
     /// <summary>Kullanıcı aynı oyun için fontu değiştirdi (otomatik / sabit / eklenen dosya).</summary>

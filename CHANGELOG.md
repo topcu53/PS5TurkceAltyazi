@@ -1,5 +1,10 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.4.1 – Programın yanındaki yazı tipi
+
+- AltyaziPlus.exe ile aynı klasöre bir .ttf/.otf konursa, program açılışta onu kendiliğinden sabit yazı tipi yapar
+  (PC ve TV). Altyazı Görünümü'nden istenirse "Otomatik"e dönülebilir.
+
 ## v2.4 – Sabit yazı tipi
 
 - Altyazı Görünümü'nde "Otomatik" / "Sabit yazı tipi" seçimi: kendi .ttf/.otf dosyanızı (ör. Mirisch) seçin, her oyunda o

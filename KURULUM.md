@@ -54,7 +54,9 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 7. **Oyunda altyazıları açın:** Oyunun kendi ayarlarından altyazıları açın.
 8. **Altyazı yerini tanıtın (bir kez):** Biri konuşurken **Otomatik Bul**'a basın. Ya da **Elle Seç** ile altyazının çıktığı bölgeyi fareyle çizin.
 
-9. **Yazı tipi: hiçbir şey yapmanız gerekmez.** Program ilk birkaç altyazıda oyunun yazısını ölçer; Türkçeyi en benzer
+9. **Kendi yazı tipiniz (isteğe bağlı):** Bir `.ttf` / `.otf` dosyasını `AltyaziPlus.exe` ile aynı klasöre koyun; program
+   açılışta onu altyazı yazı tipi yapar (boyut yine oyundan ölçülür). Ya da: Altyazı Görünümü → Sabit yazı tipi.
+   **Otomatik yazı tipi: hiçbir şey yapmanız gerekmez.** Program ilk birkaç altyazıda oyunun yazısını ölçer; Türkçeyi en benzer
    ücretsiz yazı tipiyle (49 font, tırnaklı/tırnaksız dahil), aynı harf boyunda ve renkte yazar. Başka oyuna geçtiğinizde
    yazının değiştiğini kendisi fark eder ve yeniden öğrenir. Tutmadıysa **Altyazı Görünümü… → Baştan öğren**.
 
