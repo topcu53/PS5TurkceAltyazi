@@ -30,6 +30,9 @@ public sealed class FontEntry
     /// <summary>x-yüksekliği / yazı boyu (em) – aynı ölçüm yöntemiyle; Türkçe yazı boyunu bulmak için.</summary>
     public double XhPerEm { get; set; } = 0.53;
     public double CapPerEm { get; set; } = 0.71;
+    /// <summary>Çizgi kontrastı: yatay çizgi kalınlığı / dikey çizgi kalınlığı (tırnaklı fontlarda düşük). 0 = bilinmiyor.</summary>
+    public double K { get; set; }
+    public double Ck { get; set; }
     public bool Custom { get; set; }
 
     public string Key => System.IO.Path.GetFileNameWithoutExtension(File);
@@ -189,7 +192,7 @@ public static class TtfInfo
 }
 
 /// <summary>Bir altyazı satırının ölçümü.</summary>
-public sealed record LineMeasure(double Xh, double Asc, double R, double S, double W, bool Caps, byte Red, byte Green, byte Blue, bool Outline);
+public sealed record LineMeasure(double Xh, double Asc, double R, double S, double W, bool Caps, byte Red, byte Green, byte Blue, bool Outline, double K = 0);
 
 /// <summary>Oyunun altyazısına göre seçilen yazı tipi ve Türkçe yazının boyu.</summary>
 public sealed record GameFontChoice(FontEntry Font, double EmNorm, string ColorHex, bool Outline, int Samples)
@@ -215,6 +218,8 @@ public sealed class SubtitleFontMatcher
     public GameFontChoice? Current { get; private set; }
     /// <summary>Kullanıcının sabitlediği yazı tipi (null = otomatik seçim). Boy ve renk yine ölçülür.</summary>
     public FontEntry? Fixed { get; set; }
+    /// <summary>Oyuna hazır aile (ör. "eb-garamond"): otomatik seçim yalnızca bu ailenin kalınlıkları arasından yapılır.</summary>
+    public string? FamilyHint { get; set; }
     private double _currentDist = double.MaxValue;
 
     public void Reset()
@@ -257,15 +262,15 @@ public sealed class SubtitleFontMatcher
         if (src.Count < 3) return false;
 
         double r = Median(src.Select(m => m.R)), s = Median(src.Select(m => m.S)), w = Median(src.Select(m => m.W));
+        double k = Median(src.Where(m => m.K > 0).Select(m => m.K));
         double xh = Median(src.Select(m => m.Xh));
         FontEntry? best = null;
         double bestD = double.MaxValue;
         foreach (var f in FontCatalog.All)
         {
-            if (f.Serif || f.Custom) continue;
-            double d = useCaps
-                ? Math.Abs(s - f.Cs) / 0.03 + Math.Abs(w - f.Cw) / 0.05
-                : Math.Abs(s - f.S) / 0.03 + Math.Abs(w - f.W) / 0.05 + Math.Abs(r - f.R) / 0.04;
+            if (f.Custom) continue; // tırnaklı (serif) fontlar da aday: çizgi kontrastıyla ayırt edilir
+            if (FamilyHint != null && !f.Key.StartsWith(FamilyHint + "-", StringComparison.OrdinalIgnoreCase)) continue;
+            double d = Distance(f, useCaps, r, s, w, k);
             if (d < bestD) { bestD = d; best = f; }
         }
         if (best == null) return false;
@@ -281,9 +286,7 @@ public sealed class SubtitleFontMatcher
         if (Fixed == null && Current != null && FontCatalog.Find(Current.Font.Key) != null && Current.Font.Key != best.Key)
         {
             var cur = Current.Font;
-            double curD = useCaps
-                ? Math.Abs(s - cur.Cs) / 0.03 + Math.Abs(w - cur.Cw) / 0.05
-                : Math.Abs(s - cur.S) / 0.03 + Math.Abs(w - cur.W) / 0.05 + Math.Abs(r - cur.R) / 0.04;
+            double curD = Distance(cur, useCaps, r, s, w, k);
             if (bestD > curD * 0.75 || src.Count < 6) chosen = cur;
         }
 
@@ -299,6 +302,16 @@ public sealed class SubtitleFontMatcher
         Current = next;
         _currentDist = bestD;
         return changed;
+    }
+
+    /// <summary>Ölçülen yazı ile bir font arasındaki fark (küçük = daha benzer).</summary>
+    private static double Distance(FontEntry f, bool caps, double r, double s, double w, double k)
+    {
+        double fk = caps ? f.Ck : f.K;
+        double dk = fk > 0 && k > 0 ? Math.Abs(k - fk) / 0.10 : 0;
+        return caps
+            ? Math.Abs(s - f.Cs) / 0.03 + Math.Abs(w - f.Cw) / 0.05 + dk
+            : Math.Abs(s - f.S) / 0.03 + Math.Abs(w - f.W) / 0.05 + Math.Abs(r - f.R) / 0.04 + dk;
     }
 
     /// <summary>
@@ -372,6 +385,26 @@ public sealed class SubtitleFontMatcher
         runs.Sort();
         double stroke = runs.Count % 2 == 1 ? runs[runs.Count / 2] : (runs[runs.Count / 2 - 1] + runs[runs.Count / 2]) / 2.0;
 
+        // Çizgi kontrastı: x-yüksekliği bandındaki yatay çizgilerin kalınlığı (sütunlardaki kısa dikey koşular)
+        var hruns = new List<int>();
+        for (int x = 0; x < w; x++)
+        {
+            int n = 0;
+            for (int y = xTop; y < baseRow; y++)
+            {
+                if (ink[y * w + x]) n++;
+                else if (n > 0) { if (n < 0.5 * xh) hruns.Add(n); n = 0; }
+            }
+        }
+        double hstroke = stroke;
+        if (hruns.Count > 0)
+        {
+            hruns.Sort();
+            hstroke = hruns.Count % 2 == 1 ? hruns[hruns.Count / 2] : (hruns[hruns.Count / 2 - 1] + hruns[hruns.Count / 2]) / 2.0;
+        }
+        // Küçük yazıda (x-yüksekliği < 14 px) piksel yuvarlaması kontrastı bozar → kullanma
+        double contrast = xh >= 14 && stroke > 0 ? hstroke / stroke : 0;
+
         int c0 = -1, c1 = -1;
         for (int x = 0; x < w; x++)
             for (int y = 0; y < h; y++)
@@ -412,7 +445,7 @@ public sealed class SubtitleFontMatcher
         bool outline = edge > 0 && bg > 80 && darkEdge > edge * 0.55;
 
         return new LineMeasure(xh, asc, xh / (double)asc, stroke / xh, width / (double)text.Length / xh, caps,
-            MedianByte(rs), MedianByte(gs), MedianByte(bs), outline);
+            MedianByte(rs), MedianByte(gs), MedianByte(bs), outline, contrast);
     }
 
     private static int Otsu(int[] hist, int total)

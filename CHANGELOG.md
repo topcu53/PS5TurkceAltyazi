@@ -1,5 +1,15 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.5 – Oyunlara en yakın ücretsiz fontlar
+
+- 18 yeni açık lisanslı yazı tipi dosyası (Türkçe karakterli): Arimo, Inter, Libre Franklin, EB Garamond, Crimson Pro,
+  Libre Baskerville, Cormorant Garamond. Katalog artık 49 font.
+- Tırnaklı (serif) fontlar da otomatik eşleşmeye katıldı: yeni "çizgi kontrastı" ölçümü (ince yatay / kalın dikey
+  çizgi) serif ve sans yazıyı ayırt eder. RDR2 gibi oyunlarda en yakın font ölçümle bulunur.
+- Hazır oyun eşleşmeleri: GTA V → Arimo (Chalet 1960 yerine), The Last of Us → Barlow (FF DIN yerine),
+  Elden Ring → EB Garamond (Agmena yerine). Kalınlık ve boy yine ekrandan ölçülür.
+- Tüm fontların ölçüleri oyundaki ölçümle aynı yöntemle yeniden hesaplandı (boy daha isabetli).
+
 ## v1.4 – Altyazı her zaman orijinal boyunda
 
 - Yazı artık hiç küçültülmüyor: uzun çeviriler orijinal boyda kalır ve **aşağıya doğru satır satır** iner

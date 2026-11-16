@@ -2,8 +2,13 @@ Altyazı+ ile gelen yazı tipleri ücretsiz ve açık lisanslıdır (Google Font
 
 SIL Open Font License 1.1 (https://openfontlicense.org):
   Noto Sans, Noto Serif, Open Sans, Barlow, Barlow Semi Condensed, Barlow Condensed, Montserrat,
-  Oswald
+  Oswald, Arimo, Inter, Libre Franklin, EB Garamond, Crimson Pro, Libre Baskerville, Cormorant Garamond
+  (Copyright: The Arimo / Inter / Libre Franklin / EB Garamond / Crimson Pro / Libre Baskerville /
+   Cormorant Project Authors; ayrılmış font adı yoktur)
 Apache License 2.0: Roboto, Roboto Condensed
 
 Türkçe karakterler için "latin" ve "latin-ext" alt kümeleri tek dosyada birleştirilmiştir (değiştirilmiş sürüm).
 Oyunların kendi yazı tipleri programla DAĞITILMAZ; kullanıcı kendi sahip olduğu font dosyasını ekleyebilir.
+
+Hazır oyun eşleşmeleri (yalnızca benzer ücretsiz fontlar; oyunların kendi fontları değildir):
+  GTA V (Chalet 1960) → Arimo • The Last of Us (FF DIN) → Barlow • Elden Ring (Agmena) → EB Garamond

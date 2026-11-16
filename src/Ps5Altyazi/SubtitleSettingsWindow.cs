@@ -129,7 +129,9 @@ public sealed class SubtitleSettingsWindow : Window
 
         var gameRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0) };
         gameRow.Children.Add(new TextBlock { Text = "Oyun:", Width = 70, VerticalAlignment = VerticalAlignment.Center });
-        foreach (var name in _s.GameFonts.Keys.Append("Genel").Append(_s.ActiveGame).Distinct().OrderBy(n => n)) _gameBox.Items.Add(name);
+        foreach (var name in _s.GameFonts.Keys.Append("Genel").Append(_s.ActiveGame)
+                     .Concat(Ps5Altyazi.Fonts.GamePresets.All.Select(g => g.Name)).Append("Red Dead Redemption 2")
+                     .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n)) _gameBox.Items.Add(name);
         _gameBox.Text = _s.ActiveGame;
         _gameBox.ToolTip = "Oyunun adını yazın ya da listeden seçin (ör. RDR2, GTA 6). Her oyunun yazı tipi ayrı öğrenilir.";
         _gameBox.SelectionChanged += (_, _) => { if (_gameBox.SelectedItem is string g) Dispatcher.BeginInvoke(() => SwitchGame(g)); };

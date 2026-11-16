@@ -58,6 +58,9 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
    Program birkaç altyazıdan sonra oyunun yazısına en benzer yazı tipini, harf boyunu ve rengini kendisi bulur ve bu oyun için
    hatırlar. İsterseniz listeden başka bir font seçebilir ya da oyunun kendi font dosyası sizdeyse **Dosyadan ekle…** ile
    kullanabilirsiniz. (Oyunların kendi fontları lisanslı olduğu için programla birlikte gelmez.)
+   Hazır eşleşmesi olan oyunlar (listeden seçin): **GTA V**, **The Last of Us**, **Elden Ring** – bu oyunlarda oyunun
+   fontuna en yakın ücretsiz font ailesi kullanılır. Diğer oyunlarda (ör. RDR2) program 49 ücretsiz font arasından
+   tırnaklı/tırnaksız ayrımı dahil en yakınını ölçerek seçer.
 
 ### Kısayollar (her pencerede çalışır)
 
