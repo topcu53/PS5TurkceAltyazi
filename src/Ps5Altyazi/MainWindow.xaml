@@ -47,7 +47,7 @@
             <CheckBox x:Name="SubtitleWindowCheck" IsChecked="True" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#EEEEEE"
                       FontWeight="Bold" Content="Türkçe altyazı (F8)" Checked="SubtitleWindowCheck_Changed" Unchecked="SubtitleWindowCheck_Changed"/>
             <CheckBox x:Name="ScreenCheck" VerticalAlignment="Center" Margin="12,0,0,0" Foreground="#EEEEEE" FontWeight="Bold"
-                      Content="Oyun içi yazılar – tuş ipuçları (F7)" Checked="ScreenCheck_Changed" Unchecked="ScreenCheck_Changed"
+                      Content="Tuş ipuçlarını sürekli çevir (deneysel) – ekranı bir kez çevirmek için F7" Checked="ScreenCheck_Changed" Unchecked="ScreenCheck_Changed"
                       ToolTip="Oynanış ekranındaki tuş ipuçlarını (Greet, Press X to …), görev ve ipucu yazılarını Türkçeye çevirir. Menüler çevrilmez; tuş simgeleri örtülmez."/>
             <Button Content="Altyazı Görünümü…" Click="SubtitleAppearance_Click"/>
             <Button Content="📺 TV Modu…" FontWeight="Bold" Click="TvMode_Click"/>

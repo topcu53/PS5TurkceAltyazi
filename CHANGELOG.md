@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.11 – F7: "Ekranı çevir" (anlık, sabit)
+
+- F7 artık ekranı **bir kez** okuyup çevirir: tuş ipuçları, görev ve bilgi yazıları kendi yerlerinde Türkçe görünür ve
+  yazı miktarına göre 8–40 sn **sabit** kalır; tekrar F7'ye basınca hemen kalkar. Okuma tek kareden yapıldığı için
+  titreme / gidip gelme olmaz; zaman kısıtı olmadığından yazı daha büyütülerek (daha az OCR hatasıyla) okunur.
+- Sürekli takip eden eski mod ana penceredeki kutuyla açılabilir (deneysel, varsayılan kapalı).
+- Fikir: benzer açık kaynak proje CouchSubs'ın "Ekranı çevir" yaklaşımı (kod alınmadı, kendi uygulamamız).
+
 ## v1.10 – Sabit yazı tipi ve boy, sağdaki tuş listesi düzgün
 
 - Yazı tipi/boy artık bir altyazıdan yalnızca bir kez ölçülüyor (kararan kareler tekrar tekrar ölçülmüyor).

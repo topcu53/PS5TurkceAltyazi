@@ -33,7 +33,7 @@ Hazır dosyalar **[Releases](../../releases)** sayfasındadır:
 | Kısayol | |
 |---|---|
 | F6 | Çeviriyi başlat / durdur |
-| F7 | Oyun içi yazılar aç / kapat |
+| F7 | Ekranı çevir: tuş ipuçları, görevler (tekrar basınca kalkar) |
 | F8 | Türkçeyi göster / gizle |
 
 ## Klasörler

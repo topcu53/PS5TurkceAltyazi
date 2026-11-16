@@ -132,7 +132,7 @@ public partial class MainWindow
     {
         ScreenCheck.IsChecked = _settings.ScreenTranslateEnabled;
         if (_settings.ScreenTranslateEnabled)
-            Log.Info("Oyun içi yazı çevirisi AÇIK (tuş ipuçları, görev / ipucu yazıları; menüler hariç). Kapatmak için F7.");
+            Log.Info("Oyun içi yazıları sürekli çevirme AÇIK (deneysel). Ekranı bir kez çevirmek için F7.");
         if (!EnglishWords.IsLoaded) Log.Warn("İngilizce kelime listesi yüklenemedi; OCR düzeltmesi yapılmayacak.");
     }
 
@@ -143,7 +143,7 @@ public partial class MainWindow
     }
 
     /// <summary>F7: oyun içi yazı çevirisini aç / kapat.</summary>
-    private void ToggleScreenTranslation() => SetScreenTranslation(!_settings.ScreenTranslateEnabled, "F7");
+    private void ToggleScreenTranslation() => ToggleScreenSnapshot();
 
     private void SetScreenTranslation(bool on, string source)
     {
@@ -153,7 +153,7 @@ public partial class MainWindow
         if (ScreenCheck.IsChecked != on) ScreenCheck.IsChecked = on;
         if (!on) ClearScreenItems();
         _thumbAtScan = null;
-        Notify(on ? "Oyun içi yazı çevirisi açık (F7)" : "Oyun içi yazı çevirisi kapalı (F7)");
+        Notify(on ? "Oyun içi yazılar sürekli çevriliyor (deneysel)" : "Sürekli çeviri kapalı – ekranı çevirmek için F7");
         Log.Info($"[{source}] Oyun içi yazı çevirisi {(on ? "AÇILDI (tuş ipuçları, görev / ipucu yazıları; menüler hariç)" : "KAPATILDI")}.");
         if (on && _ocr is not WindowsOcrEngine)
             Log.Warn("Oyun içi yazı çevirisi için Windows OCR (İngilizce paket) gerekir.");
@@ -170,7 +170,7 @@ public partial class MainWindow
     /// <summary>Her canlı karede çağrılır (arayüz iş parçacığı).</summary>
     private void ScreenTick(FrameResult r)
     {
-        if (!ScreenOn || _ocr is not WindowsOcrEngine) return;
+        if (!ScreenOn || _snapItems != null || _snapCts != null || _ocr is not WindowsOcrEngine) return;
         _screenOcr ??= WindowsOcrEngine.Create(out _); // altyazı OCR'ı ile aynı anda çalışabilsin diye ayrı motor
         if (_screenOcr is not { } engine) return;
 
@@ -614,7 +614,10 @@ public partial class MainWindow
     private void PushScreen(bool force = false)
     {
         bool muted = !_settings.SubtitleWindowEnabled;
-        var show = ScreenOn && !muted && !_menuOpen ? _screenItems.Where(IsShowable).Where(i => i.FrameW > 0).ToList() : new List<ScreenItem>();
+        var show = muted ? new List<ScreenItem>()
+            : _snapItems != null ? _snapItems.ToList()                          // F7 ile anlık çevrilmiş ekran (sabit)
+            : ScreenOn && !_menuOpen ? _screenItems.Where(IsShowable).Where(i => i.FrameW > 0).ToList()
+            : new List<ScreenItem>();
 
         string key = _lastGameScreenPx + "|" + string.Join("|", show.Select(i => $"{i.Px}:{i.Turkish}"));
         if (!force && key == _lastScreenKey) return;

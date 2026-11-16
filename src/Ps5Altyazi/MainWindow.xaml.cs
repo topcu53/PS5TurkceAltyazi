@@ -143,7 +143,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.10 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v1.11 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1405,7 +1405,7 @@ public partial class MainWindow : Window
         bool f8 = NativeMethods.RegisterHotKey(hwnd, HotkeyF8, ModNoRepeat, VkF8);
         bool f9 = NativeMethods.RegisterHotKey(hwnd, HotkeyF9, ModNoRepeat, VkF9);
         if (!f9) Log.Warn("F9 (çevirili ekran görüntüsü) kısayolu kaydedilemedi: başka bir program kullanıyor olabilir. 'Kare kaydet' düğmesi de aynı görüntüyü kaydeder.");
-        if (f6 && f7 && f8) Log.Success("Kısayollar hazır: F6 = çeviriyi başlat/durdur, F7 = oyun içi yazı çevirisi (tuş ipuçları) aç/kapat, " +
+        if (f6 && f7 && f8) Log.Success("Kısayollar hazır: F6 = çeviriyi başlat/durdur, F7 = ekranı çevir (tuş ipuçları, görevler; tekrar basınca kalkar), " +
                                         "F8 = Türkçe altyazıyı göster/gizle, F9 = çevirili ekran görüntüsü (her pencerede çalışır).");
         else Log.Warn($"Kısayol kaydedilemedi ({(f6 ? "" : "F6 ")}{(f7 ? "" : "F7 ")}{(f8 ? "" : "F8")}): başka bir program bu tuşu kullanıyor olabilir. " +
                       "Düğmeleri kullanabilir veya o programı kapatıp yeniden başlatabilirsiniz.");
@@ -1551,6 +1551,13 @@ public partial class MainWindow : Window
             // v1.2: en düşük gecikme için 60 FPS (Remote Play "Yüksek" kare hızında 60 kare gönderir)
             if (_settings.Fps == 30) { _settings.Fps = 60; Log.Info("Hedef FPS 60'a çıkarıldı (en düşük altyazı gecikmesi)."); }
             _settings.SettingsVersion = 4;
+            _settings.Save();
+        }
+        if (_settings.SettingsVersion < 5)
+        {
+            // v1.11: tuş ipuçları varsayılan olarak F7 ile anlık çevrilir; sürekli mod (titreyebilen) deneysel ve kapalı
+            _settings.ScreenTranslateEnabled = false;
+            _settings.SettingsVersion = 5;
             _settings.Save();
         }
     }
