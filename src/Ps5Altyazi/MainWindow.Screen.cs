@@ -47,6 +47,7 @@ public partial class MainWindow
         public bool Hidden;           // yazı değişti / kayboldu, sonraki taramayı bekliyor
         public bool[] Mask = Array.Empty<bool>();
         public int MaskCount;
+        public int MaskBad;           // üst üste kaç karede yazı değişmiş göründü (titremesin diye hemen gizlenmez)
         public string[] IconPngs = Array.Empty<string>();
         public int FrameW, FrameH;
     }
@@ -56,6 +57,57 @@ public partial class MainWindow
         "mission objectives and hints. Translate briefly, as in a game's Turkish localization.";
 
     private static readonly Regex TagRx = new("<x id=\"(\\d+)\"\\s*/>", RegexOptions.Compiled);
+
+    private static readonly System.Globalization.CultureInfo TrCulture = System.Globalization.CultureInfo.GetCultureInfo("tr-TR");
+
+    private enum CaseStyle { Normal, Upper, Title }
+
+    private static CaseStyle StyleOf(string tagged)
+    {
+        var words = TagRx.Replace(tagged, " ").Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(w => new string(w.Where(char.IsLetter).ToArray())).Where(w => w.Length > 0).ToList();
+        if (words.Count == 0) return CaseStyle.Normal;
+        if (words.All(w => w.All(char.IsUpper)) && words.Sum(w => w.Length) >= 4) return CaseStyle.Upper;
+        int title = words.Count(w => char.IsUpper(w[0]));
+        return words.Count >= 2 && title >= words.Count * 0.8 ? CaseStyle.Title : CaseStyle.Normal;
+    }
+
+    /// <summary>Etiketlerin dışındaki metne dönüşüm uygular (&lt;x id="1"/&gt; bozulmasın).</summary>
+    private static string MapOutsideTags(string tagged, Func<string, string> f)
+    {
+        var sb = new StringBuilder();
+        int last = 0;
+        foreach (Match m in TagRx.Matches(tagged))
+        {
+            sb.Append(f(tagged[last..m.Index])).Append(m.Value);
+            last = m.Index + m.Length;
+        }
+        sb.Append(f(tagged[last..]));
+        return sb.ToString();
+    }
+
+    private static string NormalizeCase(string tagged)
+    {
+        if (StyleOf(tagged) == CaseStyle.Normal) return tagged;
+        string lower = MapOutsideTags(tagged, t => Regex.Replace(t.ToLowerInvariant(), @"\bi\b", "I"));
+        int i = 0;
+        while (i < lower.Length && !char.IsLetter(lower[i])) { if (lower[i] == '<') { int e = lower.IndexOf('>', i); i = e < 0 ? lower.Length : e + 1; } else i++; }
+        return i < lower.Length ? lower[..i] + char.ToUpperInvariant(lower[i]) + lower[(i + 1)..] : lower;
+    }
+
+    private static string RestoreCase(string originalTagged, string tr)
+    {
+        switch (StyleOf(originalTagged))
+        {
+            case CaseStyle.Upper:
+                return MapOutsideTags(tr, t => t.ToUpper(TrCulture));
+            case CaseStyle.Title:
+                return MapOutsideTags(tr, t => Regex.Replace(t, @"(^|[\s\-(""'])(\p{Ll})",
+                    m => m.Groups[1].Value + m.Groups[2].Value.ToUpper(TrCulture)));
+            default:
+                return tr;
+        }
+    }
 
     private readonly List<ScreenItem> _screenItems = new();
     private readonly Dictionary<string, string?> _screenTr = new(StringComparer.Ordinal); // İngilizce(etiketli) → Türkçe (null = çevrilmez)
@@ -132,12 +184,17 @@ public partial class MainWindow
         {
             if (it.Hidden || it.MaskCount < 4 || it.FrameW != game.Width || it.FrameH != game.Height) continue;
             var (mask, count) = ScreenTextReader.TextMask(game, it.Px);
-            if (count < it.MaskCount * 0.4 || ScreenTextReader.MaskDistance(mask, it.Mask) > 0.45)
+            bool gone = count < it.MaskCount * 0.3 || ScreenTextReader.MaskDistance(mask, it.Mask) > 0.55;
+            // Arkadaki sahne (at, ışık) hareket ettikçe maske oynar: ancak ~0,1 sn boyunca değişik kalırsa gizle
+            it.MaskBad = gone ? it.MaskBad + 1 : 0;
+            if (it.MaskBad >= 6)
             {
                 it.Hidden = true;
+                it.MaskBad = 0;
                 changed = true;
                 _screenForceScan = true;
             }
+            else if (gone) _screenForceScan = true; // değişmiş olabilir: yeniden okuyup doğrula
         }
         if (changed) PushScreen();
 
@@ -195,8 +252,10 @@ public partial class MainWindow
             _screenOcrMsSum += res.Milliseconds;
 
             // Menü / harita açık mı? (çok sayıda yazı ya da büyük yazılı liste) → gösterme, çevirme
-            int big = res.Blocks.Count(b => b.LineHeight >= 0.03 * game.Height);
-            bool menu = res.Blocks.Count >= 7 || big >= 4;
+            // Yanında tuş simgesi olan yazılar (Fırçala □, Besle ✚ ...) tuş ipucu listesidir, menü sayılmaz
+            var plain = res.Blocks.Where(b => b.SideIcon == 0 && b.Icons.Count == 0).ToList();
+            int big = plain.Count(b => b.LineHeight >= 0.03 * game.Height);
+            bool menu = plain.Count >= 7 || big >= 4;
             if (menu != _menuOpen)
             {
                 _menuOpen = menu;
@@ -279,11 +338,18 @@ public partial class MainWindow
         }
 
         // Bu taramada görülmeyenler: bir kez görülmezse gizle, iki kez görülmezse kaldır
+        // OCR bir taramada satırı okuyamayabilir: yazı ekranda hâlâ duruyorsa (maske tutuyor) gizleme → titreme olmaz
         foreach (var it in _screenItems.Where(i => !matched.Contains(i)).ToList())
         {
             it.Missed++;
-            it.Hidden = true;
-            if (it.Missed >= 2 || it.Seen < 2) _screenItems.Remove(it);
+            bool stillThere = false;
+            if (it.MaskCount >= 4 && it.FrameW == game.Width && it.FrameH == game.Height)
+            {
+                var (mask, count) = ScreenTextReader.TextMask(game, it.Px);
+                stillThere = count >= it.MaskCount * 0.5 && ScreenTextReader.MaskDistance(mask, it.Mask) <= 0.4;
+            }
+            if (!stillThere) it.Hidden = true;
+            if (it.Missed >= (stillThere ? 4 : 2) || (it.Seen < 2 && !stillThere)) _screenItems.Remove(it);
         }
 
         // Üst üste binen kopyaları temizle (en son görüleni tut)
@@ -359,12 +425,16 @@ public partial class MainWindow
 
                 try
                 {
-                    var (results, fromCache, engineName, ms) = await service.TranslateManyAsync(pending, ScreenContext, CancellationToken.None);
+                    // BÜYÜK HARF / Her Kelimesi Büyük yazılar (RDR2 küçük büyük harfleri) çeviriyi bozar ("Bolt Action" → "Ilt Eylem"):
+                    // cümle düzenine çevirip gönder, sonucu oyundaki görünüme geri çevir
+                    var request = pending.Select(NormalizeCase).ToList();
+                    var (results, fromCache, engineName, ms) = await service.TranslateManyAsync(request, ScreenContext, CancellationToken.None);
                     for (int k = 0; k < pending.Count; k++)
                     {
                         string en = pending[k];
                         string? tr = results[k]?.Trim();
                         if (tr == null) continue; // çevrilemedi → sonraki taramada tekrar denenir
+                        tr = RestoreCase(en, tr);
                         string plainTr = WebUtility.HtmlDecode(TagRx.Replace(tr, " ")).Trim();
                         string plainEn = WebUtility.HtmlDecode(TagRx.Replace(en, " ")).Trim();
                         bool same = plainTr.Length == 0 || string.Equals(Simplify(plainTr), Simplify(plainEn), StringComparison.OrdinalIgnoreCase);

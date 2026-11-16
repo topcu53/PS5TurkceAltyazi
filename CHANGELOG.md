@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.8 – Tuş ipuçları: titreme, uzun listeler, büyük harf çevirisi
+
+- Titreme giderildi: arkada at / ışık hareket ettiğinde Türkçe kutu hemen kaldırılmıyor; yazı ~0,1 sn boyunca
+  gerçekten değişik görünürse kaldırılır. OCR bir taramada satırı okuyamasa da yazı ekranda duruyorsa kutu kalır.
+- Uzun tuş listeleri (Bilgi göster, Eyeri çıkar, Fırçala, Besle, Yönlendir, Okşa, Kaç…) artık menü sanılmıyor:
+  yanında tuş simgesi olan satırlar menü sayımına girmez.
+- BÜYÜK HARF / Her Kelimesi Büyük yazılar (RDR2) çeviriye cümle düzeninde gönderiliyor ("Bolt Action" → "Ilt Eylem"
+  gibi saçma çeviriler biter); sonuç Türkçe kurallarıyla geri büyütülür (I → İ doğru).
+
 ## v1.7 – Çevirili ekran görüntüsü, ortalı altyazı
 
 - **F9 = çevirili ekran görüntüsü**: oyunun karesi + Türkçe altyazı (ve oyun içi yazılar), TV'de görünen şekliyle
