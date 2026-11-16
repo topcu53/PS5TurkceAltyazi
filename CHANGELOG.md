@@ -1,5 +1,9 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.0.1 – Yeni logo
+
+- Altyazı Plus logosu (uygulama simgesi, pencere, başlık, GitHub sayfası).
+
 ## v2.0 – Yeni arayüz ve logo
 
 - Yeni logo (uygulama simgesi, pencere, görev çubuğu).
