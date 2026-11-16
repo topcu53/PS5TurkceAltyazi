@@ -254,6 +254,7 @@ public sealed class SubtitleFontMatcher
     }
 
     private bool _restyled;
+    private DateTime _lastRestyle = DateTime.MinValue;
 
     /// <summary>
     /// Oyun (ya da altyazı stili) değişti mi? Son 4 ölçüm öncekilerden belirgin farklıysa eski ölçümler silinir;
@@ -261,8 +262,9 @@ public sealed class SubtitleFontMatcher
     /// </summary>
     private void DetectStyleChange(List<LineMeasure> list)
     {
-        const int recent = 4;
-        if (list.Count < recent + 4) return;
+        const int recent = 5;
+        if (list.Count < recent + 6) return;
+        if (DateTime.UtcNow - _lastRestyle < TimeSpan.FromMinutes(3)) return; // aynı oyunda sık sık sıfırlanmasın
         var old = list.Take(list.Count - recent).ToList();
         var now = list.Skip(list.Count - recent).ToList();
         double xo = Median(old.Select(m => m.Xh)), xn = Median(now.Select(m => m.Xh));
@@ -273,11 +275,14 @@ public sealed class SubtitleFontMatcher
         // Her yeni ölçüm aynı yöne sapmalı (tek tük OCR hatası stil değişimi sayılmasın)
         bool allBigger = now.All(m => m.Xh > xo * 1.12), allSmaller = now.All(m => m.Xh < xo * 0.88);
         bool sizeJump = (allBigger || allSmaller) && Math.Abs(xn - xo) > xo * 0.15;
-        bool shapeJump = Math.Abs(sn - so) > 0.05 || Math.Abs(wn - wo) > 0.10 || dk > 0.22;
+        // Kısa satırlar (ör. "Of all the days...") ölçüyü oynatır: şekil değişimi için en az iki ölçü birlikte belirgin değişmeli
+        int shapeVotes = (Math.Abs(sn - so) > 0.06 ? 1 : 0) + (Math.Abs(wn - wo) > 0.14 ? 1 : 0) + (dk > 0.28 ? 1 : 0);
+        bool shapeJump = shapeVotes >= 2;
         if (!sizeJump && !shapeJump) return;
         list.RemoveRange(0, list.Count - recent);
         (ReferenceEquals(list, _lower) ? _caps : _lower).Clear(); // diğer listede de eski oyunun ölçümleri var
         _restyled = true;
+        _lastRestyle = DateTime.UtcNow;
         Log.Info("Altyazı yazısı değişti (başka oyun?): yazı tipi ve boy yeniden öğreniliyor.");
     }
 

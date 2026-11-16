@@ -503,6 +503,7 @@ public partial class MainWindow
         _lastScreenKey = key;
 
         var pieces = show.SelectMany(BuildPieces).ToList();
+        _shownPieces = pieces;
 
         // PC
         if (pieces.Count > 0 && _screenWin == null) _screenWin = new ScreenOverlayWindow();

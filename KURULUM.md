@@ -60,6 +60,8 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 
 ### Kısayollar (her pencerede çalışır)
 
+- **F9** – çevirili ekran görüntüsü (TV'de görünen Türkçe yazıyla birlikte; *captures* klasörüne `ceviri-*.png`)
+
 | Tuş | İşlev |
 |---|---|
 | **F6** | Çeviriyi başlat / durdur |

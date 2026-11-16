@@ -173,6 +173,15 @@
     // Yazı küçültülmez (orijinalle aynı boy); uzun metin satır satır aşağı iner.
     // Ekranın altından taşarsa kutu yalnızca gerektiği kadar yukarı kaydırılır.
     if (anchor) {
+      // Yazıyı siyah kutunun içinde dikeyde ortala: kutu en az orijinal altyazı kadar yüksek, yazı tam ortada
+      var target = parseFloat(sub.style.minHeight) || 0;
+      sub.style.minHeight = '';
+      var natural = sub.offsetHeight; // 6 + 8 px iç boşlukla yazının kendi yüksekliği
+      if (target > natural) {
+        var extra = (target - natural) / 2;
+        sub.style.paddingTop = (6 + extra) + 'px';
+        sub.style.paddingBottom = (8 + extra) + 'px';
+      }
       var top = parseFloat(sub.style.top) || 0, h = sub.offsetHeight;
       if (top + h > 1072) sub.style.top = Math.max(0, 1072 - h) + 'px';
     }

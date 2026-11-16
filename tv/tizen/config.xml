@@ -2,7 +2,7 @@
 <!-- Altyazı+ – Samsung Tizen TV uygulaması. Yapımcı: Burak Topcu.
      Paketlemek için: tizen/README.md (Tizen Studio + Samsung sertifikası gerekir). -->
 <widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets"
-        id="http://github.com/topcu53/PS5TurkceAltyazi" version="1.0.8" viewmodes="maximized">
+        id="http://github.com/topcu53/PS5TurkceAltyazi" version="1.0.9" viewmodes="maximized">
     <tizen:application id="PS5TRalt01.PS5TurkceAltyazi" package="PS5TRalt01" required_version="2.3"/>
     <content src="index.html"/>
     <name>Altyazı+</name>

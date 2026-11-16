@@ -142,7 +142,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.6 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v1.7 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1381,8 +1381,8 @@ public partial class MainWindow : Window
 
     // ───────────────────────────── Kısayollar ve tek tuşla kullanım (Aşama 6) ─────────────────────────────
 
-    private const int HotkeyF6 = 0x5046, HotkeyF7 = 0x5047, HotkeyF8 = 0x5048;
-    private const uint ModNoRepeat = 0x4000, VkF6 = 0x75, VkF7 = 0x76, VkF8 = 0x77;
+    private const int HotkeyF6 = 0x5046, HotkeyF7 = 0x5047, HotkeyF8 = 0x5048, HotkeyF9 = 0x5049;
+    private const uint ModNoRepeat = 0x4000, VkF6 = 0x75, VkF7 = 0x76, VkF8 = 0x77, VkF9 = 0x78;
     private const int WmHotkey = 0x0312;
     private HwndSource? _hwndSource;
 
@@ -1396,8 +1396,10 @@ public partial class MainWindow : Window
         bool f6 = NativeMethods.RegisterHotKey(hwnd, HotkeyF6, ModNoRepeat, VkF6);
         bool f7 = NativeMethods.RegisterHotKey(hwnd, HotkeyF7, ModNoRepeat, VkF7);
         bool f8 = NativeMethods.RegisterHotKey(hwnd, HotkeyF8, ModNoRepeat, VkF8);
+        bool f9 = NativeMethods.RegisterHotKey(hwnd, HotkeyF9, ModNoRepeat, VkF9);
+        if (!f9) Log.Warn("F9 (çevirili ekran görüntüsü) kısayolu kaydedilemedi: başka bir program kullanıyor olabilir. 'Kare kaydet' düğmesi de aynı görüntüyü kaydeder.");
         if (f6 && f7 && f8) Log.Success("Kısayollar hazır: F6 = çeviriyi başlat/durdur, F7 = oyun içi yazı çevirisi (tuş ipuçları) aç/kapat, " +
-                                        "F8 = Türkçe altyazıyı göster/gizle (her pencerede çalışır).");
+                                        "F8 = Türkçe altyazıyı göster/gizle, F9 = çevirili ekran görüntüsü (her pencerede çalışır).");
         else Log.Warn($"Kısayol kaydedilemedi ({(f6 ? "" : "F6 ")}{(f7 ? "" : "F7 ")}{(f8 ? "" : "F8")}): başka bir program bu tuşu kullanıyor olabilir. " +
                       "Düğmeleri kullanabilir veya o programı kapatıp yeniden başlatabilirsiniz.");
     }
@@ -1410,6 +1412,7 @@ public partial class MainWindow : Window
             if (id == HotkeyF6) { ToggleSystem("F6"); handled = true; }
             else if (id == HotkeyF7) { ToggleScreenTranslation(); handled = true; }
             else if (id == HotkeyF8) { ToggleSubtitleVisibility(); handled = true; }
+            else if (id == HotkeyF9) { TakeTranslatedSnapshot(); handled = true; }
         }
         return IntPtr.Zero;
     }
@@ -1421,6 +1424,7 @@ public partial class MainWindow : Window
         NativeMethods.UnregisterHotKey(hwnd, HotkeyF6);
         NativeMethods.UnregisterHotKey(hwnd, HotkeyF7);
         NativeMethods.UnregisterHotKey(hwnd, HotkeyF8);
+        NativeMethods.UnregisterHotKey(hwnd, HotkeyF9);
         _hwndSource?.RemoveHook(WndProc);
     }
 
@@ -1574,6 +1578,7 @@ public partial class MainWindow : Window
     private void ShowTurkish(string text)
     {
         _subWin?.ShowSubtitle(text);
+        _shownTurkish = text ?? "";
         if (_server == null) return;
         if (string.IsNullOrEmpty(text)) _server.Clear();
         else _server.ShowSubtitle(text, _lastCoverNorm);
@@ -2019,6 +2024,7 @@ public partial class MainWindow : Window
         {
             string path = SavePng(f, "kare");
             Log.Success($"Kare kaydedildi (oyun alanı {f.Width}x{f.Height}): {path}");
+            if (SaveTranslatedSnapshot() is { } tr) Log.Success($"Çevirili hali (TV'de görünen) kaydedildi: {tr}");
             if (_last?.RegionCrop is { } rc)
                 Log.Success($"Altyazı alanı da kaydedildi: {SavePng(rc, "altyazi-alani")}");
             if (_lastOcrInput is { } oi)

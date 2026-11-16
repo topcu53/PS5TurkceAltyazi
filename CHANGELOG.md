@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.7 – Çevirili ekran görüntüsü, ortalı altyazı
+
+- **F9 = çevirili ekran görüntüsü**: oyunun karesi + Türkçe altyazı (ve oyun içi yazılar), TV'de görünen şekliyle
+  (aynı yazı tipi, boy, renk, siyah kutu). "Kare kaydet" düğmesi de çevirili hâlini ayrıca kaydeder
+  (captures klasörü, ceviri-*.png). Windows'un ekran görüntüsü TV'deki yazıyı göremediği için.
+- TV: Türkçe yazı siyah kutunun içinde dikeyde ortalanır (en üste yapışmaz). TV uygulaması 1.0.9.
+- Yazı tipi: aynı oyunda yanlışlıkla "oyun değişti" sanılması düzeltildi (kısa satırlar artık sıfırlatmaz;
+  en az iki ölçü birlikte değişmeli, en fazla 3 dakikada bir).
+
 ## v1.6 – Yazı tipi tamamen otomatik
 
 - Oyun adı yazma ve yazı tipi seçme kaldırıldı: program fontu, boyu ve rengi her zaman ekrandaki altyazıdan bulur.
