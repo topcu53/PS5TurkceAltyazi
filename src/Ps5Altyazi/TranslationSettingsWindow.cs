@@ -104,15 +104,15 @@ public sealed class TranslationSettingsWindow : Window
         buttons.Children.Add(_saveBtn);
 
         var clearDeepL = new Button { Content = "DeepL Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
-        clearDeepL.Click += (_, _) => { _deepLBox.Clear(); _clearDeepL = true; SetStatus("DeepL anahtarı kaydedince silinecek.", Brushes.DarkOrange); };
+        clearDeepL.Click += (_, _) => { _deepLBox.Clear(); _clearDeepL = true; SetStatus("DeepL anahtarı kaydedince silinecek.", Theme.Warn); };
         buttons.Children.Add(clearDeepL);
 
         var clearAzure = new Button { Content = "Azure Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
-        clearAzure.Click += (_, _) => { _azureBox.Clear(); _clearAzure = true; SetStatus("Azure anahtarı kaydedince silinecek.", Brushes.DarkOrange); };
+        clearAzure.Click += (_, _) => { _azureBox.Clear(); _clearAzure = true; SetStatus("Azure anahtarı kaydedince silinecek.", Theme.Warn); };
         buttons.Children.Add(clearAzure);
 
         var clearGemini = new Button { Content = "Gemini Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
-        clearGemini.Click += (_, _) => { _geminiBox.Clear(); _clearGemini = true; SetStatus("Gemini anahtarı kaydedince silinecek.", Brushes.DarkOrange); };
+        clearGemini.Click += (_, _) => { _geminiBox.Clear(); _clearGemini = true; SetStatus("Gemini anahtarı kaydedince silinecek.", Theme.Warn); };
         buttons.Children.Add(clearGemini);
 
         var closeBtn = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), IsCancel = true };
@@ -121,6 +121,7 @@ public sealed class TranslationSettingsWindow : Window
 
         root.Children.Add(buttons);
         Content = root;
+        Theme.Apply(this);
         Loaded += (_, _) => _deepLBox.Focus();
     }
 
@@ -141,13 +142,13 @@ public sealed class TranslationSettingsWindow : Window
 
         if (deepL == null && azure == null && gemini == null && !mm)
         {
-            SetStatus("En az bir çeviri servisi gerekli (DeepL anahtarı önerilir).", Brushes.Firebrick);
+            SetStatus("En az bir çeviri servisi gerekli (DeepL anahtarı önerilir).", Theme.Bad);
             return;
         }
 
         Result = new TranslationSettingsResult(deepL, azure, region, mm, email, gemini, gModel);
         _saveBtn.IsEnabled = false;
-        SetStatus("Kaydedildi. Servisler test ediliyor…", Brushes.DimGray);
+        SetStatus("Kaydedildi. Servisler test ediliyor…", Theme.Dim);
 
         const string sample = "Hey, partner. We need to talk.";
         var report = new StringBuilder();
@@ -207,7 +208,7 @@ public sealed class TranslationSettingsWindow : Window
         else report.AppendLine("– MyMemory: kapalı");
 
         report.Append(anyOk ? "Ayarlar kaydedildi; pencereyi kapatabilirsiniz." : "Hiçbir servis çalışmadı; anahtarları ve interneti kontrol edin.");
-        SetStatus(report.ToString(), anyOk ? Brushes.ForestGreen : Brushes.Firebrick);
+        SetStatus(report.ToString(), anyOk ? Theme.Good : Theme.Bad);
         _saveBtn.IsEnabled = true;
     }
 
@@ -215,11 +216,11 @@ public sealed class TranslationSettingsWindow : Window
         new() { Text = text, FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 0) };
 
     private static TextBlock Note(string text) =>
-        new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 4, 0, 0) };
+        new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 4, 0, 0) };
 
     private static TextBlock LinkNote(string before, string url, string after)
     {
-        var tb = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 4, 0, 0) };
+        var tb = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 4, 0, 0) };
         tb.Inlines.Add(before);
         var link = new Hyperlink(new Run(url.Replace("https://", ""))) { NavigateUri = new Uri(url) };
         link.RequestNavigate += (_, e) =>

@@ -25,7 +25,7 @@ public sealed class SubtitleSettingsWindow : Window
     public event Action<bool>? FontChanged;
 
     private readonly Func<string> _describeFont;
-    private readonly TextBlock _fontInfo = new() { TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 4, 0, 0) };
+    private readonly TextBlock _fontInfo = new() { TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 4, 0, 0) };
     private readonly ComboBox _gameBox = new() { IsEditable = true, MinWidth = 200 };
     private readonly ComboBox _fontBox = new() { MinWidth = 260 };
     private bool _loadingFont;
@@ -102,11 +102,12 @@ public sealed class SubtitleSettingsWindow : Window
             Text = "İpucu: Altyazı penceresi normalde fare tıklamalarını geçirir, Remote Play'i engellemez. " +
                    "Taşımak için 'Konumu düzenle'yi işaretleyin. Altyazı bitince pencere kendiliğinden gizlenir.",
             TextWrapping = TextWrapping.Wrap,
-            Foreground = Brushes.DimGray,
+            Foreground = Theme.Dim,
             Margin = new Thickness(0, 12, 0, 0)
         });
 
         Content = root;
+        Theme.Apply(this);
         Closed += (_, _) =>
         {
             _sub.SetEditMode(false);
@@ -124,7 +125,7 @@ public sealed class SubtitleSettingsWindow : Window
         {
             Text = "Bir şey seçmenize gerek yok. Program oyunun altyazısını ölçer; Türkçeyi en benzer yazı tipiyle, aynı harf " +
                    "boyunda ve renkte yazar. Başka bir oyuna geçtiğinizde bunu kendisi fark eder ve birkaç altyazıda yeni oyuna uyar.",
-            TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 2, 0, 6)
+            TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 6)
         });
         _fontInfo.Text = _describeFont();
         panel.Children.Add(_fontInfo);

@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.1 – Uygulamaya ait başlık çubuğu, bütün pencereler yeni temada
+
+- Windows başlık çubuğu yerine uygulamanın kendi koyu başlık çubuğu (logo, başlık, küçült / büyüt / kapat; sürükleyerek
+  taşınır, çift tıkla büyür).
+- Altyazı Görünümü, Çeviri Ayarları ve TV Modu pencereleri de aynı koyu temaya geçti (düğmeler, yazı kutuları, bağlantılar).
+
 ## v2.0.1 – Yeni logo
 
 - Altyazı Plus logosu (uygulama simgesi, pencere, başlık, GitHub sayfası).

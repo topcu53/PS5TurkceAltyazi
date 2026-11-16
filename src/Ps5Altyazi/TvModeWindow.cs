@@ -156,6 +156,7 @@ public sealed class TvModeWindow : Window
         root.Children.Add(close);
 
         Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = 900 };
+        Theme.Apply(this);
         _actionButtons = new[] { findBtn, pairBtn, installBtn, launchBtn, extendBtn };
 
         Loaded += (_, _) =>
@@ -276,5 +277,5 @@ public sealed class TvModeWindow : Window
         new() { Text = text, FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 4) };
 
     private static TextBlock Note(string text) =>
-        new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 2, 0, 0) };
+        new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 0) };
 }
