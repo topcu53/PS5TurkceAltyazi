@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.6 – Yazı tipi yöneticisi
+
+- Ana pencerede "🔤 Yazı Tipi" düğmesi. Altyazı Görünümü'nde tüm yazı tipleri tek listede (her biri kendi görünümüyle;
+  eklediğiniz fontlar ★ ile en üstte), "＋ Yazı tipi ekle" ve "🗑 Eklenen fontu kaldır" düğmeleri, seçili fontla canlı
+  Türkçe örnek ve eksik Türkçe harf uyarısı. Seçim anında PC ve TV altyazısına uygulanır.
+
 ## v2.5 – Varsayılan yazı tipi: Arimo Bold
 
 - Altyazı artık varsayılan olarak her oyunda sabit **Arimo Bold** ile yazılır (programın içinde, Türkçe harfler tam;

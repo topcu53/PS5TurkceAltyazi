@@ -62,6 +62,7 @@
                     <CheckBox x:Name="TranslateCheck" IsChecked="True" Content="Çeviri"
                               Checked="TranslateCheck_Changed" Unchecked="TranslateCheck_Changed"/>
                     <Button Content="🎨 Altyazı Görünümü" Click="SubtitleAppearance_Click"/>
+                    <Button Content="🔤 Yazı Tipi" Click="SubtitleAppearance_Click" ToolTip="Altyazı yazı tipini seçin ya da kendi fontunuzu ekleyin"/>
                     <Button Content="🌐 Çeviri Ayarları" Click="TranslationSettings_Click"/>
                     <Button Content="📺 TV Modu" FontWeight="Bold" Click="TvMode_Click"/>
                     <CheckBox x:Name="TvServerCheck" Content="TV / telefon yayını"

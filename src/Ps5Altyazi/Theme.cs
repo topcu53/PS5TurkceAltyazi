@@ -20,6 +20,7 @@ public static class Theme
     public static readonly Brush Text = Frozen("#E8EDF7");
     public static readonly Brush Dim = Frozen("#8B97AD");
     public static readonly Brush Good = Frozen("#4ADE80");
+    public static readonly Brush Accent = Frozen("#33C6FF");
     public static readonly Brush Warn = Frozen("#FFB03B");
     public static readonly Brush Bad = Frozen("#FF6B6B");
     public static readonly Brush Line = Frozen("#222C42");

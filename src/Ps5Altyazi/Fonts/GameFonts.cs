@@ -112,6 +112,14 @@ public static class FontCatalog
 
     public static string PathOf(FontEntry e) => System.IO.Path.Combine(Folder, e.File);
 
+    /// <summary>Kullanıcının eklediği fontu siler (programla gelen fontlar silinmez).</summary>
+    public static void RemoveCustom(FontEntry e)
+    {
+        if (!e.Custom) return;
+        try { System.IO.File.Delete(PathOf(e)); } catch { }
+        _entries = null;
+    }
+
     /// <summary>TV'nin indirebileceği font dosyası mı? (yalnızca bu klasördeki, adı güvenli dosyalar)</summary>
     public static string? ServeablePath(string fileName)
     {
