@@ -119,38 +119,25 @@ public sealed class SubtitleSettingsWindow : Window
     private FrameworkElement FontSection()
     {
         var panel = new StackPanel { Margin = new Thickness(0, 14, 0, 0) };
-        panel.Children.Add(new TextBlock { Text = "Yazı tipi (oyunun altyazısına benzet)", FontWeight = FontWeights.Bold });
+        panel.Children.Add(new TextBlock { Text = "Yazı tipi: otomatik", FontWeight = FontWeights.Bold });
         panel.Children.Add(new TextBlock
         {
-            Text = "Program oyunun altyazısını ölçer ve Türkçeyi en benzer yazı tipiyle, aynı harf boyunda ve renkte yazar. " +
-                   "Her oyun için ayrı hatırlanır. Oyunun kendi font dosyası sizde varsa 'Dosyadan ekle' ile kullanabilirsiniz.",
+            Text = "Bir şey seçmenize gerek yok. Program oyunun altyazısını ölçer; Türkçeyi en benzer yazı tipiyle, aynı harf " +
+                   "boyunda ve renkte yazar. Başka bir oyuna geçtiğinizde bunu kendisi fark eder ve birkaç altyazıda yeni oyuna uyar.",
             TextWrapping = TextWrapping.Wrap, Foreground = Brushes.DimGray, Margin = new Thickness(0, 2, 0, 6)
         });
-
-        var gameRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 2, 0, 0) };
-        gameRow.Children.Add(new TextBlock { Text = "Oyun:", Width = 70, VerticalAlignment = VerticalAlignment.Center });
-        foreach (var name in _s.GameFonts.Keys.Append("Genel").Append(_s.ActiveGame)
-                     .Concat(Ps5Altyazi.Fonts.GamePresets.All.Select(g => g.Name)).Append("Red Dead Redemption 2")
-                     .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(n => n)) _gameBox.Items.Add(name);
-        _gameBox.Text = _s.ActiveGame;
-        _gameBox.ToolTip = "Oyunun adını yazın ya da listeden seçin (ör. RDR2, GTA 6). Her oyunun yazı tipi ayrı öğrenilir.";
-        _gameBox.SelectionChanged += (_, _) => { if (_gameBox.SelectedItem is string g) Dispatcher.BeginInvoke(() => SwitchGame(g)); };
-        _gameBox.LostKeyboardFocus += (_, _) => SwitchGame(_gameBox.Text);
-        _gameBox.KeyDown += (_, e) => { if (e.Key == System.Windows.Input.Key.Enter) SwitchGame(_gameBox.Text); };
-        gameRow.Children.Add(_gameBox);
-        panel.Children.Add(gameRow);
-
-        var fontRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 0) };
-        fontRow.Children.Add(new TextBlock { Text = "Yazı tipi:", Width = 70, VerticalAlignment = VerticalAlignment.Center });
-        _fontBox.SelectionChanged += (_, _) => OnFontPicked();
-        fontRow.Children.Add(_fontBox);
-        var add = new Button { Content = "Dosyadan ekle…", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(8, 0, 0, 0) };
-        add.Click += (_, _) => AddFontFile();
-        fontRow.Children.Add(add);
-        panel.Children.Add(fontRow);
+        _fontInfo.Text = _describeFont();
         panel.Children.Add(_fontInfo);
-
-        FillFonts();
+        var relearn = new Button { Content = "Baştan öğren", Padding = new Thickness(8, 2, 8, 2), Margin = new Thickness(0, 6, 0, 0),
+                                   HorizontalAlignment = HorizontalAlignment.Left,
+                                   ToolTip = "Yazı tipi ya da boy tutmadıysa: öğrenileni siler, sonraki altyazılardan yeniden ölçer." };
+        relearn.Click += (_, _) =>
+        {
+            _s.GameFonts.Clear();
+            FontChanged?.Invoke(true);
+            _fontInfo.Text = "Sıfırlandı: sonraki birkaç altyazıdan yeniden ölçülecek.";
+        };
+        panel.Children.Add(relearn);
         return panel;
     }
 

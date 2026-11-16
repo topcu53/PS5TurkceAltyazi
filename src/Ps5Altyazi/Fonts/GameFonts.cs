@@ -248,8 +248,37 @@ public sealed class SubtitleFontMatcher
             var list = m.Caps ? _caps : _lower;
             list.Add(m);
             if (list.Count > Keep) list.RemoveAt(0);
+            DetectStyleChange(list);
         }
         return Choose(game.Height);
+    }
+
+    private bool _restyled;
+
+    /// <summary>
+    /// Oyun (ya da altyazı stili) değişti mi? Son 4 ölçüm öncekilerden belirgin farklıysa eski ölçümler silinir;
+    /// yeni oyunun yazısı birkaç altyazıda öğrenilir (kullanıcının oyun seçmesine gerek kalmaz).
+    /// </summary>
+    private void DetectStyleChange(List<LineMeasure> list)
+    {
+        const int recent = 4;
+        if (list.Count < recent + 4) return;
+        var old = list.Take(list.Count - recent).ToList();
+        var now = list.Skip(list.Count - recent).ToList();
+        double xo = Median(old.Select(m => m.Xh)), xn = Median(now.Select(m => m.Xh));
+        double so = Median(old.Select(m => m.S)), sn = Median(now.Select(m => m.S));
+        double wo = Median(old.Select(m => m.W)), wn = Median(now.Select(m => m.W));
+        var ko = old.Where(m => m.K > 0).Select(m => m.K).ToList(); var kn = now.Where(m => m.K > 0).Select(m => m.K).ToList();
+        double dk = ko.Count > 0 && kn.Count > 0 ? Math.Abs(Median(ko) - Median(kn)) : 0;
+        // Her yeni ölçüm aynı yöne sapmalı (tek tük OCR hatası stil değişimi sayılmasın)
+        bool allBigger = now.All(m => m.Xh > xo * 1.12), allSmaller = now.All(m => m.Xh < xo * 0.88);
+        bool sizeJump = (allBigger || allSmaller) && Math.Abs(xn - xo) > xo * 0.15;
+        bool shapeJump = Math.Abs(sn - so) > 0.05 || Math.Abs(wn - wo) > 0.10 || dk > 0.22;
+        if (!sizeJump && !shapeJump) return;
+        list.RemoveRange(0, list.Count - recent);
+        (ReferenceEquals(list, _lower) ? _caps : _lower).Clear(); // diğer listede de eski oyunun ölçümleri var
+        _restyled = true;
+        Log.Info("Altyazı yazısı değişti (başka oyun?): yazı tipi ve boy yeniden öğreniliyor.");
     }
 
     private bool Choose(double frameH)
@@ -287,13 +316,14 @@ public sealed class SubtitleFontMatcher
         {
             var cur = Current.Font;
             double curD = Distance(cur, useCaps, r, s, w, k);
-            if (bestD > curD * 0.75 || src.Count < 6) chosen = cur;
+            bool clearlyWrong = curD > 2.5 && bestD < curD * 0.6; // ör. önceki oyundan kalan font buna hiç benzemiyor
+            if (!_restyled && !clearlyWrong && (bestD > curD * 0.75 || src.Count < 6)) chosen = cur;
         }
 
         double perEm = useCaps ? chosen.CapPerEm : chosen.XhPerEm;
         double em = xh / Math.Max(0.2, perEm) / frameH;
         // Boy kararlılığı: yeterli ölçüm varsa küçük oynamalarda eski boy korunur (yazı her altyazıda aynı boyda kalsın)
-        if (Current != null && Current.EmNorm > 0 && Current.Font.Key == chosen.Key && Current.Samples >= 6 &&
+        if (!_restyled && Current != null && Current.EmNorm > 0 && Current.Font.Key == chosen.Key && Current.Samples >= 6 &&
             Math.Abs(Current.EmNorm - em) < Current.EmNorm * 0.07)
             em = Current.EmNorm;
         var next = new GameFontChoice(chosen, em, color, outline, src.Count);
@@ -301,6 +331,7 @@ public sealed class SubtitleFontMatcher
                        Current.ColorHex != color || Current.Outline != outline;
         Current = next;
         _currentDist = bestD;
+        _restyled = false;
         return changed;
     }
 

@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.6 – Yazı tipi tamamen otomatik
+
+- Oyun adı yazma ve yazı tipi seçme kaldırıldı: program fontu, boyu ve rengi her zaman ekrandaki altyazıdan bulur.
+- Oyun değişimi kendiliğinden algılanır: son altyazıların yazısı (boy, kalınlık, genişlik, tırnak) öncekilerden belirgin
+  farklıysa eski ölçümler silinir ve yeni oyunun fontu birkaç altyazıda öğrenilir.
+- Kayıtlı font yeni yazıya hiç benzemiyorsa beklemeden en yakın fonta geçilir.
+- Altyazı Görünümü'nde yalnızca "Baştan öğren" düğmesi var.
+
 ## v1.5 – Oyunlara en yakın ücretsiz fontlar
 
 - 18 yeni açık lisanslı yazı tipi dosyası (Türkçe karakterli): Arimo, Inter, Libre Franklin, EB Garamond, Crimson Pro,

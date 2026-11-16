@@ -10,5 +10,4 @@ Apache License 2.0: Roboto, Roboto Condensed
 Türkçe karakterler için "latin" ve "latin-ext" alt kümeleri tek dosyada birleştirilmiştir (değiştirilmiş sürüm).
 Oyunların kendi yazı tipleri programla DAĞITILMAZ; kullanıcı kendi sahip olduğu font dosyasını ekleyebilir.
 
-Hazır oyun eşleşmeleri (yalnızca benzer ücretsiz fontlar; oyunların kendi fontları değildir):
-  GTA V (Chalet 1960) → Arimo • The Last of Us (FF DIN) → Barlow • Elden Ring (Agmena) → EB Garamond
+Eşleşme tamamen otomatiktir (oyunların kendi fontları programla dağıtılmaz).

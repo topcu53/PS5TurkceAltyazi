@@ -39,16 +39,14 @@ public partial class MainWindow
     /// <summary>Etkin oyunun yazı tipi ayarını yükler (açılışta ve oyun değişince).</summary>
     private void InitGameFont()
     {
+        // Tamamen otomatik: oyun adı / font seçimi yok. Tek profil; oyun değişince eşleştirici bunu kendisi fark eder.
+        _settings.ActiveGame = "Genel";
         var p = ActiveFontProfile;
+        p.FontKey = "auto";
         _fontMatcher.Reset();
-        _fontMatcher.Fixed = p.FontKey == "auto" ? null : FontCatalog.Find(p.FontKey);
-        var preset = GamePresets.Find(_settings.ActiveGame);
-        _fontMatcher.FamilyHint = preset?.FamilyPrefix;
-        if (preset != null && _fontMatcher.Fixed == null)
-            Log.Info($"{preset.Name}: oyunun fontu {preset.Original} – en yakın ücretsiz aile \"{preset.FamilyPrefix}\" kullanılacak (kalınlık ve boy ölçülür).");
+        _fontMatcher.Fixed = null;
+        _fontMatcher.FamilyHint = null;
         var learned = FontCatalog.Find(p.LearnedKey);
-        // Öğrenilmiş font bu oyunun hazır ailesinden değilse (eski sürümden kalma) yok say
-        if (learned != null && preset != null && !learned.Key.StartsWith(preset.FamilyPrefix + "-", StringComparison.OrdinalIgnoreCase)) learned = null;
         var font = _fontMatcher.Fixed ?? learned;
         if (font != null)
         {
