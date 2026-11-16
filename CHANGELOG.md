@@ -1,5 +1,12 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.3 – Google Gemini çeviri servisi
+
+- Yeni isteğe bağlı çeviri servisi: **Google Gemini** (Google AI Studio anahtarı, kart gerekmez). Sıra:
+  DeepL → Gemini → Azure → MyMemory. Varsayılan model en hızlı Flash-Lite; model adı değişirse yedek modeller denenir.
+- Gemini'ye önceki altyazılar bağlam olarak verilir (isimler ve hitap tutarlı kalır); yalnızca çeviri döndürmesi istenir.
+- Ücretsiz katman sınırı dolunca (429) 2 dakika sonra yeniden denenir, bu arada sıradaki servis kullanılır.
+
 ## v1.2 – En düşük gecikme
 
 - Yakalama 60 FPS (önceden 30): altyazı en geç ~17 ms içinde görülür. Kare başına bir tam görüntü kopyası daha az.

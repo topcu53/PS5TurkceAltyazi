@@ -13,31 +13,36 @@ namespace Ps5Altyazi;
 
 /// <summary>Çeviri servisleri ayarları (sonuç).</summary>
 public sealed record TranslationSettingsResult(
-    string? DeepLKey, string? AzureKey, string? AzureRegion, bool MyMemoryEnabled, string? MyMemoryEmail);
+    string? DeepLKey, string? AzureKey, string? AzureRegion, bool MyMemoryEnabled, string? MyMemoryEmail,
+    string? GeminiKey = null, string? GeminiModel = null);
 
 /// <summary>
 /// Çeviri servisleri penceresi (kod ile oluşturulur):
-/// 1) DeepL (asıl)  2) Azure Translator (isteğe bağlı yedek)  3) MyMemory (anahtarsız son yedek).
+/// 1) DeepL (asıl)  2) Google Gemini (isteğe bağlı yedek)  3) Azure Translator (isteğe bağlı)  4) MyMemory (anahtarsız son yedek).
 /// </summary>
 public sealed class TranslationSettingsWindow : Window
 {
     private readonly PasswordBox _deepLBox = NewPasswordBox();
     private readonly PasswordBox _azureBox = NewPasswordBox();
+    private readonly PasswordBox _geminiBox = NewPasswordBox();
+    private readonly TextBox _geminiModel = new() { Margin = new Thickness(0, 4, 0, 0), Padding = new Thickness(4), Width = 220, HorizontalAlignment = HorizontalAlignment.Left };
     private readonly TextBox _azureRegion = new() { Margin = new Thickness(0, 4, 0, 0), Padding = new Thickness(4), Width = 180, HorizontalAlignment = HorizontalAlignment.Left };
     private readonly CheckBox _myMemoryCheck = new() { Content = "MyMemory yedeğini kullan (anahtarsız, ücretsiz)", Margin = new Thickness(0, 4, 0, 0) };
     private readonly TextBox _myMemoryEmail = new() { Margin = new Thickness(0, 4, 0, 0), Padding = new Thickness(4) };
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0), FontSize = 13 };
     private readonly Button _saveBtn = new() { Content = "Kaydet ve Test Et", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
 
-    private readonly string? _curDeepL, _curAzure;
+    private readonly string? _curDeepL, _curAzure, _curGemini;
 
     public TranslationSettingsResult? Result { get; private set; }
 
     private static PasswordBox NewPasswordBox() => new() { Margin = new Thickness(0, 4, 0, 0), Padding = new Thickness(4), FontSize = 14 };
 
-    public TranslationSettingsWindow(string? deepLKey, string? azureKey, string? azureRegion, bool myMemoryEnabled, string? myMemoryEmail)
+    public TranslationSettingsWindow(string? deepLKey, string? azureKey, string? azureRegion, bool myMemoryEnabled, string? myMemoryEmail,
+        string? geminiKey = null, string? geminiModel = null)
     {
         _curDeepL = deepLKey;
+        _curGemini = geminiKey;
         _curAzure = azureKey;
         Title = "Çeviri Ayarları";
         Width = 600;
@@ -46,7 +51,7 @@ public sealed class TranslationSettingsWindow : Window
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
 
         var root = new StackPanel { Margin = new Thickness(16) };
-        root.Children.Add(Note("Sıra: DeepL → Azure (anahtar girildiyse) → MyMemory. Bir servisin ücretsiz kotası dolunca " +
+        root.Children.Add(Note("Sıra: DeepL → Gemini → Azure (anahtar girildiyse) → MyMemory. Bir servisin ücretsiz kotası dolunca " +
                                "program otomatik olarak sıradakine geçer, kota yenilenince DeepL'e kendiliğinden döner. " +
                                "Anahtarlar bu bilgisayarda Windows şifrelemesiyle saklanır."));
 
@@ -57,8 +62,22 @@ public sealed class TranslationSettingsWindow : Window
         root.Children.Add(_deepLBox);
         if (!string.IsNullOrEmpty(deepLKey)) root.Children.Add(Note($"Kayıtlı: {DeepLTranslator.Mask(deepLKey)} (değiştirmek için yenisini yazın)"));
 
-        // 2) Azure
-        root.Children.Add(Header("2) Azure Translator – yedek (isteğe bağlı)"));
+        // 2) Gemini
+        root.Children.Add(Header("2) Google Gemini – yedek (isteğe bağlı, kart gerekmez)"));
+        root.Children.Add(LinkNote("Ücretsiz anahtar: ", "https://aistudio.google.com/apikey",
+            " → \"Create API key\". Ücretsiz katmanda dakikalık/günlük sınır var; dolunca sıradaki servise geçilir. " +
+            "Not: Gemini uygulaması (Pro) aboneliği API kotası vermez. Ücretsiz katmanda gönderilen metinler Google tarafından " +
+            "ürün geliştirmede kullanılabilir (yalnızca oyun altyazısı gönderilir). Anahtarı kimseyle paylaşmayın."));
+        root.Children.Add(_geminiBox);
+        if (!string.IsNullOrEmpty(geminiKey)) root.Children.Add(Note($"Kayıtlı: {DeepLTranslator.Mask(geminiKey)}"));
+        var modelRow = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 4, 0, 0) };
+        modelRow.Children.Add(new TextBlock { Text = "Model (boş = en hızlı Flash-Lite): ", VerticalAlignment = VerticalAlignment.Center });
+        _geminiModel.Text = geminiModel ?? "";
+        modelRow.Children.Add(_geminiModel);
+        root.Children.Add(modelRow);
+
+        // 3) Azure
+        root.Children.Add(Header("3) Azure Translator – yedek (isteğe bağlı)"));
         root.Children.Add(LinkNote("Ayda 2 milyon karakter ücretsiz (F0). Kayıt kredi/banka kartı ister. ", "https://portal.azure.com",
             " → Translator kaynağı oluştur (Fiyat katmanı: F0) → Keys and Endpoint: anahtar + konum/bölge."));
         root.Children.Add(_azureBox);
@@ -70,7 +89,7 @@ public sealed class TranslationSettingsWindow : Window
         root.Children.Add(regionRow);
 
         // 3) MyMemory
-        root.Children.Add(Header("3) MyMemory – son yedek (anahtar gerekmez)"));
+        root.Children.Add(Header("4) MyMemory – son yedek (anahtar gerekmez)"));
         _myMemoryCheck.IsChecked = myMemoryEnabled;
         root.Children.Add(_myMemoryCheck);
         root.Children.Add(Note("Günlük sınır e-postasız ~5.000, e-postayla ~50.000 karakter. E-posta isteğe bağlıdır; " +
@@ -92,6 +111,10 @@ public sealed class TranslationSettingsWindow : Window
         clearAzure.Click += (_, _) => { _azureBox.Clear(); _clearAzure = true; SetStatus("Azure anahtarı kaydedince silinecek.", Brushes.DarkOrange); };
         buttons.Children.Add(clearAzure);
 
+        var clearGemini = new Button { Content = "Gemini Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
+        clearGemini.Click += (_, _) => { _geminiBox.Clear(); _clearGemini = true; SetStatus("Gemini anahtarı kaydedince silinecek.", Brushes.DarkOrange); };
+        buttons.Children.Add(clearGemini);
+
         var closeBtn = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), IsCancel = true };
         closeBtn.Click += (_, _) => Close();
         buttons.Children.Add(closeBtn);
@@ -101,7 +124,7 @@ public sealed class TranslationSettingsWindow : Window
         Loaded += (_, _) => _deepLBox.Focus();
     }
 
-    private bool _clearDeepL, _clearAzure;
+    private bool _clearDeepL, _clearAzure, _clearGemini;
 
     private async Task SaveAndTestAsync()
     {
@@ -110,16 +133,19 @@ public sealed class TranslationSettingsWindow : Window
         string? azure = _azureBox.Password.Trim();
         if (azure.Length == 0) azure = _clearAzure ? null : _curAzure;
         string? region = string.IsNullOrWhiteSpace(_azureRegion.Text) ? null : _azureRegion.Text.Trim();
+        string? gemini = _geminiBox.Password.Trim();
+        if (gemini.Length == 0) gemini = _clearGemini ? null : _curGemini;
+        string? gModel = string.IsNullOrWhiteSpace(_geminiModel.Text) ? null : _geminiModel.Text.Trim();
         bool mm = _myMemoryCheck.IsChecked == true;
         string? email = string.IsNullOrWhiteSpace(_myMemoryEmail.Text) ? null : _myMemoryEmail.Text.Trim();
 
-        if (deepL == null && azure == null && !mm)
+        if (deepL == null && azure == null && gemini == null && !mm)
         {
             SetStatus("En az bir çeviri servisi gerekli (DeepL anahtarı önerilir).", Brushes.Firebrick);
             return;
         }
 
-        Result = new TranslationSettingsResult(deepL, azure, region, mm, email);
+        Result = new TranslationSettingsResult(deepL, azure, region, mm, email, gemini, gModel);
         _saveBtn.IsEnabled = false;
         SetStatus("Kaydedildi. Servisler test ediliyor…", Brushes.DimGray);
 
@@ -141,6 +167,20 @@ public sealed class TranslationSettingsWindow : Window
             catch (Exception ex) { report.AppendLine($"✖ DeepL: {ex.Message}"); }
         }
         else report.AppendLine("– DeepL: anahtar yok");
+
+        if (gemini != null)
+        {
+            try
+            {
+                var g = new GeminiTranslator(gemini, gModel);
+                var gsw = Stopwatch.StartNew();
+                string t = await g.TranslateAsync(sample, null, cts.Token);
+                report.AppendLine($"✔ Google Gemini ({g.Model}): \"{t}\"  ({gsw.ElapsedMilliseconds} ms)");
+                anyOk = true;
+            }
+            catch (Exception ex) { report.AppendLine($"✖ Gemini: {ex.Message}"); }
+        }
+        else report.AppendLine("– Gemini: anahtar yok (isteğe bağlı)");
 
         if (azure != null)
         {

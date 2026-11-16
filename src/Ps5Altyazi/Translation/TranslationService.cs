@@ -334,6 +334,7 @@ public sealed class TranslationService : IDisposable
         "deepl" => TimeSpan.FromHours(6),   // aylık kota; 6 saatte bir yoklanır (yeni dönem başladıysa kendiliğinden döner)
         "azure" => TimeSpan.FromHours(6),
         "mymemory" => TimeSpan.FromHours(1), // günlük kota
+        "gemini" => TimeSpan.FromMinutes(2), // ücretsiz katman çoğunlukla dakikalık sınır
         _ => TimeSpan.FromHours(1)
     };
 

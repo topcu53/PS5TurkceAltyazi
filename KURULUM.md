@@ -50,7 +50,7 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 5. **İngilizce okuma paketini kurun (bir kez):** Program "İngilizce OCR paketi yok" derse **İngilizce OCR Paketini Kur** düğmesine basın, yönetici iznini onaylayın. Kurulum bitince programı kapatıp yeniden açın.
 6. **Çeviri ayarlarını girin:** **Çeviri Ayarları…** → DeepL anahtarınızı yapıştırın → **Kaydet ve Test Et**.
    - Anahtarınız bilgisayarınızda **şifreli** saklanır, başka yere gönderilmez.
-   - DeepL kotası dolarsa program kendiliğinden yedek servise geçer (MyMemory, isteğe bağlı Azure).
+   - DeepL kotası dolarsa program kendiliğinden yedek servise geçer: isteğe bağlı **Google Gemini** (ücretsiz anahtar: https://aistudio.google.com/apikey, kart gerekmez), isteğe bağlı Azure, son olarak MyMemory.
 7. **Oyunda altyazıları açın:** Oyunun kendi ayarlarından altyazıları açın.
 8. **Altyazı yerini tanıtın (bir kez):** Biri konuşurken **Otomatik Bul**'a basın. Ya da **Elle Seç** ile altyazının çıktığı bölgeyi fareyle çizin.
 

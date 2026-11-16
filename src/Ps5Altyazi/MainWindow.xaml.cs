@@ -106,7 +106,7 @@ public partial class MainWindow : Window
 
     // Çeviri (Aşama 4)
     private TranslationService? _translation;
-    private string? _deepLKey, _azureKey;
+    private string? _deepLKey, _azureKey, _geminiKey;
     private CancellationTokenSource? _trCts;
     private long _trSeq;
     private readonly List<string> _recentEnglish = new();
@@ -142,7 +142,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.2 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v1.3 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1178,16 +1178,18 @@ public partial class MainWindow : Window
         TranslateCheck.IsChecked = _settings.TranslationEnabled;
         _deepLKey = SecretStore.Unprotect(_settings.DeepLKeyProtected);
         _azureKey = SecretStore.Unprotect(_settings.AzureKeyProtected);
+        _geminiKey = SecretStore.Unprotect(_settings.GeminiKeyProtected);
         ApplyTranslators(checkUsage: true);
     }
 
-    /// <summary>Çeviri zincirini kurar: DeepL → Azure (anahtar varsa) → MyMemory (açıksa).</summary>
+    /// <summary>Çeviri zincirini kurar: DeepL → Gemini → Azure (anahtar varsa) → MyMemory (açıksa).</summary>
     private void ApplyTranslators(bool checkUsage)
     {
         if (_translation == null) return;
         var engines = new List<ITranslator>();
         DeepLTranslator? deepL = null;
         if (!string.IsNullOrWhiteSpace(_deepLKey)) engines.Add(deepL = new DeepLTranslator(_deepLKey));
+        if (!string.IsNullOrWhiteSpace(_geminiKey)) engines.Add(new GeminiTranslator(_geminiKey, _settings.GeminiModel));
         if (!string.IsNullOrWhiteSpace(_azureKey)) engines.Add(new AzureTranslator(_azureKey, _settings.AzureRegion));
         if (_settings.MyMemoryEnabled) engines.Add(new MyMemoryTranslator(_settings.MyMemoryEmail));
 
@@ -1255,14 +1257,19 @@ public partial class MainWindow : Window
 
     private void TranslationSettings_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new TranslationSettingsWindow(_deepLKey, _azureKey, _settings.AzureRegion, _settings.MyMemoryEnabled, _settings.MyMemoryEmail)
+        var dlg = new TranslationSettingsWindow(_deepLKey, _azureKey, _settings.AzureRegion, _settings.MyMemoryEnabled, _settings.MyMemoryEmail,
+            _geminiKey, _settings.GeminiModel)
         {
             Owner = this
         };
         dlg.ShowDialog();
         if (dlg.Result is not { } r) return;
 
-        bool deepLChanged = r.DeepLKey != _deepLKey, azureChanged = r.AzureKey != _azureKey;
+        bool deepLChanged = r.DeepLKey != _deepLKey, azureChanged = r.AzureKey != _azureKey, geminiChanged = r.GeminiKey != _geminiKey;
+        _geminiKey = r.GeminiKey;
+        _settings.GeminiKeyProtected = _geminiKey == null ? null : SecretStore.Protect(_geminiKey);
+        _settings.GeminiModel = r.GeminiModel;
+        if (geminiChanged) _settings.EngineCooldowns.Remove("gemini");
         _deepLKey = r.DeepLKey;
         _azureKey = r.AzureKey;
         _settings.DeepLKeyProtected = _deepLKey == null ? null : SecretStore.Protect(_deepLKey);
@@ -1274,6 +1281,7 @@ public partial class MainWindow : Window
         if (azureChanged) _settings.EngineCooldowns.Remove("azure");
         SaveSettings();
         Log.Info($"Çeviri ayarları kaydedildi (DeepL: {(_deepLKey == null ? "yok" : DeepLTranslator.Mask(_deepLKey))}, " +
+                 $"Gemini: {(_geminiKey == null ? "yok" : DeepLTranslator.Mask(_geminiKey))}, " +
                  $"Azure: {(_azureKey == null ? "yok" : DeepLTranslator.Mask(_azureKey))}, MyMemory: {(r.MyMemoryEnabled ? "açık" : "kapalı")}). Anahtarlar şifreli.");
         ApplyTranslators(checkUsage: deepLChanged);
     }
