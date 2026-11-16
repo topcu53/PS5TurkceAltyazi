@@ -15,14 +15,14 @@ namespace Ps5Altyazi;
 /// </summary>
 public static class Theme
 {
-    public static readonly Brush Bg = Frozen("#14161B");
-    public static readonly Brush Bar = Frozen("#101216");
-    public static readonly Brush Text = Frozen("#ECEEF3");
-    public static readonly Brush Dim = Frozen("#9AA1AE");
+    public static readonly Brush Bg = Frozen("#0B0F1A");
+    public static readonly Brush Bar = Frozen("#070A12");
+    public static readonly Brush Text = Frozen("#E8EDF7");
+    public static readonly Brush Dim = Frozen("#8B97AD");
     public static readonly Brush Good = Frozen("#4ADE80");
     public static readonly Brush Warn = Frozen("#FFB03B");
     public static readonly Brush Bad = Frozen("#FF6B6B");
-    public static readonly Brush Line = Frozen("#2F3440");
+    public static readonly Brush Line = Frozen("#222C42");
 
     private static Brush Frozen(string hex)
     {
@@ -137,7 +137,7 @@ public static class Theme
         bd.AppendChild(cp);
         t.VisualTree = bd;
         var hover = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
-        hover.Setters.Add(new Setter(Border.BackgroundProperty, danger ? Frozen("#E81123") : Frozen("#2A2F3A"), "Bd"));
+        hover.Setters.Add(new Setter(Border.BackgroundProperty, danger ? Frozen("#E81123") : Frozen("#1F2A42"), "Bd"));
         t.Triggers.Add(hover);
         return t;
     }

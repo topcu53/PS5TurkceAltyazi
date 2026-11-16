@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.3 – Modern tema
+
+- Logoya uygun yeni renkler: gece laciverti zemin, elektrik mavisi → camgöbeği vurgular.
+- Aç/kapa anahtarları (onay kutuları yerine), koyu açılır listeler, yuvarlak seçenek düğmeleri, ok işaretli katlanır
+  bölümler, ince kaydırma çubukları; Başlat düğmesinde mavi parlama. Bütün pencerelerde geçerli.
+
 ## v2.2 – Her ekrana sığar
 
 - Ana pencere açılışta ekranın çalışma alanına göre boyutlanır; küçük ekranda (1320×900'den küçük) tam ekran açılır.
