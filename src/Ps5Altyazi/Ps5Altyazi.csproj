@@ -13,7 +13,7 @@
     <AssemblyName>AltyaziPlus</AssemblyName>
     <RootNamespace>Ps5Altyazi</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.11.0</Version>
+    <Version>1.12.0</Version>
     <Product>Altyazı+</Product>
     <Authors>Burak Topcu</Authors>
     <Company>Burak Topcu</Company>

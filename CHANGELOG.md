@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.12 – Ekran çevirisi: ekran değişince kalkar, yazılar orijinal boyda
+
+- F7 çevirisi ekrandayken menü kaydırılır ya da ipucu değişirse, yazısı değişen kutular kendiliğinden kalkar;
+  ekranın çoğu değiştiyse çevirinin tamamı kalkar (eski çeviri yanlış satırın üstünde kalmaz). Yeniden F7.
+- Türkçe yazı ve siyah kutu küçültüldü: İngilizceyle aynı boyda, komşu satırları kapatmıyor / üst üste binmiyor.
+
 ## v1.11 – F7: "Ekranı çevir" (anlık, sabit)
 
 - F7 artık ekranı **bir kez** okuyup çevirir: tuş ipuçları, görev ve bilgi yazıları kendi yerlerinde Türkçe görünür ve

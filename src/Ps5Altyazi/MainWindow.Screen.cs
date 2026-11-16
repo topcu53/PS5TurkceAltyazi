@@ -170,7 +170,8 @@ public partial class MainWindow
     /// <summary>Her canlı karede çağrılır (arayüz iş parçacığı).</summary>
     private void ScreenTick(FrameResult r)
     {
-        if (!ScreenOn || _snapItems != null || _snapCts != null || _ocr is not WindowsOcrEngine) return;
+        if (_snapItems != null) { WatchSnapshot(r.Game); return; }
+        if (!ScreenOn || _snapCts != null || _ocr is not WindowsOcrEngine) return;
         _screenOcr ??= WindowsOcrEngine.Create(out _); // altyazı OCR'ı ile aynı anda çalışabilsin diye ayrı motor
         if (_screenOcr is not { } engine) return;
 
@@ -528,7 +529,8 @@ public partial class MainWindow
         string text = i.Block.Text;
         bool hasLower = text.Any(char.IsLower);
         bool hasDesc = text.IndexOfAny("gjpqy".ToCharArray()) >= 0;
-        double factor = !hasLower ? 1.35 : hasDesc ? 1.02 : 1.28;
+        // OCR kelime kutusu yazıdan biraz yüksek çıkar: Türkçe, İngilizceden iri görünmesin (komşu satırları kapatmasın)
+        double factor = !hasLower ? 1.12 : hasDesc ? 0.92 : 1.08;
         return i.Block.LineHeight * factor;
     }
 
@@ -563,7 +565,7 @@ public partial class MainWindow
                 string text = WebUtility.HtmlDecode(parts[i]).Trim();
                 if (text.Length == 0) text = " ";
                 char align = i == 0 ? 'r' : 'l';
-                double pr = run.H * 0.22; // büyük ilk harfler / alt çizgiler kutudan taşmasın
+                double pr = run.H * 0.10; // büyük ilk harfler / alt çizgiler kutudan taşmasın
                 pieces.Add(new ScreenPiece(run.X / W, (run.Y - pr) / H, run.W / W, (run.H + 2 * pr) / H, fs, text, align, false, 0, Array.Empty<string>()));
             }
             return pieces;
@@ -604,7 +606,7 @@ public partial class MainWindow
 
         bool wrap = b.LineCount > 1;
         char al = !wrap && (b.SideIcon == 1 || (b.SideIcon == 0 && rightSide)) ? 'r' : 'l';
-        double pad = b.LineHeight * 0.22; // İngilizce yazının üst/alt kenarı Türkçe kutunun dışında kalmasın
+        double pad = b.LineHeight * 0.10; // İngilizce yazının üst/alt kenarı Türkçe kutunun dışında kalmasın
         pieces.Add(new ScreenPiece(b.Bounds.X / W, (b.Bounds.Y - pad) / H, b.Bounds.Width / W, (b.Bounds.Height + 2 * pad) / H, fs, body, al, wrap,
             wrap ? b.Bounds.Width * 1.15 / W : 0, icons.ToArray()));
         return pieces;

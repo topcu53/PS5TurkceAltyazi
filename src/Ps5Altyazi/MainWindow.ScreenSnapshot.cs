@@ -5,6 +5,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using Ps5Altyazi.Capture;
 using Ps5Altyazi.Logging;
 using Ps5Altyazi.TextRecognition;
 using Ps5Altyazi.Vision;
@@ -53,6 +54,8 @@ public partial class MainWindow
                 FrameH = game.Height,
                 IconPngs = b.Icons.Select(ic => IconPng(game, ic)).ToArray()
             }).ToList();
+            // Her yazının "parmak izi": ekran değişince (menü kaydırıldı, ipucu kapandı) o çeviri kaldırılır
+            foreach (var it in items) (it.Mask, it.MaskCount) = ScreenTextReader.TextMask(game, it.Px);
             if (items.Count == 0)
             {
                 Notify("Ekranda çevrilecek yazı bulunamadı");
@@ -104,6 +107,33 @@ public partial class MainWindow
         {
             if (_snapCts == cts) _snapCts = null;
         }
+    }
+
+    /// <summary>
+    /// Çeviri ekrandayken her karede: yazısı değişen / kaybolan öğe kaldırılır (menü kaydırıldı, ipucu kapandı).
+    /// Öğelerin çoğu değiştiyse ekran tamamen değişmiştir → çevirinin hepsi kalkar (yeniden F7).
+    /// </summary>
+    private void WatchSnapshot(CapturedFrame game)
+    {
+        if (_snapItems == null || _snapItems.Count == 0) return;
+        bool changed = false;
+        int gone = 0;
+        foreach (var it in _snapItems.ToList())
+        {
+            if (it.FrameW != game.Width || it.FrameH != game.Height) { ClearSnapshot("pencere değişti"); return; }
+            if (it.MaskCount < 4) continue;
+            var (mask, count) = ScreenTextReader.TextMask(game, it.Px);
+            bool diff = count < it.MaskCount * 0.5 || ScreenTextReader.MaskDistance(mask, it.Mask) > 0.35;
+            it.MaskBad = diff ? it.MaskBad + 1 : 0;
+            if (it.MaskBad >= 4) // ~0,07 sn sürekli farklı: gerçekten değişti
+            {
+                _snapItems.Remove(it);
+                gone++;
+                changed = true;
+            }
+        }
+        if (_snapItems.Count == 0 || (gone > 0 && _snapItems.Count <= gone)) { ClearSnapshot("ekran değişti"); return; }
+        if (changed) PushScreen(force: true);
     }
 
     private void ClearSnapshot(string why)
