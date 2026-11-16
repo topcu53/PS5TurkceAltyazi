@@ -139,7 +139,7 @@ public sealed class AppSettings
 public sealed class GameFontProfile
 {
     /// <summary>"auto" ya da katalogdaki font anahtarı (ör. "barlow-600", "custom-...").</summary>
-    public string FontKey { get; set; } = "auto";
+    public string FontKey { get; set; } = "arimo-700"; // varsayılan: sabit Arimo Bold ("auto" = oyuna göre)
     public string? LearnedKey { get; set; }
     public double LearnedEm { get; set; }
     public string LearnedColor { get; set; } = "#FFFFFF";

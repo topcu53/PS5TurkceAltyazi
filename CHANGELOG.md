@@ -1,5 +1,10 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.5 – Varsayılan yazı tipi: Arimo Bold
+
+- Altyazı artık varsayılan olarak her oyunda sabit **Arimo Bold** ile yazılır (programın içinde, Türkçe harfler tam;
+  boyut yine oyundaki altyazıdan ölçülür). İstenirse Altyazı Görünümü'nden "Otomatik"e dönülebilir.
+
 ## v2.4.1 – Programın yanındaki yazı tipi
 
 - AltyaziPlus.exe ile aynı klasöre bir .ttf/.otf konursa, program açılışta onu kendiliğinden sabit yazı tipi yapar

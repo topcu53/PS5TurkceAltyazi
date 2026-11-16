@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.4.1 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.5 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1589,6 +1589,21 @@ public partial class MainWindow : Window
             // v1.11: tuş ipuçları varsayılan olarak F7 ile anlık çevrilir; sürekli mod (titreyebilen) deneysel ve kapalı
             _settings.ScreenTranslateEnabled = false;
             _settings.SettingsVersion = 5;
+            _settings.Save();
+        }
+        if (_settings.SettingsVersion < 6)
+        {
+            // v2.5: altyazı yazı tipi sabit Arimo Bold (programın içinde). Exe'nin yanında kalan eski font dosyası
+            // (ör. Mirisch) "zaten uygulandı" sayılır ki Arimo'yu ezmesin.
+            foreach (var prof in _settings.GameFonts.Values) prof.FontKey = "arimo-700";
+            try
+            {
+                var old = System.IO.Directory.EnumerateFiles(AppContext.BaseDirectory)
+                    .FirstOrDefault(f => f.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) || f.EndsWith(".otf", StringComparison.OrdinalIgnoreCase));
+                if (old != null) _settings.BesideExeFont = System.IO.Path.GetFileName(old) + "|" + new System.IO.FileInfo(old).Length;
+            }
+            catch { }
+            _settings.SettingsVersion = 6;
             _settings.Save();
         }
     }
