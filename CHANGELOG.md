@@ -1,5 +1,12 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.0 – Yeni arayüz ve logo
+
+- Yeni logo (uygulama simgesi, pencere, görev çubuğu).
+- Arayüz baştan düzenlendi: üstte logo, durum ve büyük Başlat düğmesi; sağda "Canlı çeviri" kartı;
+  teknik ayarlar ve teşhis görüntüleri "Gelişmiş ve teşhis" bölümünde (kapalı başlar); günlük katlanabilir.
+- Oyun içi yazı (tuş ipucu) çevirisi şimdilik rafta: arayüzden ve F7'den kaldırıldı, kod duruyor. Odak altyazıda.
+
 ## v1.13 – Ekran çevirisi: çift kutular, kırmızı menüler, at adı
 
 - Aynı yazının iki kez okunması (biri iki satırı kapsayan büyük kutu) artık iki ayrı Türkçe kutu çizmiyor.

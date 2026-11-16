@@ -130,6 +130,7 @@ public partial class MainWindow
 
     private void InitScreenTranslation()
     {
+        _settings.ScreenTranslateEnabled = false; // oyun içi yazı çevirisi şimdilik rafta
         ScreenCheck.IsChecked = _settings.ScreenTranslateEnabled;
         if (_settings.ScreenTranslateEnabled)
             Log.Info("Oyun içi yazıları sürekli çevirme AÇIK (deneysel). Ekranı bir kez çevirmek için F7.");

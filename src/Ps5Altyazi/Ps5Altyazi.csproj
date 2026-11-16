@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <!-- Windows Graphics Capture API'leri için Windows SDK projeksiyonu -->
     <TargetFramework>net8.0-windows10.0.22621.0</TargetFramework>
     <!-- Çalışma için en düşük sürüm: Windows 10 2004 (19041) -->
@@ -13,7 +14,7 @@
     <AssemblyName>AltyaziPlus</AssemblyName>
     <RootNamespace>Ps5Altyazi</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>1.13.0</Version>
+    <Version>2.0.0</Version>
     <Product>Altyazı+</Product>
     <Authors>Burak Topcu</Authors>
     <Company>Burak Topcu</Company>
@@ -23,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\logo-256.png" />
     <!-- Çeviri önbelleği (SQLite) ve API anahtarının Windows DPAPI ile şifrelenmesi -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />

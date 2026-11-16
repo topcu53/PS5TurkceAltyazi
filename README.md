@@ -1,3 +1,5 @@
+<p align="center"><img src="design/logo.png" width="120" alt="Altyazı+"></p>
+
 # Altyazı+
 
 **PS5 oyunları için canlı Türkçe çeviri.**
@@ -33,7 +35,6 @@ Hazır dosyalar **[Releases](../../releases)** sayfasındadır:
 | Kısayol | |
 |---|---|
 | F6 | Çeviriyi başlat / durdur |
-| F7 | Ekranı çevir: tuş ipuçları, görevler (tekrar basınca kalkar) |
 | F8 | Türkçeyi göster / gizle |
 
 ## Klasörler

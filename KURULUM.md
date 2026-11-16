@@ -65,7 +65,6 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 | Tuş | İşlev |
 |---|---|
 | **F6** | Çeviriyi başlat / durdur |
-| **F7** | Ekranı çevir: o anki ekrandaki tuş ipuçları, görev ve bilgi yazıları çevrilip birkaç saniye sabit kalır; tekrar basınca kalkar |
 | **F8** | Türkçe yazıyı göster / gizle |
 
 ---

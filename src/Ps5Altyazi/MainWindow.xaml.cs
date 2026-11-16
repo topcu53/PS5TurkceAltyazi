@@ -143,7 +143,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.13 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.0 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -563,6 +563,7 @@ public partial class MainWindow : Window
         // Ana önizleme (yalnızca oyun alanı)
         WriteFrame(ref _preview, PreviewImage, f.Pixels, f.Width, f.Height, f.Stride);
         PreviewPlaceholder.Visibility = Visibility.Collapsed;
+        PlaceholderPanel.Visibility = Visibility.Collapsed;
 
         // Altyazı alanı görünümleri
         if (r.RegionCrop is { } rc)
@@ -1401,11 +1402,11 @@ public partial class MainWindow : Window
         _hwndSource?.AddHook(WndProc);
         // Genel (global) kısayol: Remote Play veya başka pencere öndeyken de çalışır.
         bool f6 = NativeMethods.RegisterHotKey(hwnd, HotkeyF6, ModNoRepeat, VkF6);
-        bool f7 = NativeMethods.RegisterHotKey(hwnd, HotkeyF7, ModNoRepeat, VkF7);
+        bool f7 = true; // F7 (oyun içi yazı çevirisi) şimdilik rafta: kısayol kaydedilmiyor
         bool f8 = NativeMethods.RegisterHotKey(hwnd, HotkeyF8, ModNoRepeat, VkF8);
         bool f9 = NativeMethods.RegisterHotKey(hwnd, HotkeyF9, ModNoRepeat, VkF9);
         if (!f9) Log.Warn("F9 (çevirili ekran görüntüsü) kısayolu kaydedilemedi: başka bir program kullanıyor olabilir. 'Kare kaydet' düğmesi de aynı görüntüyü kaydeder.");
-        if (f6 && f7 && f8) Log.Success("Kısayollar hazır: F6 = çeviriyi başlat/durdur, F7 = ekranı çevir (tuş ipuçları, görevler; tekrar basınca kalkar), " +
+        if (f6 && f7 && f8) Log.Success("Kısayollar hazır: F6 = çeviriyi başlat/durdur, " +
                                         "F8 = Türkçe altyazıyı göster/gizle, F9 = çevirili ekran görüntüsü (her pencerede çalışır).");
         else Log.Warn($"Kısayol kaydedilemedi ({(f6 ? "" : "F6 ")}{(f7 ? "" : "F7 ")}{(f8 ? "" : "F8")}): başka bir program bu tuşu kullanıyor olabilir. " +
                       "Düğmeleri kullanabilir veya o programı kapatıp yeniden başlatabilirsiniz.");
@@ -1417,7 +1418,6 @@ public partial class MainWindow : Window
         {
             int id = wParam.ToInt32();
             if (id == HotkeyF6) { ToggleSystem("F6"); handled = true; }
-            else if (id == HotkeyF7) { ToggleScreenTranslation(); handled = true; }
             else if (id == HotkeyF8) { ToggleSubtitleVisibility(); handled = true; }
             else if (id == HotkeyF9) { TakeTranslatedSnapshot(); handled = true; }
         }
