@@ -43,6 +43,7 @@ public partial class MainWindow
         public bool Translating;
         public PixelRect Px => Block.Bounds;
         public int Seen = 1, Missed;
+        public int SameText = 1;      // aynı yazı üst üste kaç taramada birebir okundu (yarım okumalar çevrilmesin)
         public long LastScan;
         public bool Hidden;           // yazı değişti / kayboldu, sonraki taramayı bekliyor
         public bool[] Mask = Array.Empty<bool>();
@@ -254,6 +255,8 @@ public partial class MainWindow
             // Menü / harita açık mı? (çok sayıda yazı ya da büyük yazılı liste) → gösterme, çevirme
             // Yanında tuş simgesi olan yazılar (Fırçala □, Besle ✚ ...) tuş ipucu listesidir, menü sayılmaz
             var plain = res.Blocks.Where(b => b.SideIcon == 0 && b.Icons.Count == 0).ToList();
+            // Alt alta, aynı kenara yaslı kısa yazılar (RDR2: Bilgi göster / Eyeri çıkar / Fırçala ...) tuş listesidir
+            foreach (var col in PromptColumns(plain, game.Width)) plain.RemoveAll(col.Contains);
             int big = plain.Count(b => b.LineHeight >= 0.03 * game.Height);
             bool menu = plain.Count >= 7 || big >= 4;
             if (menu != _menuOpen)
@@ -290,6 +293,27 @@ public partial class MainWindow
         }
     }
 
+    /// <summary>Sağ ya da sol kenarı aynı hizada, kısa (≤ 4 kelime) en az 3 satırlık yazı sütunları.</summary>
+    private static IEnumerable<List<ScreenTextBlock>> PromptColumns(List<ScreenTextBlock> blocks, int W)
+    {
+        var shortOnes = blocks.Where(b => b.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length <= 4).ToList();
+        double tol = 0.02 * W;
+        foreach (Func<ScreenTextBlock, double> edge in new Func<ScreenTextBlock, double>[] { b => b.Bounds.Right, b => b.Bounds.X })
+        {
+            var used = new HashSet<ScreenTextBlock>();
+            foreach (var a in shortOnes)
+            {
+                if (used.Contains(a)) continue;
+                var col = shortOnes.Where(o => !used.Contains(o) && Math.Abs(edge(o) - edge(a)) <= tol).ToList();
+                if (col.Count >= 3)
+                {
+                    used.UnionWith(col);
+                    yield return col;
+                }
+            }
+        }
+    }
+
     private void MergeScreenBlocks(CapturedFrame game, List<ScreenTextBlock> blocks)
     {
         long scan = ++_screenScanSeq;
@@ -313,15 +337,37 @@ public partial class MainWindow
                 double sim = SubtitleText.Similarity(item.Block.Text, b.Text);
                 item.Missed = 0;
                 item.Hidden = false;
-                if (sim < 0.8 || (b.Tagged != item.English && b.Known > item.Block.Known))
+                bool sameText = b.Tagged == item.English;
+                if (sameText)
                 {
-                    // Başka yazı geldi (Greet → Defuse) ya da daha iyi okundu → yeniden çevir
-                    if (sim < 0.8) item.Seen = 1; else item.Seen++;
+                    item.Seen++;
+                    item.SameText++;
+                    item.Block = b;
+                }
+                else if (sim < 0.5)
+                {
+                    // Gerçekten başka yazı geldi (Greet → Defuse) → yeniden çevir
+                    item.Seen = 1;
+                    item.SameText = 1;
                     item.Turkish = null;
                     item.NoTranslation = false;
+                    item.Block = b;
                 }
-                else item.Seen++;
-                item.Block = b;
+                else
+                {
+                    // Aynı yazının farklı okunuşu ("ILT ACTION RIFLE" / "RIFLE FROM HORSE"): çeviri varsa koru.
+                    // Ancak yeni okuma daha uzun ve en az o kadar anlamlıysa (yarım okuma tamamlandıysa) onu benimse.
+                    item.Seen++;
+                    bool better = b.Text.Length > item.Block.Text.Length + 2 && b.Known >= item.Block.Known;
+                    if (item.Turkish == null || better)
+                    {
+                        item.SameText = 1;
+                        item.Turkish = null;
+                        item.NoTranslation = false;
+                        item.Block = b;
+                    }
+                    // değilse eski (tam) okumayı ve kutusunu koru: yarım okuma kutuyu küçültüp İngilizceyi açığa çıkarmasın
+                }
             }
             else
             {
@@ -330,8 +376,8 @@ public partial class MainWindow
             }
 
             item.LastScan = scan;
-            (item.Mask, item.MaskCount) = ScreenTextReader.TextMask(game, b.Bounds);
-            item.IconPngs = b.Icons.Select(ic => IconPng(game, ic)).ToArray();
+            (item.Mask, item.MaskCount) = ScreenTextReader.TextMask(game, item.Px);
+            item.IconPngs = item.Block.Icons.Select(ic => IconPng(game, ic)).ToArray();
             item.FrameW = game.Width;
             item.FrameH = game.Height;
             matched.Add(item);
@@ -417,7 +463,7 @@ public partial class MainWindow
                 // Sözlükteki yazılar hemen; şüpheliler ikinci görülüşte (kota harcanmasın)
                 var pending = _screenItems
                     .Where(i => i.Turkish == null && !i.NoTranslation && !i.Translating && !attempted.Contains(i.English) &&
-                                (i.Seen >= 2 || i.Block.Known >= 0.6 || SubtitleText.IsPlausible(i.Block.Text)))
+                                i.SameText >= 2) // aynı yazı iki kez birebir okunmadan çevirme (yarım / hatalı okumalar kota yemesin, titremesin)
                     .Select(i => i.English).Distinct().Take(50).ToList();
                 if (pending.Count == 0) break;
                 attempted.UnionWith(pending);
@@ -517,7 +563,8 @@ public partial class MainWindow
                 string text = WebUtility.HtmlDecode(parts[i]).Trim();
                 if (text.Length == 0) text = " ";
                 char align = i == 0 ? 'r' : 'l';
-                pieces.Add(new ScreenPiece(run.X / W, run.Y / H, run.W / W, run.H / H, fs, text, align, false, 0, Array.Empty<string>()));
+                double pr = run.H * 0.22; // büyük ilk harfler / alt çizgiler kutudan taşmasın
+                pieces.Add(new ScreenPiece(run.X / W, (run.Y - pr) / H, run.W / W, (run.H + 2 * pr) / H, fs, text, align, false, 0, Array.Empty<string>()));
             }
             return pieces;
         }
@@ -557,7 +604,8 @@ public partial class MainWindow
 
         bool wrap = b.LineCount > 1;
         char al = !wrap && (b.SideIcon == 1 || (b.SideIcon == 0 && rightSide)) ? 'r' : 'l';
-        pieces.Add(new ScreenPiece(b.Bounds.X / W, b.Bounds.Y / H, b.Bounds.Width / W, b.Bounds.Height / H, fs, body, al, wrap,
+        double pad = b.LineHeight * 0.22; // İngilizce yazının üst/alt kenarı Türkçe kutunun dışında kalmasın
+        pieces.Add(new ScreenPiece(b.Bounds.X / W, (b.Bounds.Y - pad) / H, b.Bounds.Width / W, (b.Bounds.Height + 2 * pad) / H, fs, body, al, wrap,
             wrap ? b.Bounds.Width * 1.15 / W : 0, icons.ToArray()));
         return pieces;
     }

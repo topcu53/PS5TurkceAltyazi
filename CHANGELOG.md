@@ -1,5 +1,16 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.9 – Tuş ipuçları: kararlı çeviri, tabela yazıları yok
+
+- Yarım / hatalı okumalar artık çevrilmiyor: bir yazı iki taramada birebir aynı okunmadan çeviriye gitmez
+  ("FROM HORSE → HORSE'dan", "REMOVES → KALDIRILANLAR" gibi saçma ara çeviriler ve gidip gelmeler biter).
+- Aynı yazının farklı okunuşları çeviriyi değiştirmez; yalnızca daha tam bir okuma gelirse güncellenir. Yarım okuma
+  Türkçe kutuyu küçültüp İngilizceyi açığa çıkarmaz.
+- Alt alta dizili kısa tuş listeleri (RDR2 at menüsü) artık menü sanılmıyor (menü/oyun arasında gidip gelme bitti).
+- Üst orta şerit taranmıyor: L2 ile ata bakarken karşıdaki tabelalar ("BOX", "OFFICE") çevrilmez.
+- Türkçe kutu İngilizce yazının üst/alt kenarını da örter (küçük İngilizce harfler kutunun dışında görünmez).
+- Oyun içi yazılar biraz daha büyütülerek okunuyor (küçük, süslü harflerde daha az OCR hatası).
+
 ## v1.8 – Tuş ipuçları: titreme, uzun listeler, büyük harf çevirisi
 
 - Titreme giderildi: arkada at / ışık hareket ettiğinde Türkçe kutu hemen kaldırılmıyor; yazı ~0,1 sn boyunca

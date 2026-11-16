@@ -54,7 +54,7 @@ public sealed record ScreenReadResult(List<ScreenTextBlock> Blocks, int WordCoun
 /// </summary>
 public static class ScreenTextReader
 {
-    private const double SingleScale1080 = 1.25; // 1080p karede büyütme (küçük HUD yazıları için)
+    private const double SingleScale1080 = 1.5; // 1080p karede büyütme (küçük HUD yazıları için)
 
     // Okunmayan orta bölge (oranla): oyun dünyası
     public const double CenterL = 0.30, CenterR = 0.70, CenterT = 0.12, CenterB = 0.62;
@@ -68,6 +68,9 @@ public static class ScreenTextReader
         // Orta bölgeyi ve altyazı alanını sil (OCR orada yazı aramasın)
         Blank(gray, W, PixelRect.FromLTRB((int)(CenterL * W), (int)(CenterT * H), (int)(CenterR * W), (int)(CenterB * H)));
         if (exclude is { } ex) Blank(gray, W, ex.ClampTo(W, H));
+        // Üst orta şerit: oyun dünyasındaki tabelalar / dükkan yazıları burada görünür (L2 ile ata bakarken "BOX", "OFFICE"),
+        // oyunların tuş ipuçları ise kenarlarda ve altta olur
+        Blank(gray, W, PixelRect.FromLTRB((int)(0.20 * W), 0, (int)(0.80 * W), (int)(CenterT * H)));
 
         int maxDim = Math.Max(1000, engine.MaxImageDimension);
         double scale = Math.Clamp(SingleScale1080 * 1080.0 / Math.Max(1, H), 1.0, 2.5);
