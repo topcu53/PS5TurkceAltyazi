@@ -135,6 +135,8 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Theme.Apply(this, canResize: true);
+        FitToScreen();
+        SizeChanged += (_, _) => AdaptLayout();
         _hideTimer.Tick += HideTimer_Tick;
         Log.Written += OnLogWritten;
         _timer.Tick += Timer_Tick;
@@ -142,9 +144,37 @@ public partial class MainWindow : Window
 
     // ───────────────────────────── Başlangıç / kapanış ─────────────────────────────
 
+    /// <summary>
+    /// Açılışta pencereyi ekranın çalışma alanına sığdırır (küçük dizüstü ekranlarında taşmasın).
+    /// Ekran küçükse tam ekran (büyütülmüş) açılır.
+    /// </summary>
+    private void FitToScreen()
+    {
+        var wa = SystemParameters.WorkArea;
+        MinWidth = Math.Min(MinWidth, wa.Width);
+        MinHeight = Math.Min(MinHeight, wa.Height);
+        Width = Math.Min(Width, wa.Width - 16);
+        Height = Math.Min(Height, wa.Height - 16);
+        if (wa.Width < 1320 || wa.Height < 900) WindowState = WindowState.Maximized;
+        AdaptLayout();
+    }
+
+    /// <summary>Pencere boyutuna göre yerleşim: dar ekranda sağ panel ve yazılar küçülür, günlük kısalır.</summary>
+    private void AdaptLayout()
+    {
+        double w = ActualWidth > 0 ? ActualWidth : Width, h = ActualHeight > 0 ? ActualHeight : Height;
+        bool narrow = w < 1150, shortH = h < 800, tiny = h < 650;
+        RightCol.Width = new GridLength(w < 950 ? 250 : narrow ? 300 : 360);
+        TurkishText.FontSize = narrow ? 17 : 21;
+        HeaderLogo.Width = HeaderLogo.Height = shortH ? 40 : 56;
+        HeaderSub.Visibility = tiny ? Visibility.Collapsed : Visibility.Visible;
+        LogList.Height = tiny ? 60 : shortH ? 85 : 130;
+        MainGrid.Margin = shortH ? new Thickness(10, 6, 10, 6) : new Thickness(16, 12, 16, 12);
+    }
+
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.1 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.2 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 

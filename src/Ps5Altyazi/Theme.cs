@@ -54,6 +54,13 @@ public static class Theme
 
         var content = w.Content as UIElement;
         w.Content = null;
+        // Küçük ekranda pencere ekrandan taşmasın: en fazla çalışma alanı kadar, sığmayan kısım kaydırılır
+        var wa = SystemParameters.WorkArea;
+        w.MaxHeight = wa.Height;
+        w.MaxWidth = wa.Width;
+        if (!canResize && content != null && content is not ScrollViewer)
+            content = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                                         HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
 
         var root = new Grid();
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });

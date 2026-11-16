@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.2 – Her ekrana sığar
+
+- Ana pencere açılışta ekranın çalışma alanına göre boyutlanır; küçük ekranda (1320×900'den küçük) tam ekran açılır.
+- Pencere daraldıkça / kısaldıkça yerleşim kendini ayarlar: sağ panel, çeviri yazısı, logo ve günlük küçülür.
+- Ayar pencereleri ekrandan taşmaz; sığmayan kısım kaydırılır.
+
 ## v2.1 – Uygulamaya ait başlık çubuğu, bütün pencereler yeni temada
 
 - Windows başlık çubuğu yerine uygulamanın kendi koyu başlık çubuğu (logo, başlık, küçült / büyüt / kapat; sürükleyerek

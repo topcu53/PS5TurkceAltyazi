@@ -155,7 +155,7 @@ public sealed class TvModeWindow : Window
         close.Click += (_, _) => Close();
         root.Children.Add(close);
 
-        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = 900 };
+        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = SystemParameters.WorkArea.Height - 60 };
         Theme.Apply(this);
         _actionButtons = new[] { findBtn, pairBtn, installBtn, launchBtn, extendBtn };
 
