@@ -107,6 +107,7 @@ public partial class MainWindow : Window
     // Çeviri (Aşama 4)
     private TranslationService? _translation;
     private string? _deepLKey, _azureKey, _geminiKey;
+    private string _lastLearnedText = "";
     private CancellationTokenSource? _trCts;
     private long _trSeq;
     private readonly List<string> _recentEnglish = new();
@@ -142,7 +143,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v1.9 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v1.10 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -969,7 +970,13 @@ public partial class MainWindow : Window
             var norm = CoverNormOf(job.Game, job.Lines);
             ApplyOcr(job.Seq, output, job.ChangeStart, engine.Name, CoverRectOf(job.Game, job.Lines), norm, norm[4] * job.Game.Height);
             // Oyunun altyazı yazısını ölç (yazı tipi + boy + renk), yalnızca gerçek altyazı okunduysa
-            if (SubtitleText.IsPlausible(SubtitleText.Normalize(output.Lines))) LearnGameFont(job.Game, job.Lines, output.Lines);
+            // Her altyazıdan yalnızca bir kez ölç (aynı altyazının kararan / değişen karelerinden tekrar tekrar değil)
+            string learnText = SubtitleText.Normalize(output.Lines);
+            if (SubtitleText.IsPlausible(learnText) && learnText != _lastLearnedText)
+            {
+                _lastLearnedText = learnText;
+                LearnGameFont(job.Game, job.Lines, output.Lines);
+            }
         }
         catch (Exception ex)
         {

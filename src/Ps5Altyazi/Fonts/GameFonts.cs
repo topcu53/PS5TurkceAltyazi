@@ -246,11 +246,51 @@ public sealed class SubtitleFontMatcher
             var m = Measure(game, lines[i], texts[i]);
             if (m == null) continue;
             var list = m.Caps ? _caps : _lower;
+            if (IsOutlier(list, m)) continue;
             list.Add(m);
             if (list.Count > Keep) list.RemoveAt(0);
+            _sinceSwitch++;
             DetectStyleChange(list);
         }
         return Choose(game.Height);
+    }
+
+    private int _sinceSwitch;
+    private readonly List<LineMeasure> _odd = new();
+
+    private static double Lum(LineMeasure m) => 0.299 * m.Red + 0.587 * m.Green + 0.114 * m.Blue;
+
+    /// <summary>
+    /// Ölçüme alınmaması gereken satır mı? Kararan (fade) altyazı, başka bir ekran yazısı (bölüm başlığı vb.) gibi
+    /// boyu ya da rengi öncekilerden çok farklı tek tük ölçümler yazı tipini/boyu bozmasın.
+    /// Ama aynı yönde tutarlı 5 farklı ölçüm gelirse (gerçekten başka oyun) kabul edilir.
+    /// </summary>
+    private bool IsOutlier(List<LineMeasure> list, LineMeasure m)
+    {
+        if (list.Count < 6) return false;
+        double xh = Median(list.Select(x => x.Xh)), lum = Median(list.Select(Lum));
+        bool odd = Math.Abs(m.Xh - xh) > xh * 0.2 || Lum(m) < lum * 0.82;
+        if (!odd) { _odd.Clear(); return false; }
+        if (Lum(m) < lum * 0.82) return true; // kararan / soluk kare: hiç kullanma
+        _odd.Add(m);
+        if (_odd.Count >= 5)
+        {
+            double ox = Median(_odd.Select(x => x.Xh));
+            if (_odd.All(x => Math.Abs(x.Xh - ox) < ox * 0.12))
+            {
+                // Tutarlı yeni boy: başka oyun / başka altyazı boyutu → eskileri bırak
+                list.Clear();
+                (ReferenceEquals(list, _lower) ? _caps : _lower).Clear();
+                list.AddRange(_odd.Take(_odd.Count - 1));
+                _odd.Clear();
+                _restyled = true;
+                _lastRestyle = DateTime.UtcNow;
+                Log.Info("Altyazı boyu değişti (başka oyun?): yazı tipi ve boy yeniden öğreniliyor.");
+                return false;
+            }
+            _odd.RemoveAt(0);
+        }
+        return true;
     }
 
     private bool _restyled;
@@ -277,7 +317,7 @@ public sealed class SubtitleFontMatcher
         bool sizeJump = (allBigger || allSmaller) && Math.Abs(xn - xo) > xo * 0.15;
         // Kısa satırlar (ör. "Of all the days...") ölçüyü oynatır: şekil değişimi için en az iki ölçü birlikte belirgin değişmeli
         int shapeVotes = (Math.Abs(sn - so) > 0.06 ? 1 : 0) + (Math.Abs(wn - wo) > 0.14 ? 1 : 0) + (dk > 0.28 ? 1 : 0);
-        bool shapeJump = shapeVotes >= 2;
+        bool shapeJump = shapeVotes >= 3;
         if (!sizeJump && !shapeJump) return;
         list.RemoveRange(0, list.Count - recent);
         (ReferenceEquals(list, _lower) ? _caps : _lower).Clear(); // diğer listede de eski oyunun ölçümleri var
@@ -322,22 +362,38 @@ public sealed class SubtitleFontMatcher
             var cur = Current.Font;
             double curD = Distance(cur, useCaps, r, s, w, k);
             bool clearlyWrong = curD > 2.5 && bestD < curD * 0.6; // ör. önceki oyundan kalan font buna hiç benzemiyor
-            if (!_restyled && !clearlyWrong && (bestD > curD * 0.75 || src.Count < 6)) chosen = cur;
+            // Benzer fontlar arasında gidip gelmesin: değişim için en az 8 yeni ölçüm ve belirgin üstünlük gerekir
+            if (!_restyled && !clearlyWrong && (bestD > curD * 0.7 || src.Count < 6 || _sinceSwitch < 8)) chosen = cur;
         }
 
         double perEm = useCaps ? chosen.CapPerEm : chosen.XhPerEm;
         double em = xh / Math.Max(0.2, perEm) / frameH;
         // Boy kararlılığı: yeterli ölçüm varsa küçük oynamalarda eski boy korunur (yazı her altyazıda aynı boyda kalsın)
         if (!_restyled && Current != null && Current.EmNorm > 0 && Current.Font.Key == chosen.Key && Current.Samples >= 6 &&
-            Math.Abs(Current.EmNorm - em) < Current.EmNorm * 0.07)
+            Math.Abs(Current.EmNorm - em) < Current.EmNorm * 0.10)
             em = Current.EmNorm;
+        // Renk de küçük oynamalarda sabit kalsın
+        if (!_restyled && Current != null && ColorClose(Current.ColorHex, color)) color = Current.ColorHex;
         var next = new GameFontChoice(chosen, em, color, outline, src.Count);
         bool changed = Current == null || Current.Font.Key != next.Font.Key || Math.Abs(Current.EmNorm - em) > Current.EmNorm * 0.03 ||
                        Current.ColorHex != color || Current.Outline != outline;
+        if (Current == null || Current.Font.Key != next.Font.Key) _sinceSwitch = 0;
         Current = next;
         _currentDist = bestD;
         _restyled = false;
         return changed;
+    }
+
+    private static bool ColorClose(string a, string b)
+    {
+        try
+        {
+            int d = 0;
+            for (int i = 1; i < 7; i += 2)
+                d = Math.Max(d, Math.Abs(Convert.ToInt32(a.Substring(i, 2), 16) - Convert.ToInt32(b.Substring(i, 2), 16)));
+            return d <= 14;
+        }
+        catch { return false; }
     }
 
     /// <summary>Ölçülen yazı ile bir font arasındaki fark (küçük = daha benzer).</summary>

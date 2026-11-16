@@ -1,5 +1,16 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v1.10 – Sabit yazı tipi ve boy, sağdaki tuş listesi düzgün
+
+- Yazı tipi/boy artık bir altyazıdan yalnızca bir kez ölçülüyor (kararan kareler tekrar tekrar ölçülmüyor).
+- Kararan / soluk ve boyu çok farklı tek tük satırlar (bölüm başlığı vb.) ölçüme girmiyor. Önceki sürümde bir anda
+  "Oswald 54 px" seçilmesinin sebebi buydu. Gerçekten başka oyuna geçilirse (5 tutarlı farklı ölçüm) yeniden öğrenilir.
+- Benzer fontlar arasında gidip gelme bitti: değişim için en az 8 yeni ölçüm ve belirgin üstünlük gerekir;
+  boy %10'a, renk küçük farklara kadar sabit kalır.
+- Tuş listesi satırları (yanında tuş simgesi olan) artık iki satırlık tek blok olarak birleştirilmiyor: dev boyutlu
+  "BİLGİ GÖSTER / EYER'İ KALDIR" kutuları biter.
+- Liste değişince eski Türkçe yazı yanlış satırda kalmıyor (yazının değiştiği daha hassas algılanıyor).
+
 ## v1.9 – Tuş ipuçları: kararlı çeviri, tabela yazıları yok
 
 - Yarım / hatalı okumalar artık çevrilmiyor: bir yazı iki taramada birebir aynı okunmadan çeviriye gitmez

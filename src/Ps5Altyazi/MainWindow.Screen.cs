@@ -185,7 +185,7 @@ public partial class MainWindow
         {
             if (it.Hidden || it.MaskCount < 4 || it.FrameW != game.Width || it.FrameH != game.Height) continue;
             var (mask, count) = ScreenTextReader.TextMask(game, it.Px);
-            bool gone = count < it.MaskCount * 0.3 || ScreenTextReader.MaskDistance(mask, it.Mask) > 0.55;
+            bool gone = count < it.MaskCount * 0.35 || ScreenTextReader.MaskDistance(mask, it.Mask) > 0.4;
             // Arkadaki sahne (at, ışık) hareket ettikçe maske oynar: ancak ~0,1 sn boyunca değişik kalırsa gizle
             it.MaskBad = gone ? it.MaskBad + 1 : 0;
             if (it.MaskBad >= 6)
@@ -392,10 +392,10 @@ public partial class MainWindow
             if (it.MaskCount >= 4 && it.FrameW == game.Width && it.FrameH == game.Height)
             {
                 var (mask, count) = ScreenTextReader.TextMask(game, it.Px);
-                stillThere = count >= it.MaskCount * 0.5 && ScreenTextReader.MaskDistance(mask, it.Mask) <= 0.4;
+                stillThere = count >= it.MaskCount * 0.6 && ScreenTextReader.MaskDistance(mask, it.Mask) <= 0.25;
             }
             if (!stillThere) it.Hidden = true;
-            if (it.Missed >= (stillThere ? 4 : 2) || (it.Seen < 2 && !stillThere)) _screenItems.Remove(it);
+            if (it.Missed >= (stillThere ? 3 : 2) || (it.Seen < 2 && !stillThere)) _screenItems.Remove(it);
         }
 
         // Üst üste binen kopyaları temizle (en son görüleni tut)

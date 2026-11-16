@@ -387,8 +387,11 @@ public static class ScreenTextReader
                 bool centered = Math.Abs(ln.CenterX - last.CenterX) < 1.5 * h;
                 if (!leftAligned && !centered) continue;
                 // Paragraf mı, alt alta ayrı ipuçları mı? Üst satır uzun bir cümle olmalı ya da alt satır küçük harfle sürmeli.
+                // Yanında tuş simgesi olan satırlar (tuş listesi) asla birleştirilmez
+                if (last.SideIcon != 0 || ln.SideIcon != 0) continue;
                 string lower = ln.Text.TrimStart();
-                bool continues = last.Words.Count >= 4 ||
+                int realWords = last.Words.Count(w => w.Text.Count(char.IsLetter) >= 3);
+                bool continues = realWords >= 4 ||
                                  (last.Words.Count >= 2 && lower.Length > 0 && char.IsLower(lower[0]));
                 if (!continues) continue;
                 char end = last.Text.TrimEnd().LastOrDefault();
