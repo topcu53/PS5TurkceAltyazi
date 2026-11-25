@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.10 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.11 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -216,7 +216,12 @@ public partial class MainWindow : Window
         _userStopped = !_settings.AutoStart;
         LaunchRemotePlayButton.IsEnabled = FindRemotePlayExe() != null;
         UpdateSourceUi();
-        if (UseDirect())
+        if (!_settings.SetupCompleted)
+        {
+            Log.Info("İlk açılış: kurulum adımları açılıyor (PSN girişi, PS5 eşleme, çeviri, TV).");
+            Dispatcher.InvokeAsync(RunSetupWizard, DispatcherPriority.Background);
+        }
+        else if (UseDirect())
         {
             var pc = Ps5.Ps5Store.Pairing(_settings);
             Log.Success($"Görüntü kaynağı: PS5'e doğrudan bağlantı ({pc?.Name}, {pc?.Host}). PS Remote Play uygulaması gerekmiyor.");
@@ -225,9 +230,8 @@ public partial class MainWindow : Window
         }
         else if (!_directReady)
         {
-            Log.Info("PS5 bağlantısı henüz kurulmadı. '🎮 PS5 Bağlantısı' ile bir kez kurun; PS Remote Play uygulaması gerekmez.");
+            Log.Info("PS5 bağlantısı henüz kurulmadı. Üstteki '🧭 Kurulum' ile bir kez kurun.");
             if (!Ps5.Ps5Helper.Available) Log.Warn("PS5 bağlantı yardımcısı (ps5-baglanti.exe) bu sürümde yok.");
-            else Dispatcher.InvokeAsync(OfferPs5Setup, DispatcherPriority.Background);
         }
         else if (rp != null)
         {
@@ -332,7 +336,7 @@ public partial class MainWindow : Window
         if (UseDirect()) { StartDirectCapture(); return; }
         if (!_directReady)
         {
-            Log.Warn("PS5 bağlantısı kurulmadı. '🎮 PS5 Bağlantısı' ile bir kez kurun (PS Remote Play gerekmez).");
+            Log.Warn("PS5 bağlantısı kurulmadı. Üstteki '🧭 Kurulum' ile bir kez kurun.");
             OfferPs5Setup();
             if (UseDirect() && _capture == null) StartDirectCapture();
             return;
@@ -1723,7 +1727,7 @@ public partial class MainWindow : Window
 
     private void TvMode_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new TvModeWindow(_settings, EnsureServer, SaveSettings) { Owner = this };
+        var dlg = new TvModeWindow(_settings, EnsureServer, SaveSettings, SendTestSubtitle) { Owner = this };
         dlg.ShowDialog();
     }
 
@@ -1968,6 +1972,7 @@ public partial class MainWindow : Window
     {
         if (_capture != null) WarmTranslation();
         DateTime now = DateTime.Now;
+        UpdateConnectionPills();
 
         if (_target != null && _capture != null)
         {

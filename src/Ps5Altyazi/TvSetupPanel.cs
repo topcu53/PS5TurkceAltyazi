@@ -16,7 +16,7 @@ namespace Ps5Altyazi;
 /// LG webOS: kurulum ve başlatma buradan otomatik. Samsung Tizen ve Android TV: uygulama elle kurulur (KURULUM.md),
 /// TV uygulaması bu bilgisayara bağlanır.
 /// </summary>
-public sealed class TvModeWindow : Window
+public sealed class TvSetupPanel : UserControl
 {
     private readonly AppSettings _s;
     private readonly Func<SubtitleServer> _ensureServer;
@@ -33,20 +33,56 @@ public sealed class TvModeWindow : Window
     };
     private readonly TextBlock _urlText = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 0) };
     private readonly TextBlock _otherIp = new() { FontSize = 20, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 6, 0, 0) };
-    private readonly Button[] _actionButtons;
+    private Button[] _actionButtons = Array.Empty<Button>();
+    private readonly Action? _sendTest;
+    private readonly TextBlock _tvDot = new() { Text = "●", FontSize = 18, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 6, 0) };
+    private readonly TextBlock _tvState = new() { VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
 
-    public TvModeWindow(AppSettings settings, Func<SubtitleServer> ensureServer, Action saveSettings)
+    /// <summary>TV'ye bağlı ekran sayısı (TV uygulaması açık ve bu bilgisayara bağlı).</summary>
+    public int Connected => _ensureServer().ClientCount;
+
+    private void RefreshTvState()
+    {
+        int n = Connected;
+        bool lgReady = _s.TvPlatform == "webos" && _s.TvKeyProtected != null;
+        if (n > 0) { _tvDot.Foreground = Theme.Good; _tvState.Text = $"TV bağlı ({n} ekran)"; }
+        else if (_launching) { _tvDot.Foreground = Theme.Warn; _tvState.Text = "TV uygulaması açılıyor…"; }
+        else { _tvDot.Foreground = Theme.Bad; _tvState.Text = lgReady ? "TV bağlı değil – 'TV'de Başlat' ya da test düğmesi" : "TV bağlı değil – TV uygulamasını açın"; }
+    }
+
+    private bool _launching;
+
+    /// <summary>TV bağlı değilse (LG eşlenmişse) önce uygulamayı açar, bağlanmasını bekler, sonra test altyazısı gönderir.</summary>
+    private async Task SendTestAsync()
+    {
+        _ensureServer();
+        if (Connected == 0 && _s.TvPlatform == "webos" && _s.TvKeyProtected != null)
+        {
+            _launching = true;
+            RefreshTvState();
+            try
+            {
+                await LaunchAsync();
+                for (int i = 0; i < 30 && Connected == 0; i++) await Task.Delay(500);
+            }
+            finally { _launching = false; RefreshTvState(); }
+        }
+        if (Connected == 0)
+        {
+            Write("✖ TV bağlı değil. TV'de Altyazı+ uygulamasını açın (LG'de 'TV'de Başlat'), sonra tekrar deneyin.");
+            return;
+        }
+        _sendTest?.Invoke();
+        Write("✔ Test altyazısı gönderildi: TV ekranında \"Bu bir test altyazısıdır\" yazısını görmelisiniz.");
+    }
+
+    public TvSetupPanel(AppSettings settings, Func<SubtitleServer> ensureServer, Action saveSettings, Action? sendTest = null)
     {
         _s = settings;
         _ensureServer = ensureServer;
         _saveSettings = saveSettings;
-        Title = "TV Modu – Türkçe altyazıyı TV'de göster";
-        Width = 720;
-        SizeToContent = SizeToContent.Height;
-        ResizeMode = ResizeMode.NoResize;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
-        var root = new StackPanel { Margin = new Thickness(16) };
+        _sendTest = sendTest;
+        var root = new StackPanel();
 
         // Platform
         root.Children.Add(Header("TV türü"));
@@ -149,15 +185,24 @@ public sealed class TvModeWindow : Window
         root.Children.Add(Header("Telefon / tablet / başka ekran (her cihaz)"));
         root.Children.Add(_urlText);
 
+        // Dene: bağlantı durumu ve test altyazısı
+        root.Children.Add(Header("Dene"));
+        var testRow = new StackPanel { Orientation = Orientation.Horizontal };
+        var testBtn = Btn("🧪 Test altyazısı gönder", async () => await SendTestAsync());
+        testRow.Children.Add(testBtn);
+        testRow.Children.Add(_tvDot);
+        testRow.Children.Add(_tvState);
+        root.Children.Add(testRow);
+        root.Children.Add(Note("TV'de (ve PC'de) \"Bu bir test altyazısıdır\" yazısı birkaç saniye görünür."));
+
         root.Children.Add(_log);
 
-        var close = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0), IsCancel = true };
-        close.Click += (_, _) => Close();
-        root.Children.Add(close);
-
-        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, MaxHeight = SystemParameters.WorkArea.Height - 60 };
-        Theme.Apply(this);
-        _actionButtons = new[] { findBtn, pairBtn, installBtn, launchBtn, extendBtn };
+        Content = root;
+        _actionButtons = new[] { findBtn, pairBtn, installBtn, launchBtn, extendBtn, testBtn };
+        var stateTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        stateTimer.Tick += (_, _) => RefreshTvState();
+        Loaded += (_, _) => { RefreshTvState(); stateTimer.Start(); };
+        Unloaded += (_, _) => stateTimer.Stop();
 
         Loaded += (_, _) =>
         {
@@ -309,4 +354,24 @@ public sealed class TvModeWindow : Window
 
     private static TextBlock Note(string text) =>
         new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 0) };
+}
+
+/// <summary>"📺 TV Modu" penceresi: TV kurulum panelini gösterir.</summary>
+public sealed class TvModeWindow : Window
+{
+    public TvModeWindow(AppSettings settings, Func<SubtitleServer> ensureServer, Action saveSettings, Action? sendTest = null)
+    {
+        Title = "TV Modu – Türkçe altyazıyı TV'de göster";
+        Width = 720;
+        SizeToContent = SizeToContent.Height;
+        ResizeMode = ResizeMode.NoResize;
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        var root = new StackPanel { Margin = new Thickness(16) };
+        root.Children.Add(new TvSetupPanel(settings, ensureServer, saveSettings, sendTest));
+        var close = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0), IsCancel = true };
+        close.Click += (_, _) => Close();
+        root.Children.Add(close);
+        Content = root;
+        Theme.Apply(this);
+    }
 }

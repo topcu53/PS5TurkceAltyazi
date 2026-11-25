@@ -76,6 +76,8 @@ public sealed class AppSettings
     // ───── PS5'e doğrudan bağlantı (PS Remote Play uygulaması olmadan; ps5-baglanti yardımcısı) ─────
     /// <summary>true: görüntü PS5'ten doğrudan alınır; false: PS Remote Play penceresinden.</summary>
     public bool DirectConnect { get; set; } = false;
+    /// <summary>İlk açılış kurulum sihirbazı tamamlandı mı.</summary>
+    public bool SetupCompleted { get; set; } = false;
     /// <summary>İkinci PSN hesabının 8 baytlık hesap kimliği (onaltılık, DPAPI ile şifreli). Şifre ya da token saklanmaz.</summary>
     public string? PsnAccountIdProtected { get; set; }
     /// <summary>Eşlenmiş PS5'in bilgileri (JSON: adres, ad, kayıt anahtarları; DPAPI ile şifreli).</summary>

@@ -33,6 +33,22 @@
                            Text="PS5 oyunları için canlı Türkçe altyazı  •  Yapımcı: Burak Topcu"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Background="{StaticResource CardAlt}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="16" Padding="12,6" Margin="0,0,8,0" VerticalAlignment="Center"
+                        ToolTip="PS5 bağlantısı: yeşil bağlı, turuncu bağlanıyor, kırmızı bağlı değil">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="Ps5Dot" Text="●" Foreground="#FF5C5C" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="Ps5PillText" Text="PS5: bağlı değil" FontSize="13" VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+                <Border Background="{StaticResource CardAlt}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="16" Padding="12,6" Margin="0,0,8,0" VerticalAlignment="Center"
+                        ToolTip="TV bağlantısı: yeşil bağlı, turuncu bekleniyor, kırmızı bağlı değil">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="TvDot" Text="●" Foreground="#FF5C5C" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TvPillText" Text="TV: bağlı değil" FontSize="13" VerticalAlignment="Center" MaxWidth="220" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                </Border>
+                <Button Content="🧪 Test altyazısı" Click="TestSubtitle_Click" Margin="0,0,8,0" ToolTip="TV'ye ve PC'ye 'Bu bir test altyazısıdır' gönderir"/>
+                <Button Content="🧭 Kurulum" Click="SetupWizard_Click" Margin="0,0,10,0" ToolTip="Kurulum adımlarını yeniden aç"/>
                 <Button x:Name="UpdateButton" Visibility="Collapsed" Click="Update_Click" Margin="0,0,10,0" FontWeight="Bold"
                         Background="#1F9D55" BorderBrush="#2FC76E" Foreground="White" Padding="14,6"
                         Content="⬇ Şimdi güncelle" ToolTip="Yeni sürüm hazır"/>
@@ -40,7 +56,7 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="●" Foreground="#33C6FF" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock x:Name="CaptureStatus" Text="Durduruldu" FontSize="13" VerticalAlignment="Center"
-                                   MaxWidth="320" TextTrimming="CharacterEllipsis"/>
+                                   MaxWidth="220" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
                 </Border>
                 <Button x:Name="StartStopButton" Style="{StaticResource Primary}" Content="▶ Başlat (F6)" Click="StartStop_Click"/>
@@ -120,7 +136,7 @@
                             <Image Source="Resources/logo-256.png" Width="72" Height="72" Opacity="0.85" Margin="0,0,0,14"/>
                             <TextBlock x:Name="PreviewPlaceholder" Foreground="{StaticResource TextDim}" FontSize="16" TextAlignment="Center"
                                        TextWrapping="Wrap" MaxWidth="520"
-                                       Text="Oyun görüntüsü burada görünecek.&#x0a;PS Remote Play'i açıp PS5'e bağlanın, sonra ▶ Başlat'a basın."/>
+                                       Text="Oyun görüntüsü burada görünecek.&#x0a;▶ Başlat'a (F6) basın: program PS5'e kendisi bağlanır."/>
                         </StackPanel>
                         <Canvas x:Name="Overlay" Background="Transparent"
                                 MouseLeftButtonDown="Overlay_MouseDown" MouseMove="Overlay_MouseMove" MouseLeftButtonUp="Overlay_MouseUp">
@@ -207,7 +223,7 @@
                 <Border Grid.Row="1" Style="{StaticResource CardBorder}">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource Label}" Text="REMOTE PLAY" Margin="0,0,0,2"/>
+                            <TextBlock Style="{StaticResource Label}" Text="PS5 BAĞLANTISI" Margin="0,0,0,2"/>
                             <TextBlock x:Name="RemotePlayStatus" Style="{StaticResource Value}" Text="Kontrol ediliyor…"/>
 
                             <TextBlock Style="{StaticResource Label}" Text="OKUMA (OCR)"/>

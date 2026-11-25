@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.11 – Kurulum sihirbazı, durum ışıkları, test altyazısı
+
+- İlk açılışta **kurulum sihirbazı**: Hoş geldin → PS5 bağlantısı (ikinci PSN hesabıyla giriş, PS5 eşleme, deneme) → Çeviri
+  anahtarları → TV kurulumu (test altyazısıyla) → Bitti. Sonra ana sayfadan ▶ Başlat. Üstteki **🧭 Kurulum** ile yeniden açılır.
+- Üst bantta **PS5** ve **TV** durum ışıkları: yeşil bağlı, turuncu bağlanıyor / bekleniyor, kırmızı bağlı değil; durum yazıyla da gösterilir.
+- **🧪 Test altyazısı**: TV'ye ve PC'ye "Bu bir test altyazısıdır" gönderir (TV Modu'nda ve sihirbazda da var; LG'de TV uygulaması
+  kapalıysa önce açılır).
+- Açılışta ve önizlemede artık PS Remote Play'den hiç söz edilmiyor.
+
 ## v2.10 – Kurulum dosyası ve "Şimdi güncelle"
 
 - Yeni **AltyaziPlus-Setup.exe**: yönetici izni istemeden kurulur (Başlat menüsü ve masaüstü kısayolu, Program Ekle/Kaldır'dan

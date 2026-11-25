@@ -39,16 +39,13 @@ public partial class MainWindow
             SetText(RemotePlayStatus, "PS5 bağlantısı kurulmadı – '🎮 PS5 Bağlantısı'", Orange);
     }
 
-    /// <summary>Açılışta: doğrudan bağlantı kurulmamışsa (PS Remote Play yerine) bu kurulumu önerir.</summary>
+    /// <summary>PS5 bağlantısı kurulmamışken başlatılmak istendi: kurulum sihirbazı açılır.</summary>
     private void OfferPs5Setup()
     {
         var answer = MessageBox.Show(this,
-            "PS5 bağlantısı henüz kurulmadı.\n\n" +
-            "Altyazı+ PS5'e PS Remote Play uygulaması olmadan, arka planda kendisi bağlanır. Bunun için bir kerelik kurulum gerekir " +
-            "(ikinci bir PSN hesabıyla giriş ve PS5'teki 'Cihazı Bağla' kodu).\n\n" +
-            "Şimdi kurulsun mu?",
-            "PS5 Bağlantısı", MessageBoxButton.YesNo, MessageBoxImage.Information);
-        if (answer == MessageBoxResult.Yes) Ps5Connect_Click(this, new RoutedEventArgs());
+            "PS5 bağlantısı henüz kurulmadı.\n\nKurulum adımları (PSN girişi, PS5 eşleme, TV) şimdi açılsın mı?",
+            "Altyazı+ – Kurulum", MessageBoxButton.YesNo, MessageBoxImage.Information);
+        if (answer == MessageBoxResult.Yes) RunSetupWizard();
     }
 
     private void DirectCheck_Changed(object sender, RoutedEventArgs e)
@@ -96,6 +93,7 @@ public partial class MainWindow
         src.StateChanged += (state, text) => Dispatcher.InvokeAsync(() =>
         {
             if (!ReferenceEquals(_capture, src)) return;
+            SetPs5Pill(state, text);
             bool streaming = state == Ps5State.Streaming;
             if (streaming && !_directStreaming)
             {
@@ -137,6 +135,8 @@ public partial class MainWindow
         _capture = src;
         _target = null;
         _directStreaming = false;
+        _ps5Level = 1;
+        _ps5Text = "bağlanıyor…";
         ResetSessionStats();
         StartStopButton.Content = "■ Durdur (F6)";
         SetText(CaptureStatus, "PS5'e bağlanılıyor…", Orange);

@@ -14,10 +14,10 @@ using Ps5Altyazi.Settings;
 namespace Ps5Altyazi;
 
 /// <summary>
-/// PS5 Bağlantısı: PS Remote Play uygulaması olmadan PS5'e doğrudan bağlanmak için bir kerelik kurulum
+/// PS5 bağlantısı kurulum paneli (hem kurulum sihirbazında hem "PS5 Bağlantısı" penceresinde): PS Remote Play uygulaması olmadan PS5'e doğrudan bağlanmak için bir kerelik kurulum
 /// (ikinci PSN hesabıyla giriş → PS5'i bul → PS5'teki "Cihazı Bağla" koduyla eşleştir → dene).
 /// </summary>
-public sealed class Ps5ConnectWindow : Window
+public sealed class Ps5SetupPanel : UserControl
 {
     private readonly AppSettings _s;
     private readonly Action _save;
@@ -38,17 +38,11 @@ public sealed class Ps5ConnectWindow : Window
     };
     private readonly List<Button> _buttons = new();
 
-    public Ps5ConnectWindow(AppSettings settings, Action saveSettings)
+    public Ps5SetupPanel(AppSettings settings, Action saveSettings)
     {
         _s = settings;
         _save = saveSettings;
-        Title = "PS5 Bağlantısı – PS Remote Play uygulaması olmadan";
-        Width = 760;
-        SizeToContent = SizeToContent.Height;
-        ResizeMode = ResizeMode.NoResize;
-        WindowStartupLocation = WindowStartupLocation.CenterOwner;
-
-        var root = new StackPanel { Margin = new Thickness(16) };
+        var root = new StackPanel();
         root.Children.Add(Note(
             "Bir kerelik kurulum. Bittiğinde PS Remote Play uygulamasına gerek kalmaz: Altyazı+ açılınca PS5'e arka planda kendisi " +
             "bağlanır (PS5 dinlenmedeyse uyandırır), ekranda pencere açılmaz. Siz oyunu TV'de, kendi kolunuzla oynarsınız."));
@@ -106,11 +100,7 @@ public sealed class Ps5ConnectWindow : Window
         root.Children.Add(_directCheck);
         root.Children.Add(_log);
 
-        var close = new Button { Content = "Kapat", Padding = new Thickness(18, 4, 18, 4), Margin = new Thickness(0, 12, 0, 0), HorizontalAlignment = HorizontalAlignment.Right, IsCancel = true };
-        close.Click += (_, _) => Close();
-        root.Children.Add(close);
         Content = root;
-        Theme.Apply(this);
 
         _passcodeBox.Password = Ps5Store.Passcode(_s) ?? "";
         _passcodeBox.PasswordChanged += (_, _) =>
@@ -141,7 +131,7 @@ public sealed class Ps5ConnectWindow : Window
             OpenInBrowser();
             return;
         }
-        var (url, error) = PsnLoginWindow.Run(this);
+        var (url, error) = PsnLoginWindow.Run(Window.GetWindow(this));
         if (url == null)
         {
             Write(error != null ? $"✖ Giriş tamamlanmadı ({error}). Tekrar deneyin ya da 'Tarayıcıda aç'." : "Giriş yapılmadı.");
@@ -261,8 +251,15 @@ public sealed class Ps5ConnectWindow : Window
         RefreshState();
     }
 
+    /// <summary>Giriş / eşleme durumu değişti (sihirbaz ilerlemeyi günceller).</summary>
+    public event Action? Changed;
+
+    /// <summary>İkinci hesapla giriş yapıldı ve PS5 eşlendi mi.</summary>
+    public bool IsComplete => Ps5Store.IsReady(_s);
+
     private void RefreshState()
     {
+        Changed?.Invoke();
         bool hasAccount = Ps5Store.AccountId(_s) != null;
         _accountState.Text = hasAccount ? "✔ Giriş yapıldı (hesap kimliği kayıtlı)." : "Henüz giriş yapılmadı.";
         _accountState.Foreground = hasAccount ? Theme.Good : Theme.Dim;
@@ -307,4 +304,24 @@ public sealed class Ps5ConnectWindow : Window
 
     private static TextBlock Note(string text) =>
         new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 0) };
+}
+
+/// <summary>"🎮 PS5 Bağlantısı" penceresi: kurulum panelini gösterir.</summary>
+public sealed class Ps5ConnectWindow : Window
+{
+    public Ps5ConnectWindow(AppSettings settings, Action saveSettings)
+    {
+        Title = "PS5 Bağlantısı – PS Remote Play uygulaması olmadan";
+        Width = 760;
+        SizeToContent = SizeToContent.Height;
+        ResizeMode = ResizeMode.NoResize;
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        var root = new StackPanel { Margin = new Thickness(16) };
+        root.Children.Add(new Ps5SetupPanel(settings, saveSettings));
+        var close = new Button { Content = "Kapat", Padding = new Thickness(18, 4, 18, 4), Margin = new Thickness(0, 12, 0, 0), HorizontalAlignment = HorizontalAlignment.Right, IsCancel = true };
+        close.Click += (_, _) => Close();
+        root.Children.Add(close);
+        Content = root;
+        Theme.Apply(this);
+    }
 }
