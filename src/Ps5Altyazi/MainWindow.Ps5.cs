@@ -18,14 +18,17 @@ public partial class MainWindow
     private volatile bool _directStreaming;
 
     /// <summary>Görüntü PS5'ten doğrudan mı alınacak (ayar açık, kütüphane var, hesap ve PS5 eşlenmiş).</summary>
-    private bool UseDirect() => _settings.DirectConnect && Ps5Link.IsReady(_settings);
+    private bool UseDirect() => _settings.DirectConnect && _directReady;
+
+    /// <summary>Kütüphane var, hesap ve PS5 eşlenmiş (UpdateSourceUi'de güncellenir; zamanlayıcı her yarım saniyede sorar).</summary>
+    private bool _directReady;
 
     private bool DirectRunning => _capture is Ps5DirectCaptureSource;
 
     /// <summary>KAYNAK satırı: doğrudan bağlantı hazırsa onay kutusu görünür, açıkken pencere seçimi gizlenir.</summary>
     private void UpdateSourceUi()
     {
-        bool ready = Ps5Link.IsReady(_settings);
+        bool ready = _directReady = Ps5Link.IsReady(_settings);
         DirectCheck.Visibility = ready ? Visibility.Visible : Visibility.Collapsed;
         _updatingDirectCheck = true;
         DirectCheck.IsChecked = _settings.DirectConnect && ready;

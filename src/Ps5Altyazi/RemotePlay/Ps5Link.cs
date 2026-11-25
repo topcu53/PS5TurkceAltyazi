@@ -11,14 +11,13 @@ namespace Ps5Altyazi.RemotePlayLink;
 public static class Ps5Link
 {
     /// <summary>Yerel kütüphane (altyazi_rp.dll) bu programda var ve yüklenebiliyor mu.</summary>
-    public static bool LibraryAvailable
+    public static bool LibraryAvailable => _available.Value;
+
+    private static readonly Lazy<bool> _available = new(() =>
     {
-        get
-        {
-            try { return NativeMethods.IsAvailable; }
-            catch { return false; }
-        }
-    }
+        try { return NativeMethods.IsAvailable; }
+        catch { return false; }
+    });
 
     public static byte[]? AccountId(AppSettings s)
     {

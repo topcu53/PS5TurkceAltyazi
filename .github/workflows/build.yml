@@ -129,6 +129,12 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Derle (tek dosya .exe)
         run: dotnet publish src\Ps5Altyazi\Ps5Altyazi.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
+      - name: PS5 bağlantı kütüphanesi programın içinde mi
+        shell: pwsh
+        run: |
+          $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes("publish\AltyaziPlus.exe"))
+          foreach ($n in "altyazi_rp.dll", "WebView2Loader.dll") { if (-not $text.Contains($n)) { throw "$n AltyaziPlus.exe'nin içinde yok" } }
+          "tamam"
       - uses: actions/upload-artifact@v4
         with:
           name: AltyaziPlus-Windows

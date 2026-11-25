@@ -27,7 +27,6 @@
     <Resource Include="Resources\logo-256.png" />
     <!-- Çeviri önbelleği (SQLite) ve API anahtarının Windows DPAPI ile şifrelenmesi -->
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <!-- LG webOS TV'ye uygulama kurmak için (geliştirici modu SSH, port 9922) -->
     <PackageReference Include="SSH.NET" Version="2024.1.0" />
     <!-- PSN girişi: Sony'nin kendi giriş sayfası program içinde açılır (şifre programa gelmez) -->
