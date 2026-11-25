@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.10 – Kurulum dosyası ve "Şimdi güncelle"
+
+- Yeni **AltyaziPlus-Setup.exe**: yönetici izni istemeden kurulur (Başlat menüsü ve masaüstü kısayolu, Program Ekle/Kaldır'dan
+  kaldırılabilir).
+- Program yeni sürümü kendisi denetler (açılışta ve 6 saatte bir). Yeni sürüm çıkınca üst bantta **⬇ Şimdi güncelle**
+  düğmesi görünür; basınca indirilir, sessizce kurulur ve program yeni sürümle yeniden açılır. Ayarlar, PS5 eşlemesi ve
+  çeviri önbelleği korunur.
+
 ## v2.9 – PS Remote Play uygulaması olmadan PS5'e doğrudan bağlantı (kendi yardımcımız)
 
 - PS5 bağlantısı baştan kendi kodumuzla yazıldı: programın içindeki ayrı yardımcı `ps5-baglanti.exe` (tools/ps5-baglanti),

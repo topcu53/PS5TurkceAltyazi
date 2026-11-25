@@ -33,6 +33,9 @@
                            Text="PS5 oyunları için canlı Türkçe altyazı  •  Yapımcı: Burak Topcu"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="UpdateButton" Visibility="Collapsed" Click="Update_Click" Margin="0,0,10,0" FontWeight="Bold"
+                        Background="#1F9D55" BorderBrush="#2FC76E" Foreground="White" Padding="14,6"
+                        Content="⬇ Şimdi güncelle" ToolTip="Yeni sürüm hazır"/>
                 <Border Background="{StaticResource CardAlt}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="16" Padding="14,6" Margin="0,0,10,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="●" Foreground="#33C6FF" Margin="0,0,8,0" VerticalAlignment="Center"/>

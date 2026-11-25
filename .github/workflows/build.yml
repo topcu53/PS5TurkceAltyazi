@@ -99,10 +99,19 @@ jobs:
           $meta = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($dll.FullName))
           if (-not $meta.Contains("ps5-baglanti.exe")) { throw "ps5-baglanti.exe programa gömülmedi" }
           "tamam ($([math]::Round($dll.Length/1MB,1)) MB)"
+      - name: Kurulum dosyası (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          $ver = (Get-Content VERSION -Raw).Trim()
+          & $iscc /Qp "/DMyVersion=$ver" installer\AltyaziPlus.iss
+          if ($LASTEXITCODE -ne 0) { throw "kurulum derlenemedi" }
+          Get-Item publish\AltyaziPlus-Setup.exe | Format-List Name, Length
       - uses: actions/upload-artifact@v4
         with:
           name: AltyaziPlus-Windows
-          path: publish\AltyaziPlus.exe
+          path: publish\*.exe
 
   android:
     name: Android TV uygulaması
@@ -169,7 +178,8 @@ jobs:
           body: |
             **Altyazı+** – PS5 oyunları için canlı Türkçe çeviri. Yapımcı: Burak Topcu.
             Kurulum: depodaki KURULUM.md dosyasına bakın.
-            - AltyaziPlus.exe – Windows programı (PC)
+            - AltyaziPlus-Setup.exe – Windows kurulumu (önerilen; program içinden "Şimdi güncelle" ile güncellenir)
+            - AltyaziPlus.exe – Windows programı, kurulumsuz tek dosya
             - AltyaziPlus-AndroidTV.apk – Android TV / Google TV uygulaması
             - tr.ps5altyazi.tv_*.ipk – LG webOS uygulaması (PC programı kendisi kurar)
             - AltyaziPlus-Samsung-Tizen.zip – Samsung TV uygulaması (Tizen Studio ile kurulur)

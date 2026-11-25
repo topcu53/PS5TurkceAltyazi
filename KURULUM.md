@@ -43,7 +43,9 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 
 ## 2. Bilgisayar kurulumu
 
-1. **Programı indirin:** GitHub sayfasındaki **Releases** bölümünden `AltyaziPlus.exe` dosyasını indirin. Kurulum gerekmez; dosyayı istediğiniz klasöre koyun.
+1. **Programı kurun:** GitHub sayfasındaki **Releases** bölümünden `AltyaziPlus-Setup.exe`'yi indirip çalıştırın (yönetici izni
+   istemez). Bundan sonra güncellemeleri tekrar indirmeniz gerekmez: yeni sürüm çıkınca programın üst bandında
+   **⬇ Şimdi güncelle** düğmesi görünür, basmanız yeterli. (Kurulumsuz kullanmak isterseniz tek dosya `AltyaziPlus.exe` de var.)
 2. **Windows uyarısı çıkarsa:**
    - *"Windows bilgisayarınızı korudu"* uyarısında → **Ek bilgi** → **Yine de çalıştır**.
    - *Akıllı Uygulama Denetimi (Smart App Control)* programı engellerse: Windows Güvenliği → Uygulama ve tarayıcı denetimi → Akıllı Uygulama Denetimi ayarları → **Kapalı**.
