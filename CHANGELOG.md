@@ -1,5 +1,10 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.7.1 – Düzeltme
+
+- v2.7'de programın içine eski TV paketi (1.0.9) gömülü kalmıştı; LG'de TV uygulaması her başlatmada yeniden
+  kuruluyordu. Paket 1.0.10'a güncellendi.
+
 ## v2.7 – LG geliştirici modu kendiliğinden açık kalır
 
 - LG'de **Key Server** artık yalnızca ilk eşleştirmede gerekir. Eşleştirmede TV'nin geliştirici oturum jetonu okunup
