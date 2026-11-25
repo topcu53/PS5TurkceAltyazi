@@ -88,7 +88,7 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 5. **TV Modu → 4. adım:** PS5'in takılı olduğu HDMI girişini seçin → **TV'ye Kur** → **TV'de Başlat**.
 6. **Bundan sonra:** **F6**'ya basınca TV uygulaması kendiliğinden açılır.
 
-> LG'nin geliştirici modu sürelidir; süre dolarsa kurulan uygulama kaldırılır. Program F6 ile başlatıldığında süreyi (en fazla 12 saatte bir) kendiliğinden uzatır. Elle uzatmak için: TV Modu → **Geliştirici Süresini Uzat**. Uygulama silinmişse **TV'ye Kur** ile yeniden kurun.
+> **Key Server yalnızca ilk eşleştirmede gerekir** (LG onu TV her açıldığında kendisi kapatır; açık kalması gerekmez). LG'nin geliştirici modu sürelidir (en çok 1000 saat); süre dolarsa kurulan uygulama silinir. Altyazı+ bunu engellemek için süreyi kendiliğinden yeniler: PC programı açıkken 6 saatte bir LG sunucusu üzerinden (TV kapalı olsa bile), TV uygulaması da açıldığında ve açık kaldıkça. Elle yenilemek için: TV Modu → **Geliştirici Süresini Uzat**. LG oturumu yine de kapatırsa (nadiren olur) program log'da yazar: bir kereliğine Developer Mode'u açıp Key Server'ı açın, TV Modu'nda yeni Passphrase ile **Bağlan** → **TV'ye Kur**.
 
 ### 3B. Android TV / Google TV
 

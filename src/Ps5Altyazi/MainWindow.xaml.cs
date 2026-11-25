@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.6 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.7 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -198,6 +198,7 @@ public partial class MainWindow : Window
         InitSubtitleWindow();
         InitScreenTranslation();
         InitGameFont();
+        InitLgDevModeKeepAlive();
         LgWebOsTv.GetPinnedHostKey = ip => _settings.TvHostKeys.TryGetValue(ip, out var fp) ? fp : null;
         LgWebOsTv.SavePinnedHostKey = (ip, fp) => Dispatcher.Invoke(() => { _settings.TvHostKeys[ip] = fp; SaveSettings(); });
         TvServerCheck.IsChecked = _settings.TvServerEnabled;
@@ -1711,6 +1712,63 @@ public partial class MainWindow : Window
         dlg.ShowDialog();
     }
 
+    // ───────── LG geliştirici modu: Key Server'a bir daha gerek kalmasın ─────────
+    // Key Server yalnızca ilk eşleştirmede gerekir (LG onu her TV açılışında kendisi kapatır).
+    // Asıl sorun geliştirici oturumunun bitmesi: o zaman uygulama silinir ve anahtar değişir.
+    // Bu yüzden oturumu program açıkken düzenli olarak, TV kapalı olsa bile LG sunucusu üzerinden yeniliyoruz.
+    private readonly DispatcherTimer _devModeTimer = new() { Interval = TimeSpan.FromHours(6) };
+
+    private void InitLgDevModeKeepAlive()
+    {
+        _devModeTimer.Tick += async (_, _) => await KeepLgDevModeAliveAsync(force: false);
+        _devModeTimer.Start();
+        _ = KeepLgDevModeAliveAsync(force: false);
+    }
+
+    /// <summary>Oturum jetonu varsa LG sunucusundan süreyi yeniler (en çok 6 saatte bir) ve kalan süreyi yazar.</summary>
+    private async Task KeepLgDevModeAliveAsync(bool force)
+    {
+        string? token = SecretStore.Unprotect(_settings.TvDevTokenProtected);
+        if (token == null || _settings.TvPlatform != "webos") return;
+        if (!force && _settings.TvLastExtend != null && DateTime.Now - _settings.TvLastExtend < TimeSpan.FromHours(6)) return;
+        try
+        {
+            if (await LgWebOsTv.ResetDevSessionAsync(token))
+            {
+                _settings.TvLastExtend = DateTime.Now;
+                SaveSettings();
+                string? left = await LgWebOsTv.CheckDevSessionAsync(token);
+                Log.Info("LG geliştirici modu süresi yenilendi" + (left != null ? $" (kalan: {left.Split(':')[0]} saat)." : "."));
+            }
+            else
+                Log.Warn("LG geliştirici modu oturumu bulunamadı: süre dolmuş ya da LG oturumu kapatmış olabilir. " +
+                         "TV'de Developer Mode uygulamasını açıp kontrol edin; kapandıysa açın, Key Server'ı açın ve TV Modu'nda 'Bağlan'a basın (bir kereliğine).");
+        }
+        catch (Exception ex)
+        {
+            Log.Info("LG geliştirici süresi şu an yenilenemedi (internet?): " + ex.Message);
+        }
+    }
+
+    /// <summary>Jeton yoksa TV'den okuyup saklar (SSH bağlantısı gerekir).</summary>
+    private async Task<string?> EnsureDevTokenAsync(LgWebOsTv tv)
+    {
+        string? token = SecretStore.Unprotect(_settings.TvDevTokenProtected);
+        if (token != null) return token;
+        try
+        {
+            token = await tv.ReadDevSessionTokenAsync();
+            if (token != null)
+            {
+                _settings.TvDevTokenProtected = SecretStore.Protect(token);
+                SaveSettings();
+                Log.Info("LG geliştirici oturum jetonu kaydedildi: süre artık otomatik yenilenecek.");
+            }
+        }
+        catch (Exception ex) { Log.Info("LG oturum jetonu okunamadı: " + ex.Message); }
+        return token;
+    }
+
     /// <summary>F6 ile başlarken TV uygulamasını aç (gerekirse önce geliştirici süresini yenile).</summary>
     private async Task AutoLaunchTvAsync()
     {
@@ -1720,7 +1778,10 @@ public partial class MainWindow : Window
             if (pem == null || pass == null || string.IsNullOrEmpty(_settings.TvIp)) return;
             var tv = new LgWebOsTv(_settings.TvIp, pem, pass);
             EnsureServer();
-            if (_settings.TvLastExtend == null || DateTime.Now - _settings.TvLastExtend > TimeSpan.FromHours(12))
+            string? devToken = await EnsureDevTokenAsync(tv);
+            if (devToken != null)
+                await KeepLgDevModeAliveAsync(force: false); // sunucudan: TV'de Developer Mode ekranı açılmaz
+            else if (_settings.TvLastExtend == null || DateTime.Now - _settings.TvLastExtend > TimeSpan.FromHours(12))
             {
                 await tv.ExtendDevModeAsync();
                 _settings.TvLastExtend = DateTime.Now;
@@ -1732,12 +1793,18 @@ public partial class MainWindow : Window
                 Log.Success("TV uygulaması yeni sürüme güncellendi.");
             string? pc = SubtitleServer.GetLocalIPv4(tv.Ip);
             if (pc == null) { Log.Warn("TV uygulaması açılamadı: bu bilgisayarın ağ adresi bulunamadı."); return; }
-            await tv.LaunchAsync(pc, _settings.TvHdmi);
+            await tv.LaunchAsync(pc, _settings.TvHdmi, devToken);
             Log.Success($"TV uygulaması açıldı (HDMI {_settings.TvHdmi}).");
         }
         catch (Exception ex)
         {
-            Log.Warn($"TV uygulaması otomatik açılamadı: {ex.Message} (TV kapalı veya geliştirici modu süresi dolmuş olabilir.)");
+            bool keyGone = ex is Renci.SshNet.Common.SshAuthenticationException ||
+                           ex.Message.Contains("passphrase", StringComparison.OrdinalIgnoreCase) ||
+                           ex.Message.Contains("Permission denied", StringComparison.OrdinalIgnoreCase);
+            Log.Warn(keyGone
+                ? "TV uygulaması açılamadı: TV'nin geliştirici anahtarı değişmiş (Developer Mode kapanıp yeniden açılmış). " +
+                  "Bir kereliğine: TV'de Developer Mode → Key Server'ı açın, TV Modu'nda yeni Passphrase ile 'Bağlan' → 'TV'ye Kur'."
+                : $"TV uygulaması otomatik açılamadı: {ex.Message} (TV kapalı veya geliştirici modu süresi dolmuş olabilir.)");
         }
     }
 

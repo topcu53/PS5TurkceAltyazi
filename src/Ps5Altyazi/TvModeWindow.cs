@@ -202,8 +202,16 @@ public sealed class TvModeWindow : Window
         _s.TvIp = ip;
         _s.TvKeyProtected = SecretStore.Protect(pem);
         _s.TvPassphraseProtected = SecretStore.Protect(pass);
+        _s.TvDevTokenProtected = null; // yeni eşleştirme: oturum jetonunu da yeniden oku
+        try
+        {
+            string? tok = await tv.ReadDevSessionTokenAsync();
+            if (tok != null) _s.TvDevTokenProtected = SecretStore.Protect(tok);
+        }
+        catch { /* jeton okunamazsa eski yöntemle (TV'de Developer Mode açılarak) uzatılır */ }
         _saveSettings();
-        Write($"✔ Eşleştirildi: {info}. Şimdi 'TV'ye Kur'a basın. (Key Server'ı artık kapatabilirsiniz.)");
+        Write($"✔ Eşleştirildi: {info}. Şimdi 'TV'ye Kur'a basın. (Key Server'ı artık kapatabilirsiniz; bir daha gerekmez.)");
+        if (_s.TvDevTokenProtected != null) Write("✔ Geliştirici süresi bundan sonra program açıkken kendiliğinden yenilenecek (TV kapalı olsa bile).");
         Log.Success($"LG TV eşleştirildi: {ip} – {info}");
     }
 
@@ -231,18 +239,41 @@ public sealed class TvModeWindow : Window
         _ensureServer();
         if (await tv.EnsureInstalledAsync(new Progress<string>(Write), CancellationToken.None)) Write("✔ TV uygulaması güncellendi.");
         string? pc = SubtitleServer.GetLocalIPv4(tv.Ip) ?? throw new InvalidOperationException("Bu bilgisayarın ağ adresi bulunamadı.");
-        await tv.LaunchAsync(pc, _s.TvHdmi);
+        await tv.LaunchAsync(pc, _s.TvHdmi, SecretStore.Unprotect(_s.TvDevTokenProtected));
         Write($"✔ TV uygulaması başlatıldı (PC: {pc}, HDMI {_s.TvHdmi}). TV ekranında PS5 görüntüsü ve altyazılar görünmeli.");
         Log.Success($"TV uygulaması başlatıldı (PC {pc}, HDMI {_s.TvHdmi}).");
     }
 
     private async Task ExtendAsync()
     {
-        var tv = RequireTv();
-        await tv.ExtendDevModeAsync();
+        string? tok = SecretStore.Unprotect(_s.TvDevTokenProtected);
+        if (tok == null)
+        {
+            var tv = RequireTv();
+            try
+            {
+                tok = await tv.ReadDevSessionTokenAsync();
+                if (tok != null) { _s.TvDevTokenProtected = SecretStore.Protect(tok); _saveSettings(); }
+            }
+            catch { }
+            if (tok == null)
+            {
+                await tv.ExtendDevModeAsync();
+                _s.TvLastExtend = DateTime.Now;
+                _saveSettings();
+                Write("✔ Geliştirici modu süresi yenilendi (TV'de Developer Mode uygulaması kısa süre açılabilir).");
+                return;
+            }
+        }
+        if (!await LgWebOsTv.ResetDevSessionAsync(tok))
+        {
+            Write("✖ LG oturumu bulunamadı: Developer Mode kapanmış olabilir. TV'de açın, Key Server'ı açın ve 'Bağlan'a basın.");
+            return;
+        }
         _s.TvLastExtend = DateTime.Now;
         _saveSettings();
-        Write("✔ Geliştirici modu süresi yenilendi (TV'de Developer Mode uygulaması kısa süre açılabilir).");
+        string? left = await LgWebOsTv.CheckDevSessionAsync(tok);
+        Write("✔ Geliştirici modu süresi yenilendi" + (left != null ? $" – kalan: {left.Split(':')[0]} saat." : "."));
     }
 
     // ───────── Yardımcılar ─────────

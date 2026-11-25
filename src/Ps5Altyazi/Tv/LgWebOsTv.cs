@@ -25,7 +25,7 @@ namespace Ps5Altyazi.Tv;
 public sealed class LgWebOsTv
 {
     public const string AppId = "tr.ps5altyazi.tv";
-    public const string AppVersion = "1.0.9";
+    public const string AppVersion = "1.0.10";
     private const string LunaSend = "/usr/bin/luna-send-pub";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(6) };
 
@@ -213,13 +213,13 @@ public sealed class LgWebOsTv
     }
 
     /// <summary>TV uygulamasını PC adresi ve HDMI girişiyle başlatır (açıksa yeniden yapılandırır).</summary>
-    public Task LaunchAsync(string pcIp, int hdmi) => Task.Run(() =>
+    public Task LaunchAsync(string pcIp, int hdmi, string? devToken = null) => Task.Run(() =>
     {
         if (!IsValidIPv4(pcIp)) throw new InvalidOperationException("Bilgisayarın ağ adresi bulunamadı.");
         hdmi = Math.Clamp(hdmi, 1, 4);
         using var ssh = NewSsh();
         ssh.Connect();
-        string payload = JsonSerializer.Serialize(new { id = AppId, @params = new { server = pcIp, hdmi } });
+        string payload = JsonSerializer.Serialize(new { id = AppId, @params = new { server = pcIp, hdmi, devToken = IsValidDevToken(devToken) ? devToken : "" } });
         string res = Run(ssh, $"{LunaSend} -n 1 luna://com.webos.applicationManager/launch '{payload}'");
         ssh.Disconnect();
         if (!res.Contains("\"returnValue\":true") && !res.Contains("\"returnValue\": true"))
@@ -239,6 +239,44 @@ public sealed class LgWebOsTv
         Run(ssh, $"{LunaSend} -n 1 luna://com.webos.applicationManager/launch '{payload}'");
         ssh.Disconnect();
     });
+
+    // ───────── Geliştirici modu oturumunu canlı tutma (Key Server'a tekrar gerek kalmasın) ─────────
+    // LG, Developer Mode oturumunu en çok 1000 saat açık tutar; süre dolarsa ya da LG oturumu kapatırsa
+    // TV uygulaması silinir ve SSH anahtarı değişir (Key Server'ı yeniden açmak gerekir).
+    // Developer Mode uygulamasının kendi "Extend" düğmesi de LG'nin şu adresini çağırır; TV'ye özel oturum
+    // jetonu TV'de /var/luna/preferences/devmode_enabled dosyasında durur (yalnızca geliştirici bağlantısıyla okunur).
+    private const string LgDevSessionUrl = "https://developer.lge.com/secure/";
+
+    /// <summary>TV'deki geliştirici modu oturum jetonunu okur (SSH). Bulunamazsa null.</summary>
+    public Task<string?> ReadDevSessionTokenAsync() => Task.Run(() =>
+    {
+        using var ssh = NewSsh();
+        ssh.Connect();
+        string tok = Run(ssh, "/bin/cat /var/luna/preferences/devmode_enabled 2>/dev/null").Trim();
+        ssh.Disconnect();
+        return IsValidDevToken(tok) ? tok : null;
+    });
+
+    public static bool IsValidDevToken(string? t) =>
+        !string.IsNullOrEmpty(t) && t.Length is >= 16 and <= 256 && t.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_');
+
+    /// <summary>Oturumu LG sunucusu üzerinden baştan başlatır (TV kapalı olsa bile çalışır).</summary>
+    public static async Task<bool> ResetDevSessionAsync(string token, CancellationToken ct = default)
+    {
+        if (!IsValidDevToken(token)) return false;
+        string res = await Http.GetStringAsync(LgDevSessionUrl + "ResetDevModeSession.dev?sessionToken=" + Uri.EscapeDataString(token), ct);
+        return res.Contains("\"success\"", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Kalan oturum süresi (ör. "999:58:40"). Oturum yoksa / ulaşılamazsa null.</summary>
+    public static async Task<string?> CheckDevSessionAsync(string token, CancellationToken ct = default)
+    {
+        if (!IsValidDevToken(token)) return null;
+        string res = await Http.GetStringAsync(LgDevSessionUrl + "CheckDevModeSession.dev?sessionToken=" + Uri.EscapeDataString(token), ct);
+        if (!res.Contains("\"success\"", StringComparison.OrdinalIgnoreCase)) return null;
+        string left = Extract(res, "errorMsg");
+        return left.Length > 0 ? left : null;
+    }
 
     private static string Extract(string json, string key)
     {

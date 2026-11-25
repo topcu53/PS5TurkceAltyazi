@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.7 – LG geliştirici modu kendiliğinden açık kalır
+
+- LG'de **Key Server** artık yalnızca ilk eşleştirmede gerekir. Eşleştirmede TV'nin geliştirici oturum jetonu okunup
+  şifreli saklanır; program açıkken geliştirici süresi 6 saatte bir **LG sunucusu üzerinden** yenilenir (TV kapalı olsa
+  bile, TV'de Developer Mode ekranı açılmadan).
+- TV uygulaması (1.0.10) da açıldığında ve açık kaldıkça süreyi kendisi yeniler; PC kapalıyken bile oturum düşmez.
+- Oturum yine de düşerse (LG tarafında kapanırsa) log ne yapılacağını açıkça yazar: bir kereliğine Key Server + 'Bağlan'.
+
 ## v2.6 – Yazı tipi yöneticisi
 
 - Ana pencerede "🔤 Yazı Tipi" düğmesi. Altyazı Görünümü'nde tüm yazı tipleri tek listede (her biri kendi görünümüyle;

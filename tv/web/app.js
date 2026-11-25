@@ -370,12 +370,30 @@
     }
   }
 
+  // ───── LG geliştirici modu süresini TV'nin kendisi de yenilesin ─────
+  // (PC kapalıyken bile: uygulama her açılışta ve açık kaldıkça 6 saatte bir, LG Developer Mode
+  //  uygulamasının "Extend" düğmesinin çağırdığı adresi arka planda çağırır; ekranda bir şey açılmaz.)
+  function keepDevMode(force) {
+    if (PLATFORM !== 'webos') return;
+    var tok = load('devToken', '');
+    if (!tok) return;
+    var last = parseInt(load('devExtendAt', '0'), 10) || 0, now = Date.now();
+    if (!force && now - last < 6 * 3600 * 1000) return;
+    try {
+      var img = new Image();
+      img.src = 'https://developer.lge.com/secure/ResetDevModeSession.dev?sessionToken=' + encodeURIComponent(tok) + '&_=' + now;
+      save('devExtendAt', now);
+    } catch (e) { }
+  }
+  setInterval(function () { keepDevMode(false); }, 30 * 60 * 1000);
+
   // ───── Başlatma parametreleri (PC "TV'de Başlat" ile gönderir) ─────
   function applyParams(p) {
     if (!p) return;
     if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) { return; } }
     if (p.server) { state.server = String(p.server); save('server', state.server); }
     if (p.hdmi) { setHdmi(parseInt(p.hdmi, 10) || 1); }
+    if (p.devToken && /^[A-Za-z0-9_-]{16,256}$/.test(String(p.devToken))) { save('devToken', String(p.devToken)); keepDevMode(true); }
     hideSetup();
     connect();
   }
@@ -476,6 +494,7 @@
 
   // ───── Başlangıç ─────
   setHdmi(state.hdmi);
+  keepDevMode(false);
   var params = null;
   try { params = window.PalmSystem && window.PalmSystem.launchParams ? JSON.parse(window.PalmSystem.launchParams) : null; } catch (e) { }
   if (params && params.server) applyParams(params);

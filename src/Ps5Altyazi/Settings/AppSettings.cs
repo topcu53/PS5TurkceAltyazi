@@ -70,6 +70,8 @@ public sealed class AppSettings
     /// <summary>TV'de İngilizce altyazının üstünü Türkçe gelene kadar siyah kutuyla ört.</summary>
     public bool TvMaskEnglish { get; set; } = true;
     public DateTime? TvLastExtend { get; set; }
+    /// <summary>LG geliştirici modu oturum jetonu (DPAPI ile şifreli). Süreyi TV'ye bağlanmadan yenilemek için.</summary>
+    public string? TvDevTokenProtected { get; set; }
     /// <summary>TV'lerin SSH sunucu anahtarı parmak izleri (ip → SHA256), ilk bağlantıda öğrenilir.</summary>
     public System.Collections.Generic.Dictionary<string, string> TvHostKeys { get; set; } = new();
 
