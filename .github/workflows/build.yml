@@ -93,9 +93,12 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path src\Ps5Altyazi\native\ps5-baglanti.exe)) { throw "ps5-baglanti.exe indirilemedi" }
-          $text = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes("publish\AltyaziPlus.exe"))
-          foreach ($n in "ps5-baglanti.exe", "WebView2Loader.dll") { if (-not $text.Contains($n)) { throw "$n AltyaziPlus.exe'nin içinde yok" } }
-          "tamam"
+          $exe = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes("publish\AltyaziPlus.exe"))
+          if (-not $exe.Contains("WebView2Loader.dll")) { throw "WebView2Loader.dll AltyaziPlus.exe'nin içinde yok" }
+          $dll = Get-ChildItem -Recurse src\Ps5Altyazi\obj -Filter AltyaziPlus.dll | Where-Object { $_.FullName -match 'win-x64' } | Select-Object -First 1
+          $meta = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($dll.FullName))
+          if (-not $meta.Contains("ps5-baglanti.exe")) { throw "ps5-baglanti.exe programa gömülmedi" }
+          "tamam ($([math]::Round($dll.Length/1MB,1)) MB)"
       - uses: actions/upload-artifact@v4
         with:
           name: AltyaziPlus-Windows
