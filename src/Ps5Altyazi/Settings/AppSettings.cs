@@ -72,6 +72,16 @@ public sealed class AppSettings
     public DateTime? TvLastExtend { get; set; }
     /// <summary>LG geliştirici modu oturum jetonu (DPAPI ile şifreli). Süreyi TV'ye bağlanmadan yenilemek için.</summary>
     public string? TvDevTokenProtected { get; set; }
+
+    // ───── PS5'e doğrudan bağlantı (Remote Play uygulaması olmadan; CouchSubs/chiaki-ng yöntemi) ─────
+    /// <summary>true: görüntü PS5'ten doğrudan alınır; false: PS Remote Play penceresinden.</summary>
+    public bool DirectConnect { get; set; } = false;
+    /// <summary>İkinci PSN hesabının 8 baytlık hesap kimliği (base64, DPAPI ile şifreli). Şifre ya da token saklanmaz.</summary>
+    public string? PsnAccountIdProtected { get; set; }
+    /// <summary>Eşlenmiş PS5'in bilgileri (JSON: adres, ad, kayıt anahtarları; DPAPI ile şifreli).</summary>
+    public string? Ps5ConsoleProtected { get; set; }
+    /// <summary>PS5 bu hesap için 4 haneli giriş şifresi istiyorsa (DPAPI ile şifreli).</summary>
+    public string? Ps5LoginPasscodeProtected { get; set; }
     /// <summary>TV'lerin SSH sunucu anahtarı parmak izleri (ip → SHA256), ilk bağlantıda öğrenilir.</summary>
     public System.Collections.Generic.Dictionary<string, string> TvHostKeys { get; set; } = new();
 

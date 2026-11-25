@@ -55,3 +55,10 @@ Hazır dosyalar **[Releases](../../releases)** sayfasındadır:
 - Değişiklikler: [CHANGELOG.md](CHANGELOG.md)
 
 © 2026 Burak Topcu
+
+## Lisans ve teşekkür
+
+Altyazı+ **GNU AGPL-3.0** lisanslıdır ([LICENSE](LICENSE)). PS5'e PS Remote Play uygulaması olmadan doğrudan bağlantı,
+Sinan Yorulmaz'ın [CouchSubs](https://github.com/yorulmazsinan/couchsubs) projesinden (AGPL-3.0) uyarlandı; Remote Play
+protokolü [chiaki-ng](https://github.com/chiaki-ng/chiaki-ng) sayesinde mümkün. Ayrıntı: [NOTICE](NOTICE),
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

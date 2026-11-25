@@ -17,3 +17,7 @@ settings.json
 *.db
 *.pem
 webos_rsa
+
+# CI'da derlenen PS5 bağlantı kütüphanesi
+src/Ps5Altyazi/native/
+build/

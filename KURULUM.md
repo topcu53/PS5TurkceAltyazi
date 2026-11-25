@@ -11,13 +11,14 @@ Yapımcı: **Burak Topcu**
 ```
 PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
  │
- └─ PS Remote Play ─▶ Windows PC  (Altyazı+ ekrandaki İngilizce yazıyı okur → DeepL ile Türkçeye çevirir)
+ └─ Remote Play ─▶ Windows PC     (Altyazı+ PS5'e arka planda kendisi bağlanır, İngilizce yazıyı okur → Türkçeye çevirir)
                          │
                          └─ ev ağı ─▶ TV'deki Altyazı+ uygulaması (PS5 görüntüsünün üstüne Türkçeyi çizer)
 ```
 
 - PS5 TV'ye bağlı kalır. Capture card gerekmez.
-- PC, oyunu **PS Remote Play** penceresinden okur.
+- PC, PS5'e **arka planda kendisi bağlanır** (Remote Play protokolü; PS Remote Play uygulaması gerekmez, ekranda pencere açılmaz).
+  Bunun için ücretsiz ikinci bir PSN hesabı gerekir. İstenirse eski yöntemle PS Remote Play penceresinden de okuyabilir.
 - Türkçe yazı üç yerden birinde görünür:
   - **TV'de**: LG, Samsung ve Android TV / Google TV'de. TV'ye küçük bir uygulama kurulur.
   - **PC ekranında**: Remote Play penceresinin üstünde.
@@ -33,7 +34,8 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 |---|---|
 | **PS5** | Ayarlar → Sistem → Uzaktan Oynatma → **Uzaktan Oynatmayı Etkinleştir** açık olmalı. |
 | **Windows 10 / 11 bilgisayar** | PS5 ve TV ile **aynı ev ağında** olmalı. PS5 ve PC'yi kabloyla bağlamak gecikmeyi azaltır. |
-| **PS Remote Play** | Sony'nin ücretsiz uygulaması: https://remoteplay.dl.playstation.net/remoteplay/ |
+| **İkinci PSN hesabı** | Ücretsiz; PS5'e kullanıcı olarak eklenir. PS5'e doğrudan bağlantı için (önerilen). |
+| **PS Remote Play** (yalnız eski yöntem) | Sony'nin ücretsiz uygulaması: https://remoteplay.dl.playstation.net/remoteplay/ |
 | **DeepL API Free anahtarı** | Ücretsiz, aylık karakter kotası var (program kullanımı gösterir): https://www.deepl.com/pro-api (Kayıt sırasında kart bilgisi istenebilir. Ücretsiz planda para çekilmez.) |
 | **TV** (isteğe bağlı) | LG webOS 4+ (2018 ve sonrası) • Samsung Tizen (2016 ve sonrası) • Android TV / Google TV |
 
@@ -45,8 +47,23 @@ PS5 ──HDMI──▶ TV                 (kablo bağlantısı değişmez)
 2. **Windows uyarısı çıkarsa:**
    - *"Windows bilgisayarınızı korudu"* uyarısında → **Ek bilgi** → **Yine de çalıştır**.
    - *Akıllı Uygulama Denetimi (Smart App Control)* programı engellerse: Windows Güvenliği → Uygulama ve tarayıcı denetimi → Akıllı Uygulama Denetimi ayarları → **Kapalı**.
-3. **PS Remote Play'i açın:** PS5'e bağlanın ve pencereyi **büyütün (tam ekran)**. Remote Play ayarlarında *Çözünürlük: 1080p*, *Kare hızı: Yüksek* önerilir.
-4. **`AltyaziPlus.exe`'yi açın:** Program Remote Play penceresini kendisi bulur.
+3. **PS5'e bağlantı – önerilen: PS Remote Play uygulaması olmadan (bir kerelik kurulum):**
+   - Ücretsiz **ikinci bir PSN hesabı** açın ve PS5'e kullanıcı olarak ekleyin. (Kendi hesabınızla bağlanılırsa kolunuz
+     oyundan kopar; ikinci hesap yalnız Altyazı+ içindir, siz oyunu kendi hesabınızla oynarsınız.)
+   - PS5'te ikinci kullanıcıda: Ayarlar → Sistem → Uzaktan Oynatma → **Uzaktan Oynatmayı Etkinleştir** açık.
+     Önerilen: Ayarlar → Sistem → Güç Tasarrufu → Dinlenme Modunda Kullanılabilen Özellikler → **İnternete Bağlı Kal** ve
+     **PS5'in Ağ Üzerinden Açılmasını Etkinleştir** açık (program PS5'i dinlenmeden kendisi uyandırır).
+   - `AltyaziPlus.exe`'yi açın → **🎮 PS5 Bağlantısı**:
+     1. **PSN ile giriş yap** → Sony'nin kendi sayfasında **ikinci** hesapla giriş yapın (şifreniz programa gelmez).
+     2. **Ağda ara** → PS5'iniz listede görünür (görünmezse IP adresini yazın).
+     3. PS5'te ikinci kullanıcıya geçin → Ayarlar → Sistem → Uzaktan Oynatma → **Cihazı Bağla** → ekrandaki 8 haneli kodu
+        yazıp **Eşleştir**. Sonra PS5'te kendi hesabınıza dönün.
+     4. **Bağlantıyı dene** → "Görüntü geliyor" yazınca kurulum tamam.
+   - Bundan sonra programı açmanız yeterli: PS5'e arka planda bağlanır, ekranda pencere açılmaz. PS Remote Play
+     uygulamasını açmayın (aynı anda tek bağlantı olur).
+   - *Eski yöntem (yedek):* KAYNAK'taki **Doğrudan bağlan** kutusunu kapatırsanız program yine PS Remote Play penceresinden okur.
+     O zaman PS Remote Play'i açıp PS5'e bağlanın ve pencereyi büyütün.
+4. **`AltyaziPlus.exe`'yi açın:** Program PS5'e kendisi bağlanır (ya da eski yöntemde Remote Play penceresini kendisi bulur).
 5. **İngilizce okuma paketini kurun (bir kez):** Program "İngilizce OCR paketi yok" derse **İngilizce OCR Paketini Kur** düğmesine basın, yönetici iznini onaylayın. Kurulum bitince programı kapatıp yeniden açın.
 6. **Çeviri ayarlarını girin:** **Çeviri Ayarları…** → DeepL anahtarınızı yapıştırın → **Kaydet ve Test Et**.
    - Anahtarınız bilgisayarınızda **şifreli** saklanır, başka yere gönderilmez.

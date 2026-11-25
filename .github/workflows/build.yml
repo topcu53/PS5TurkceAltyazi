@@ -13,15 +13,120 @@ on:
 permissions:
   contents: write
 
+env:
+  FFMPEG_VERSION: "7.1.2"
+
 jobs:
+  # PS5'e Remote Play uygulaması olmadan doğrudan bağlanan yerel kütüphane (altyazi_rp.dll):
+  # chiaki-ng'nin libchiaki'si + FFmpeg (yalnız H.264 çözücü + swscale), MSYS2 ile statik derlenir.
+  # Kaynak ve derleme adımları CouchSubs'tan (github.com/yorulmazsinan/couchsubs, AGPL-3.0) alındı.
+  native:
+    name: PS5 bağlantı kütüphanesi
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Satır sonları olduğu gibi kalsın
+        shell: pwsh
+        run: |
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+      - uses: actions/checkout@v4
+      - name: chiaki-ng ve gereken alt modüller
+        shell: pwsh
+        run: |
+          git submodule update --init --depth 1 third-party/chiaki-ng
+          git -C third-party/chiaki-ng submodule update --init --depth 1 third-party/nanopb third-party/jerasure third-party/gf-complete third-party/curl
+          Get-ChildItem third-party/patches/chiaki-*.patch | Sort-Object Name | ForEach-Object {
+            git -C third-party/chiaki-ng apply "../patches/$($_.Name)"
+            if ($LASTEXITCODE -ne 0) { throw "chiaki yaması uygulanamadı: $($_.Name)" }
+          }
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+          update: true
+          install: make diffutils tar xz
+          pacboy: >-
+            cc:p
+            cmake:p
+            ninja:p
+            pkgconf:p
+            nasm:p
+            python:p
+            python-protobuf:p
+            protobuf:p
+            openssl:p
+            json-c:p
+            libevent:p
+            miniupnpc:p
+      - name: FFmpeg önbelleği
+        id: ffmpeg-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ffmpeg-prefix
+          key: ffmpeg-${{ env.FFMPEG_VERSION }}-mingw64-h264-swscale-v1
+      - name: FFmpeg (kaynaktan, en küçük yapılandırma; LGPL)
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        run: |
+          PREFIX="$PWD/ffmpeg-prefix"
+          mkdir -p ffmpeg-src
+          if curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o ffmpeg.tar.xz "https://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.xz"; then
+            tar -xJf ffmpeg.tar.xz -C ffmpeg-src --strip-components=1
+          else
+            curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 -o ffmpeg.tar.gz "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n${FFMPEG_VERSION}.tar.gz"
+            tar -xzf ffmpeg.tar.gz -C ffmpeg-src --strip-components=1
+          fi
+          cd ffmpeg-src
+          ./configure --prefix="$PREFIX" \
+            --enable-static --disable-shared --disable-debug \
+            --disable-everything --disable-autodetect --enable-w32threads \
+            --disable-programs --disable-doc --disable-network \
+            --disable-avdevice --disable-avformat --disable-avfilter --disable-swresample \
+            --enable-avcodec --enable-avutil --enable-swscale \
+            --enable-decoder=h264 --enable-parser=h264
+          make -j"$(nproc)"
+          make install
+      - name: FFmpeg'i önbelleğe yaz
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ffmpeg-prefix
+          key: ${{ steps.ffmpeg-cache.outputs.cache-primary-key }}
+      - name: Yapılandır
+        run: cmake -S native -B build/native -G Ninja -DCMAKE_BUILD_TYPE=Release -DFFMPEG_PREFIX="$PWD/ffmpeg-prefix"
+      - name: Derle
+        run: cmake --build build/native
+      - name: DLL yalnız Windows'un kendi DLL'lerine bağlı olmalı
+        run: |
+          DLL=build/native/altyazi_rp.dll
+          objdump -p "$DLL" | grep 'DLL Name' | tee deps.txt
+          allowed='^(kernel32|user32|advapi32|shell32|ole32|oleaut32|gdi32|ws2_32|wsock32|iphlpapi|bcrypt|bcryptprimitives|crypt32|secur32|normaliz|msvcrt|ntdll|api-ms-win-.*|ucrtbase)\.dll$'
+          bad=$(awk '{print tolower($3)}' deps.txt | grep -Ev "$allowed" || true)
+          if [ -n "$bad" ]; then echo "İzin verilmeyen bağımlılık: $bad"; exit 1; fi
+          for fn in cs_init cs_discover_id cs_wake cs_register cs_session_start_ex cs_session_stop; do
+            objdump -p "$DLL" | grep -qw "$fn" || { echo "Dışa aktarılmamış: $fn"; exit 1; }
+          done
+          ls -l "$DLL"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-altyazi-rp
+          path: build/native/altyazi_rp.dll
+          if-no-files-found: error
+
   windows:
     name: Windows programı
+    needs: native
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: native-altyazi-rp
+          path: src/Ps5Altyazi/native
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       - name: Derle (tek dosya .exe)
         run: dotnet publish src\Ps5Altyazi\Ps5Altyazi.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -p:DebugType=none -o publish
       - uses: actions/upload-artifact@v4
@@ -82,6 +187,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: dist
+          pattern: AltyaziPlus-*
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:

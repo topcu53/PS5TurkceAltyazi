@@ -1,5 +1,16 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.8 – PS Remote Play uygulaması olmadan PS5'e doğrudan bağlantı
+
+- Yeni **🎮 PS5 Bağlantısı**: bir kerelik kurulumla (ikinci PSN hesabıyla Sony'nin kendi sayfasında giriş → PS5'i bul →
+  PS5'teki "Cihazı Bağla" koduyla eşleştir) program PS5'e **arka planda kendisi** bağlanır. Ekranda pencere açılmaz,
+  PS Remote Play uygulaması gerekmez; PS5 dinlenmedeyse uyandırılır, bağlantı koparsa kendiliğinden yeniden bağlanır.
+- Görüntü PS5'ten doğrudan (1080p) gelir; pencere küçültme, "pencere bulunamadı" sorunları kalmaz.
+- Yöntem ve Remote Play katmanı CouchSubs'tan (Sinan Yorulmaz, AGPL-3.0), protokol chiaki-ng'den. Altyazı+ artık
+  **AGPL-3.0** lisanslı (LICENSE, NOTICE, THIRD-PARTY-NOTICES.md).
+- Eski yöntem (PS Remote Play penceresinden okuma) yedek olarak duruyor: KAYNAK'taki "Doğrudan bağlan" kapatılınca kullanılır.
+- Program .NET 10'a geçti.
+
 ## v2.7.1 – Düzeltme
 
 - v2.7'de programın içine eski TV paketi (1.0.9) gömülü kalmıştı; LG'de TV uygulaması her başlatmada yeniden

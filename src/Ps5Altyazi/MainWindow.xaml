@@ -49,10 +49,17 @@
             <StackPanel>
                 <WrapPanel VerticalAlignment="Center">
                     <TextBlock Style="{StaticResource SectionTitle}" Text="KAYNAK"/>
-                    <ComboBox x:Name="WindowCombo" Width="360"/>
-                    <Button Content="⟳ Yenile" Click="Refresh_Click" ToolTip="Pencere listesini yenile"/>
-                    <Button Content="🔍 Remote Play'i Bul" Click="FindRemotePlay_Click"/>
-                    <Button x:Name="LaunchRemotePlayButton" Content="▶ PS Remote Play'i Aç" Click="LaunchRemotePlay_Click"/>
+                    <Button x:Name="Ps5ConnectButton" Content="🎮 PS5 Bağlantısı" FontWeight="Bold" Click="Ps5Connect_Click"
+                            ToolTip="Remote Play uygulaması olmadan PS5'e doğrudan bağlanın (ikinci PSN hesabıyla, bir kerelik kurulum)"/>
+                    <CheckBox x:Name="DirectCheck" Content="Doğrudan bağlan" Visibility="Collapsed"
+                              ToolTip="Açıkken görüntü PS5'ten doğrudan alınır, PS Remote Play uygulaması gerekmez"
+                              Checked="DirectCheck_Changed" Unchecked="DirectCheck_Changed"/>
+                    <StackPanel x:Name="WindowSourcePanel" Orientation="Horizontal">
+                        <ComboBox x:Name="WindowCombo" Width="360"/>
+                        <Button Content="⟳ Yenile" Click="Refresh_Click" ToolTip="Pencere listesini yenile"/>
+                        <Button Content="🔍 Remote Play'i Bul" Click="FindRemotePlay_Click"/>
+                        <Button x:Name="LaunchRemotePlayButton" Content="▶ PS Remote Play'i Aç" Click="LaunchRemotePlay_Click"/>
+                    </StackPanel>
                     <Rectangle Width="1" Height="24" Fill="{StaticResource Line}" Margin="10,0"/>
                     <TextBlock Style="{StaticResource SectionTitle}" Text="ALTYAZI"/>
                     <CheckBox x:Name="SubtitleWindowCheck" IsChecked="True" FontWeight="Bold" Content="Türkçe altyazı (F8)"

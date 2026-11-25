@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.7 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.8 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -214,7 +214,17 @@ public partial class MainWindow : Window
         WindowInfo? rp = WindowFinder.FindRemotePlay();
         _userStopped = !_settings.AutoStart;
         LaunchRemotePlayButton.IsEnabled = FindRemotePlayExe() != null;
-        if (rp != null)
+        UpdateSourceUi();
+        if (_settings.DirectConnect && !RemotePlayLink.Ps5Link.LibraryAvailable)
+            Log.Warn("PS5'e doğrudan bağlantı açık ama bağlantı kütüphanesi (altyazi_rp.dll) yüklenemedi; Remote Play penceresi kullanılacak.");
+        if (UseDirect())
+        {
+            var pc = RemotePlayLink.Ps5Link.LoadConsole(_settings);
+            Log.Success($"Görüntü kaynağı: PS5'e doğrudan bağlantı ({pc?.Name}, {pc?.Host}). PS Remote Play uygulaması gerekmiyor.");
+            if (_settings.AutoStart) StartCapture();
+            else Log.Info("Otomatik başlatma kapalı. Başlatmak için F6.");
+        }
+        else if (rp != null)
         {
             SelectWindow(rp.Handle);
             Log.Success($"PS Remote Play penceresi bulundu: {rp}");
@@ -323,6 +333,7 @@ public partial class MainWindow : Window
 
     private void StartCapture()
     {
+        if (UseDirect()) { StartDirectCapture(); return; }
         if (WindowCombo.SelectedItem is not WindowInfo w)
         {
             Log.Warn("Yakalanacak pencere seçilmedi.");
@@ -385,6 +396,7 @@ public partial class MainWindow : Window
         var src = _capture;
         _capture = null;
         _target = null;
+        _directStreaming = false;
         try
         {
             src.FrameArrived -= OnFrame;
@@ -1480,7 +1492,7 @@ public partial class MainWindow : Window
         }
 
         _userStopped = false;
-        if (WindowCombo.SelectedItem is not WindowInfo w || !NativeMethods.IsWindow(w.Handle) || !w.IsRemotePlay)
+        if (!UseDirect() && (WindowCombo.SelectedItem is not WindowInfo w || !NativeMethods.IsWindow(w.Handle) || !w.IsRemotePlay))
         {
             RefreshWindowList();
             var rp = WindowFinder.FindRemotePlay();
@@ -1979,7 +1991,7 @@ public partial class MainWindow : Window
                     _target.IsRemotePlay ? Green : Orange);
             }
         }
-        else if (now - _lastRpScan > TimeSpan.FromSeconds(2))
+        else if (!UseDirect() && now - _lastRpScan > TimeSpan.FromSeconds(2))
         {
             _lastRpScan = now;
             var rp = WindowFinder.FindRemotePlay();
@@ -2000,7 +2012,7 @@ public partial class MainWindow : Window
             }
         }
 
-        if (_capture != null)
+        if (_capture != null && (!DirectRunning || _directStreaming))
         {
             DateTime reference = _lastFrameTime == DateTime.MinValue ? _captureStart : _lastFrameTime;
             if (now - reference > TimeSpan.FromSeconds(3))
