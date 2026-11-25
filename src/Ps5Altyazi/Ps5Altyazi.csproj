@@ -14,7 +14,7 @@
     <AssemblyName>AltyaziPlus</AssemblyName>
     <RootNamespace>Ps5Altyazi</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.8.0</Version>
+    <Version>2.9.0</Version>
     <Product>Altyazı+</Product>
     <Authors>Burak Topcu</Authors>
     <Company>Burak Topcu</Company>
@@ -33,11 +33,10 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
   </ItemGroup>
 
-  <!-- PS5'e Remote Play uygulaması olmadan bağlanan yerel kütüphane (libchiaki + FFmpeg). CI'da (build.yml, native işi)
-       derlenip native\ klasörüne konur; tek dosya .exe'nin içine gömülür. Yoksa program yalnız pencereden okur. -->
-  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)native\altyazi_rp.dll')">
-    <None Include="$(MSBuildThisFileDirectory)native\altyazi_rp.dll" Link="altyazi_rp.dll"
-          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" Visible="false" />
+  <!-- PS5 bağlantı yardımcısı (ayrı program; tools/ps5-baglanti). CI'da (build.yml, "ps5-baglanti" işi) derlenip
+       native\ klasörüne konur ve programın içine gömülür; ilk kullanımda %LOCALAPPDATA%\PS5TurkceAltyazi\bin'e çıkarılır. -->
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)native\ps5-baglanti.exe')">
+    <EmbeddedResource Include="native\ps5-baglanti.exe" LogicalName="ps5-baglanti.exe" />
   </ItemGroup>
 
   <ItemGroup>

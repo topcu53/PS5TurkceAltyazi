@@ -1,47 +1,55 @@
-// SPDX-License-Identifier: AGPL-3.0-only
 using System;
 using System.Windows;
 using Ps5Altyazi.Capture;
 using Ps5Altyazi.Logging;
-using Ps5Altyazi.RemotePlayLink;
-using RP = CouchSubs.RemotePlay;
+using Ps5Altyazi.Ps5;
 
 namespace Ps5Altyazi;
 
 /// <summary>
-/// PS5'e doğrudan bağlantı (Remote Play uygulaması olmadan): görüntü kaynağı olarak pencere yerine PS5'in kendisi.
-/// Yöntem CouchSubs'tan (github.com/yorulmazsinan/couchsubs), Remote Play protokolü chiaki-ng'den.
+/// PS5'e doğrudan bağlantı (PS Remote Play uygulaması olmadan): görüntü kaynağı olarak pencere yerine PS5'in kendisi.
 /// </summary>
 public partial class MainWindow
 {
-    /// <summary>Doğrudan bağlantı akıyor mu (bağlanırken "kare gelmiyor" uyarısı verilmesin).</summary>
     private volatile bool _directStreaming;
-
-    /// <summary>Görüntü PS5'ten doğrudan mı alınacak (ayar açık, kütüphane var, hesap ve PS5 eşlenmiş).</summary>
-    private bool UseDirect() => _settings.DirectConnect && _directReady;
-
-    /// <summary>Kütüphane var, hesap ve PS5 eşlenmiş (UpdateSourceUi'de güncellenir; zamanlayıcı her yarım saniyede sorar).</summary>
     private bool _directReady;
+    private bool _updatingDirectCheck;
+
+    /// <summary>Görüntü PS5'ten doğrudan mı alınacak (ayar açık; yardımcı, hesap ve PS5 hazır).</summary>
+    private bool UseDirect() => _settings.DirectConnect && _directReady;
 
     private bool DirectRunning => _capture is Ps5DirectCaptureSource;
 
-    /// <summary>KAYNAK satırı: doğrudan bağlantı hazırsa onay kutusu görünür, açıkken pencere seçimi gizlenir.</summary>
+    /// <summary>KAYNAK satırı: doğrudan bağlantı hazırsa onay kutusu görünür; açıkken Remote Play pencere seçimi gizlenir.</summary>
     private void UpdateSourceUi()
     {
-        bool ready = _directReady = Ps5Link.IsReady(_settings);
-        DirectCheck.Visibility = ready ? Visibility.Visible : Visibility.Collapsed;
+        _directReady = Ps5Store.IsReady(_settings);
+        DirectCheck.Visibility = _directReady ? Visibility.Visible : Visibility.Collapsed;
         _updatingDirectCheck = true;
-        DirectCheck.IsChecked = _settings.DirectConnect && ready;
+        DirectCheck.IsChecked = _settings.DirectConnect && _directReady;
         _updatingDirectCheck = false;
-        WindowSourcePanel.Visibility = UseDirect() ? Visibility.Collapsed : Visibility.Visible;
+        // Pencereden okuma (eski yöntem) yalnız doğrudan bağlantı kurulu olup kullanıcı onu kapattıysa gösterilir.
+        WindowSourcePanel.Visibility = _directReady && !_settings.DirectConnect ? Visibility.Visible : Visibility.Collapsed;
         if (UseDirect() && !DirectRunning)
         {
-            var c = Ps5Link.LoadConsole(_settings);
-            SetText(RemotePlayStatus, $"PS5'e doğrudan bağlantı hazır – {c?.Name} ({c?.Host})", Neutral);
+            var p = Ps5Store.Pairing(_settings);
+            SetText(RemotePlayStatus, $"PS5'e doğrudan bağlantı hazır – {p?.Name} ({p?.Host})", Neutral);
         }
+        else if (!_directReady)
+            SetText(RemotePlayStatus, "PS5 bağlantısı kurulmadı – '🎮 PS5 Bağlantısı'", Orange);
     }
 
-    private bool _updatingDirectCheck;
+    /// <summary>Açılışta: doğrudan bağlantı kurulmamışsa (PS Remote Play yerine) bu kurulumu önerir.</summary>
+    private void OfferPs5Setup()
+    {
+        var answer = MessageBox.Show(this,
+            "PS5 bağlantısı henüz kurulmadı.\n\n" +
+            "Altyazı+ PS5'e PS Remote Play uygulaması olmadan, arka planda kendisi bağlanır. Bunun için bir kerelik kurulum gerekir " +
+            "(ikinci bir PSN hesabıyla giriş ve PS5'teki 'Cihazı Bağla' kodu).\n\n" +
+            "Şimdi kurulsun mu?",
+            "PS5 Bağlantısı", MessageBoxButton.YesNo, MessageBoxImage.Information);
+        if (answer == MessageBoxResult.Yes) Ps5Connect_Click(this, new RoutedEventArgs());
+    }
 
     private void DirectCheck_Changed(object sender, RoutedEventArgs e)
     {
@@ -51,72 +59,60 @@ public partial class MainWindow
         _settings.DirectConnect = on;
         SaveSettings();
         bool wasRunning = _capture != null;
-        if (wasRunning) StopCapture(on ? "Kaynak: PS5'e doğrudan bağlantı seçildi." : "Kaynak: PS Remote Play penceresi seçildi.");
+        if (wasRunning) StopCapture(on ? "Kaynak: PS5'e doğrudan bağlantı." : "Kaynak: PS Remote Play penceresi.");
         UpdateSourceUi();
-        Log.Info(on ? "Görüntü kaynağı: PS5'e doğrudan bağlantı (Remote Play uygulaması gerekmez)." : "Görüntü kaynağı: PS Remote Play penceresi.");
+        Log.Info(on ? "Görüntü kaynağı: PS5'e doğrudan bağlantı (PS Remote Play gerekmez)." : "Görüntü kaynağı: PS Remote Play penceresi (eski yöntem).");
         if (!on) RefreshWindowList();
         if (wasRunning) StartCapture();
     }
 
     private void Ps5Connect_Click(object sender, RoutedEventArgs e)
     {
-        // Aynı anda tek Remote Play bağlantısı olur: ayarlar (ve "Bağlantıyı dene") için çalışan bağlantı kapatılır.
+        // PS5 aynı anda tek bağlantı kabul eder: ayarlar ve "Bağlantıyı dene" için çalışan bağlantı kapatılır.
         bool wasRunning = DirectRunning;
         if (wasRunning) StopCapture("PS5 Bağlantısı penceresi açıldı.");
-        var dlg = new Ps5ConnectWindow(_settings, SaveSettings) { Owner = this };
-        dlg.ShowDialog();
+        new Ps5ConnectWindow(_settings, SaveSettings) { Owner = this }.ShowDialog();
         UpdateSourceUi();
         if (UseDirect() && (wasRunning || (_capture == null && !_userStopped && _settings.AutoStart)))
         {
-            if (_capture != null) StopCapture("Kaynak değişti: PS5'e doğrudan bağlantı.");
+            if (_capture != null) StopCapture("Kaynak: PS5'e doğrudan bağlantı.");
             StartCapture();
         }
     }
 
-    /// <summary>PS5'e doğrudan bağlanarak yakalamayı başlatır (ekranda pencere açılmaz).</summary>
     private void StartDirectCapture()
     {
         StopCapture(null);
-        var console = Ps5Link.LoadConsole(_settings);
-        byte[]? account = Ps5Link.AccountId(_settings);
-        if (console == null || account == null)
+        var pairing = Ps5Store.Pairing(_settings);
+        byte[]? account = Ps5Store.AccountId(_settings);
+        if (pairing == null || account == null)
         {
-            Log.Warn("PS5'e doğrudan bağlantı kurulmamış. '🎮 PS5 Bağlantısı' ile kurun.");
+            Log.Warn("PS5 bağlantısı kurulmamış. '🎮 PS5 Bağlantısı' ile kurun.");
             return;
         }
 
-        var src = new Ps5DirectCaptureSource(console, account, Ps5Link.LoadPasscode(_settings));
+        var src = new Ps5DirectCaptureSource(pairing, account, Ps5Store.Passcode(_settings), Math.Min(15, SelectedFps()));
         src.FrameArrived += OnFrame;
-        src.StateChanged += st => Dispatcher.InvokeAsync(() =>
+        src.StateChanged += (state, text) => Dispatcher.InvokeAsync(() =>
         {
             if (!ReferenceEquals(_capture, src)) return;
-            switch (st.Phase)
+            bool streaming = state == Ps5State.Streaming;
+            if (streaming && !_directStreaming)
             {
-                case RP.SessionPhase.Connecting:
-                    _directStreaming = false;
-                    SetText(RemotePlayStatus, $"PS5'e bağlanılıyor – {src.ConsoleName}", Orange);
-                    SetText(CaptureStatus, "PS5'e bağlanılıyor…", Orange);
-                    break;
-                case RP.SessionPhase.Streaming:
-                    _directStreaming = true;
-                    _lastFrameTime = DateTime.MinValue;
-                    _captureStart = DateTime.Now;
-                    SetText(RemotePlayStatus, $"BAĞLI (doğrudan) – {src.ConsoleName}", Green);
-                    Log.Success($"PS5'e doğrudan bağlanıldı: {src.ConsoleName}. Remote Play uygulaması gerekmiyor.");
-                    break;
-                default:
-                    _directStreaming = false;
-                    string why = Ps5Link.Describe(st.Reason);
-                    SetText(RemotePlayStatus, "Bağlantı koptu – yeniden deneniyor", Orange);
-                    if (st.Reason?.Kind != RP.DisconnectKind.Stopped) Log.Warn("PS5 bağlantısı: " + why);
-                    break;
+                _lastFrameTime = DateTime.MinValue;
+                _captureStart = DateTime.Now;
+                Log.Success($"PS5'e doğrudan bağlanıldı: {src.ConsoleName}.");
             }
+            _directStreaming = streaming;
+            SetText(RemotePlayStatus, text, streaming ? Green : Orange);
+            if (!streaming) SetText(CaptureStatus, state == Ps5State.Retrying ? "Bağlantı bekleniyor…" : "PS5'e bağlanılıyor…", Orange);
+            if (state == Ps5State.Retrying) Log.Warn("PS5: " + text);
         });
-        src.ConsoleMoved += moved => Dispatcher.InvokeAsync(() =>
+        src.Moved += p => Dispatcher.InvokeAsync(() =>
         {
-            Ps5Link.SaveConsole(_settings, moved);
+            Ps5Store.SavePairing(_settings, p);
             SaveSettings();
-            Log.Info($"PS5 yeni adreste bulundu: {moved.Host}");
+            Log.Info($"PS5 yeni adreste bulundu: {p.Host}");
         });
         src.Stopped += reason => Dispatcher.InvokeAsync(() =>
         {
@@ -128,15 +124,12 @@ public partial class MainWindow
         });
 
         _cropHwnd = IntPtr.Zero;
-        try
-        {
-            src.Start(IntPtr.Zero, SelectedFps());
-        }
+        try { src.Start(IntPtr.Zero, SelectedFps()); }
         catch (Exception ex)
         {
             src.FrameArrived -= OnFrame;
             src.Dispose();
-            Log.Error($"PS5'e doğrudan bağlantı başlatılamadı: {ex.GetType().Name}: {ex.Message}");
+            Log.Error($"PS5'e doğrudan bağlantı başlatılamadı: {ex.Message}");
             SetText(CaptureStatus, "BAŞLATILAMADI – ayrıntı logda", Red);
             return;
         }
@@ -147,8 +140,8 @@ public partial class MainWindow
         ResetSessionStats();
         StartStopButton.Content = "■ Durdur (F6)";
         SetText(CaptureStatus, "PS5'e bağlanılıyor…", Orange);
-        SetText(RemotePlayStatus, $"PS5'e bağlanılıyor – {console.Name} ({console.Host})", Orange);
-        Log.Info($"Yakalama başladı → PS5'e doğrudan bağlantı: {console.Name} ({console.Host}). Ekranda pencere açılmaz; " +
-                 "PS5 dinlenmedeyse uyandırılır.");
+        SetText(RemotePlayStatus, $"PS5'e bağlanılıyor – {pairing.Name} ({pairing.Host})", Orange);
+        Log.Info($"Yakalama başladı → PS5'e doğrudan bağlantı: {pairing.Name} ({pairing.Host}). Ekranda pencere açılmaz; " +
+                 "PS5 dinlenmedeyse uyandırılır. Bağlantı günlüğü: " + Ps5Helper.LogPath);
     }
 }

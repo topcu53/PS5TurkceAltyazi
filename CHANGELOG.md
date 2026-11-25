@@ -1,15 +1,16 @@
 # Altyazı+ – Geliştirme geçmişi
 
-## v2.8 – PS Remote Play uygulaması olmadan PS5'e doğrudan bağlantı
+## v2.9 – PS Remote Play uygulaması olmadan PS5'e doğrudan bağlantı (kendi yardımcımız)
 
-- Yeni **🎮 PS5 Bağlantısı**: bir kerelik kurulumla (ikinci PSN hesabıyla Sony'nin kendi sayfasında giriş → PS5'i bul →
-  PS5'teki "Cihazı Bağla" koduyla eşleştir) program PS5'e **arka planda kendisi** bağlanır. Ekranda pencere açılmaz,
-  PS Remote Play uygulaması gerekmez; PS5 dinlenmedeyse uyandırılır, bağlantı koparsa kendiliğinden yeniden bağlanır.
-- Görüntü PS5'ten doğrudan (1080p) gelir; pencere küçültme, "pencere bulunamadı" sorunları kalmaz.
-- Yöntem ve Remote Play katmanı CouchSubs'tan (Sinan Yorulmaz, AGPL-3.0), protokol chiaki-ng'den. Altyazı+ artık
-  **AGPL-3.0** lisanslı (LICENSE, NOTICE, THIRD-PARTY-NOTICES.md).
-- Eski yöntem (PS Remote Play penceresinden okuma) yedek olarak duruyor: KAYNAK'taki "Doğrudan bağlan" kapatılınca kullanılır.
-- Program .NET 10'a geçti.
+- PS5 bağlantısı baştan kendi kodumuzla yazıldı: programın içindeki ayrı yardımcı `ps5-baglanti.exe` (tools/ps5-baglanti),
+  chiaki-ng kütüphanesiyle PS5'i bulur, uyandırır, eşleştirir ve görüntüyü Altyazı+'a aktarır. v2.8'deki başka projeden
+  alınmış kod ve lisans değişikliği kaldırıldı.
+- Açılışta artık "PS Remote Play'i açın" denmiyor: PS5 bağlantısı kurulmamışsa **🎮 PS5 Bağlantısı** kurulumu öneriliyor;
+  kuruluysa program PS5'e arka planda kendisi bağlanıyor. PS Remote Play penceresinden okuma yalnız KAYNAK'ta
+  "Doğrudan bağlan" kapatılırsa (eski yöntem) kullanılıyor.
+- Bağlantı günlüğü: %LOCALAPPDATA%\PS5TurkceAltyazi\ps5-baglanti.log
+
+## v2.8 – (geri çekildi)
 
 ## v2.7.1 – Düzeltme
 

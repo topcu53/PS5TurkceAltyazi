@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.8 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.9 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -215,17 +215,22 @@ public partial class MainWindow : Window
         _userStopped = !_settings.AutoStart;
         LaunchRemotePlayButton.IsEnabled = FindRemotePlayExe() != null;
         UpdateSourceUi();
-        if (_settings.DirectConnect && !RemotePlayLink.Ps5Link.LibraryAvailable)
-            Log.Warn("PS5'e doğrudan bağlantı açık ama bağlantı kütüphanesi (altyazi_rp.dll) yüklenemedi; Remote Play penceresi kullanılacak.");
         if (UseDirect())
         {
-            var pc = RemotePlayLink.Ps5Link.LoadConsole(_settings);
+            var pc = Ps5.Ps5Store.Pairing(_settings);
             Log.Success($"Görüntü kaynağı: PS5'e doğrudan bağlantı ({pc?.Name}, {pc?.Host}). PS Remote Play uygulaması gerekmiyor.");
             if (_settings.AutoStart) StartCapture();
             else Log.Info("Otomatik başlatma kapalı. Başlatmak için F6.");
         }
+        else if (!_directReady)
+        {
+            Log.Info("PS5 bağlantısı henüz kurulmadı. '🎮 PS5 Bağlantısı' ile bir kez kurun; PS Remote Play uygulaması gerekmez.");
+            if (!Ps5.Ps5Helper.Available) Log.Warn("PS5 bağlantı yardımcısı (ps5-baglanti.exe) bu sürümde yok.");
+            else Dispatcher.InvokeAsync(OfferPs5Setup, DispatcherPriority.Background);
+        }
         else if (rp != null)
         {
+            // Kullanıcı eski yöntemi (PS Remote Play penceresinden okuma) seçmiş.
             SelectWindow(rp.Handle);
             Log.Success($"PS Remote Play penceresi bulundu: {rp}");
             if (_settings.AutoStart) StartCapture();
@@ -233,18 +238,8 @@ public partial class MainWindow : Window
         }
         else
         {
-            SetText(RemotePlayStatus, "BULUNAMADI – PS Remote Play açık değil", Red);
-            Log.Warn("PS Remote Play penceresi bulunamadı.");
-            string? exe = FindRemotePlayExe();
-            var answer = MessageBox.Show(this,
-                "PS Remote Play penceresi bulunamadı.\n\n" +
-                "1) PS Remote Play uygulamasını açın ve PS5'inize bağlanın.\n" +
-                "2) Oyun görüntüsü pencerede görünsün; pencereyi simge durumuna küçültmeyin.\n\n" +
-                "Program Remote Play'i arka planda aramaya devam eder; bulunca çeviriyi kendiliğinden başlatır " +
-                "(veya F6'ya basın).\n\n" +
-                (exe != null ? "PS Remote Play şimdi açılsın mı?" : "(PS Remote Play bu bilgisayarda bulunamadı; Sony'nin sitesinden kurun.)"),
-                "Remote Play hazır değil", exe != null ? MessageBoxButton.YesNo : MessageBoxButton.OK, MessageBoxImage.Warning);
-            if (answer == MessageBoxResult.Yes) LaunchRemotePlay();
+            SetText(RemotePlayStatus, "Eski yöntem seçili: PS Remote Play penceresi bekleniyor", Orange);
+            Log.Info("Görüntü kaynağı eski yöntem (PS Remote Play penceresi). Remote Play'siz çalışmak için KAYNAK'ta 'Doğrudan bağlan'ı açın.");
         }
 
         _timer.Start();
@@ -334,6 +329,13 @@ public partial class MainWindow : Window
     private void StartCapture()
     {
         if (UseDirect()) { StartDirectCapture(); return; }
+        if (!_directReady)
+        {
+            Log.Warn("PS5 bağlantısı kurulmadı. '🎮 PS5 Bağlantısı' ile bir kez kurun (PS Remote Play gerekmez).");
+            OfferPs5Setup();
+            if (UseDirect() && _capture == null) StartDirectCapture();
+            return;
+        }
         if (WindowCombo.SelectedItem is not WindowInfo w)
         {
             Log.Warn("Yakalanacak pencere seçilmedi.");
@@ -1510,8 +1512,8 @@ public partial class MainWindow : Window
         }
         else
         {
-            Notify("PS Remote Play bulunamadı – önce PS5'e bağlanın (F6)");
-            Log.Warn($"[{source}] Başlatılamadı: PS Remote Play penceresi yok veya yakalanamıyor.");
+            Notify(_directReady ? "Başlatılamadı (F6) – ayrıntı logda" : "PS5 bağlantısı kurulmadı – '🎮 PS5 Bağlantısı'");
+            Log.Warn($"[{source}] Başlatılamadı.");
         }
     }
 
@@ -1991,7 +1993,7 @@ public partial class MainWindow : Window
                     _target.IsRemotePlay ? Green : Orange);
             }
         }
-        else if (!UseDirect() && now - _lastRpScan > TimeSpan.FromSeconds(2))
+        else if (_directReady && !_settings.DirectConnect && now - _lastRpScan > TimeSpan.FromSeconds(2))
         {
             _lastRpScan = now;
             var rp = WindowFinder.FindRemotePlay();

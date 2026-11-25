@@ -73,10 +73,10 @@ public sealed class AppSettings
     /// <summary>LG geliştirici modu oturum jetonu (DPAPI ile şifreli). Süreyi TV'ye bağlanmadan yenilemek için.</summary>
     public string? TvDevTokenProtected { get; set; }
 
-    // ───── PS5'e doğrudan bağlantı (Remote Play uygulaması olmadan; CouchSubs/chiaki-ng yöntemi) ─────
+    // ───── PS5'e doğrudan bağlantı (PS Remote Play uygulaması olmadan; ps5-baglanti yardımcısı) ─────
     /// <summary>true: görüntü PS5'ten doğrudan alınır; false: PS Remote Play penceresinden.</summary>
     public bool DirectConnect { get; set; } = false;
-    /// <summary>İkinci PSN hesabının 8 baytlık hesap kimliği (base64, DPAPI ile şifreli). Şifre ya da token saklanmaz.</summary>
+    /// <summary>İkinci PSN hesabının 8 baytlık hesap kimliği (onaltılık, DPAPI ile şifreli). Şifre ya da token saklanmaz.</summary>
     public string? PsnAccountIdProtected { get; set; }
     /// <summary>Eşlenmiş PS5'in bilgileri (JSON: adres, ad, kayıt anahtarları; DPAPI ile şifreli).</summary>
     public string? Ps5ConsoleProtected { get; set; }

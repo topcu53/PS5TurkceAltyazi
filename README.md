@@ -56,9 +56,10 @@ Hazır dosyalar **[Releases](../../releases)** sayfasındadır:
 
 © 2026 Burak Topcu
 
-## Lisans ve teşekkür
+## PS5 bağlantı yardımcısı
 
-Altyazı+ **GNU AGPL-3.0** lisanslıdır ([LICENSE](LICENSE)). PS5'e PS Remote Play uygulaması olmadan doğrudan bağlantı,
-Sinan Yorulmaz'ın [CouchSubs](https://github.com/yorulmazsinan/couchsubs) projesinden (AGPL-3.0) uyarlandı; Remote Play
-protokolü [chiaki-ng](https://github.com/chiaki-ng/chiaki-ng) sayesinde mümkün. Ayrıntı: [NOTICE](NOTICE),
-[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+PS5'e PS Remote Play uygulaması olmadan bağlanmayı programın içindeki ayrı bir yardımcı program, `ps5-baglanti.exe`
+yapar (kaynağı: [tools/ps5-baglanti](tools/ps5-baglanti)). Remote Play protokolünü açık kaynak
+[chiaki-ng](https://github.com/chiaki-ng/chiaki-ng) kütüphanesi konuşur; bu yüzden yalnız bu yardımcı program
+chiaki-ng'nin lisansıyla (AGPL-3.0) dağıtılır. Altyazı+'ın kendisi onunla yalnız komut satırı üzerinden konuşur.
+Ayrıntı: [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
