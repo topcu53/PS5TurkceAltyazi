@@ -71,7 +71,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="12" Padding="{TemplateBinding Padding}">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="22" Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -360,4 +360,118 @@
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
     
+    <!-- ═══ Yeni düzen: üst sekmeler, ayarlar menüsü, durum kutucukları ═══ -->
+    <LinearGradientBrush x:Key="HeroBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#182033" Offset="0"/>
+        <GradientStop Color="#0B0F1A" Offset="1"/>
+    </LinearGradientBrush>
+    <RadialGradientBrush x:Key="HeroGlow" Center="0.5,0.62" GradientOrigin="0.5,0.62" RadiusX="0.55" RadiusY="0.6">
+        <GradientStop Color="#552F8BFF" Offset="0"/>
+        <GradientStop Color="#002F8BFF" Offset="1"/>
+    </RadialGradientBrush>
+    <SolidColorBrush x:Key="Hover" Color="#1F2A42"/>
+
+    <Style x:Key="NavTab" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="#8B97AD"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" CornerRadius="18" Padding="22,8" Margin="3" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="#E8EDF7"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#26324A"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#33415E"/>
+                            <Setter Property="Foreground" Value="#E8EDF7"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SideItem" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="#E8EDF7"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Margin" Value="0,2"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" CornerRadius="14" Padding="12,9" Background="Transparent" BorderThickness="1" BorderBrush="Transparent">
+                        <ContentPresenter/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1F2A42"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1D2639"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#2F8BFF"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Tile" TargetType="Border">
+        <Setter Property="Background" Value="#121826"/>
+        <Setter Property="BorderBrush" Value="#222C42"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="Padding" Value="14,12"/>
+    </Style>
+
+    <Style x:Key="Panel" TargetType="Border">
+        <Setter Property="Background" Value="#121826"/>
+        <Setter Property="BorderBrush" Value="#222C42"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Padding" Value="22,18"/>
+    </Style>
+
+    <Style x:Key="Big" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="FontSize" Value="15"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="22,13"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="22" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#1F2A42"/>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="#2F8BFF"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="LinkRow" TargetType="Button" BasedOn="{StaticResource Big}">
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Margin" Value="0,10,0,0"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+
+    <Style x:Key="IconBox" TargetType="Border">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="12"/>
+    </Style>
+
 </ResourceDictionary>

@@ -138,7 +138,7 @@ public partial class MainWindow
         _ps5Level = 1;
         _ps5Text = "bağlanıyor…";
         ResetSessionStats();
-        StartStopButton.Content = "■ Durdur (F6)";
+        StartStopButton.Content = "■   Çeviriyi Durdur";
         SetText(CaptureStatus, "PS5'e bağlanılıyor…", Orange);
         SetText(RemotePlayStatus, $"PS5'e bağlanılıyor – {pairing.Name} ({pairing.Host})", Orange);
         Log.Info($"Yakalama başladı → PS5'e doğrudan bağlantı: {pairing.Name} ({pairing.Host}). Ekranda pencere açılmaz; " +

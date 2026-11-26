@@ -46,6 +46,15 @@ public partial class MainWindow
         return string.Join(" + ", list) + (_settings.MyMemoryEnabled ? " (yedek: MyMemory)" : "") + " hazır";
     }
 
+    private string TranslationShort()
+    {
+        var list = new System.Collections.Generic.List<string>();
+        if (_deepLKey != null) list.Add("DeepL");
+        if (_geminiKey != null) list.Add("Gemini");
+        if (_azureKey != null) list.Add("Azure");
+        return list.Count == 0 ? "MyMemory" : string.Join(" + ", list);
+    }
+
     private void TestSubtitle_Click(object sender, RoutedEventArgs e)
     {
         if (_server is not { IsRunning: true } && _settings.TvServerEnabled) EnsureServer();
@@ -83,7 +92,7 @@ public partial class MainWindow
         else if (!_directReady) { ps5 = 0; ps5Text = "kurulmadı – 🧭 Kurulum"; }
         else { ps5 = 0; ps5Text = "bağlı değil – ▶ Başlat"; }
         Ps5Dot.Foreground = Level(ps5);
-        Ps5PillText.Text = "PS5: " + ps5Text;
+        Ps5PillText.Text = ps5Text;
         Ps5PillText.ToolTip = Ps5PillText.Text;
 
         int tv;
@@ -94,7 +103,8 @@ public partial class MainWindow
         else if (_server is { IsRunning: true } && tvSetUp) { tv = 1; tvText = "TV uygulaması bekleniyor…"; }
         else { tv = 0; tvText = tvSetUp ? "bağlı değil" : "kurulmadı"; }
         TvDot.Foreground = Level(tv);
-        TvPillText.Text = "TV: " + tvText;
+        TvPillText.Text = tvText;
+        TranslatorTileText.Text = TranslationShort();
         TvPillText.ToolTip = TvPillText.Text;
     }
 

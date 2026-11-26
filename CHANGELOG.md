@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.15 – Yeni arayüz
+
+- Üstte sekmeler: **Ana Ekran · Geçmiş · Ayarlar**.
+- Ana Ekran: büyük önizleme, altında büyük düğmeler (▶ Çeviriyi Başlat, ✦ Altyazıyı Bul, 🧪 TV'de Dene), canlı çeviri kartı;
+  sağda PS5 / TV / Okuma / Çeviri durum kutucukları (renkli simge ve ışıkla) ve hızlı ayarlar.
+- Geçmiş: okunan her altyazı İngilizcesi ve Türkçesiyle; yanında günlük ve "Günlüğü kopyala".
+- Ayarlar: solda menü (Bağlantı, Altyazı Görünümü, Çeviri, TV, Tema, Genel, Gelişmiş), sağda ilgili kart.
+
 ## v2.14 – TV'de çevirinin yeri seçilebilir, kutu yazı kadar
 
 - TV'deki Türkçe kutu artık yazı kadar; orijinal altyazının alanı kadar büyütülmüyor.

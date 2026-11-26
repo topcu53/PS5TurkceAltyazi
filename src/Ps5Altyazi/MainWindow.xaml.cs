@@ -164,17 +164,16 @@ public partial class MainWindow : Window
     {
         double w = ActualWidth > 0 ? ActualWidth : Width, h = ActualHeight > 0 ? ActualHeight : Height;
         bool narrow = w < 1150, shortH = h < 800, tiny = h < 650;
-        RightCol.Width = new GridLength(w < 950 ? 250 : narrow ? 300 : 360);
+        RightCol.Width = new GridLength(w < 1000 ? 300 : narrow ? 340 : 380);
         TurkishText.FontSize = narrow ? 17 : 21;
-        HeaderLogo.Width = HeaderLogo.Height = shortH ? 40 : 56;
+        HeaderLogo.Width = HeaderLogo.Height = shortH ? 32 : 40;
         HeaderSub.Visibility = tiny ? Visibility.Collapsed : Visibility.Visible;
-        LogList.Height = tiny ? 60 : shortH ? 85 : 130;
-        MainGrid.Margin = shortH ? new Thickness(10, 6, 10, 6) : new Thickness(16, 12, 16, 12);
+        MainGrid.Margin = shortH ? new Thickness(12, 8, 12, 8) : new Thickness(22, 14, 22, 16);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.14 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.15 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -392,7 +391,7 @@ public partial class MainWindow : Window
         _capture = src;
         _target = w;
         ResetSessionStats();
-        StartStopButton.Content = "■ Durdur (F6)";
+        StartStopButton.Content = "■   Çeviriyi Durdur";
         SetText(CaptureStatus, "Başladı, ilk kare bekleniyor…", Orange);
         Log.Info($"Yakalama başladı → {w.Title} [{w.ProcessName}, PID {w.ProcessId}] | yöntem: {src.Name} | hedef FPS: {fps}");
     }
@@ -417,7 +416,7 @@ public partial class MainWindow : Window
         if (_verifying) FinishVerification(aborted: true);
         if (_autoDetectActive) { _autoDetectActive = false; Log.Info("Otomatik altyazı bulma iptal edildi."); }
 
-        StartStopButton.Content = "▶ Başlat (F6)";
+        StartStopButton.Content = "▶   Çeviriyi Başlat";
         SetText(CaptureStatus, "Durduruldu", Neutral);
         if (reason != null) Log.Info($"Yakalama durduruldu: {reason}");
         ClearScreenItems();
@@ -1427,6 +1426,7 @@ public partial class MainWindow : Window
             _trTotalLatencySum += total;
             SetText(TurkishText, o.Text, Neutral);
             ShowTurkish(o.Text);
+            AddHistory(english, o.Text, o.Engine);
             _turkishVisible = true;
             _turkishShownAt = DateTime.Now;
             if (_currentText == null) ScheduleHide(DateTime.Now + MinTurkishDisplay); // İngilizcesi çoktan bitti
