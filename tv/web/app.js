@@ -118,6 +118,13 @@
     document.head.appendChild(st);
   }
 
+  // Güvenlik: PC'den "sil" mesajı kaçarsa (bağlantı koptu vb.) altyazı ekranda takılı kalmasın – 15 sn sonra kalkar
+  var staleTimer = null;
+  function armStale() {
+    if (staleTimer) clearTimeout(staleTimer);
+    staleTimer = state.text ? setTimeout(function () { state.text = ''; render(); }, 15000) : null;
+  }
+
   function render() {
     var s = state.style;
     var gf = s.gf || null;
@@ -367,8 +374,8 @@
 
   function handle(m) {
     switch (m.t) {
-      case 'sub': state.text = m.text || ''; if (m.cover) state.cover = m.cover; if (m.lh) state.lineH = m.lh; render(); break;
-      case 'clear': state.text = ''; state.lastMask = state.mask; render(); break;
+      case 'sub': state.text = m.text || ''; if (m.cover) state.cover = m.cover; if (m.lh) state.lineH = m.lh; armStale(); render(); break;
+      case 'clear': state.text = ''; state.lastMask = state.mask; armStale(); render(); break;
       case 'mask': state.mask = { x: m.x, y: m.y, w: m.w, h: m.h }; state.lastMask = state.mask; if (m.lh) state.lineH = m.lh; drawMask(); render(); break;
       case 'unmask': state.mask = null; drawMask(); if (!state.text) state.lastMask = null; render(); break;
       case 'notice': notice(m.text || '', m.ms || 2000); break;

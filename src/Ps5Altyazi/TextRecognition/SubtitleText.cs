@@ -47,6 +47,7 @@ public static class SubtitleText
     {
         if (string.IsNullOrWhiteSpace(s)) return false;
         s = s.Trim();
+        if (IsButtonPrompt(s)) return false;
         int letters = s.Count(char.IsLetter);
         if (letters < 2) return false;
         if (s.Any(c => char.IsLetter(c) && c > 127 && AllowedAccents.IndexOf(c) < 0)) return false;
@@ -62,6 +63,29 @@ public static class SubtitleText
         if (EndPunctuation.IndexOf(s[^1]) >= 0) return true;
         if (tokens.Count >= 3) return true;
         return tokens.Any(t => t.Length >= 2 && CommonWords.Contains(t));
+    }
+
+    private static readonly Regex PromptToken = new(@"^(?:[@©®•○●◯◎⊙]|[O0oe]|\(\S{0,3}\)?|\(\S{0,3})$", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Oyunun etkileşim istemi mi ("@ APPLE", "O WARDROBE O DRESS", "(.0) JACK DRIVER", "@ TURN OFF")?
+    /// Tuş simgesi (OCR'da @, O, (D…) + BÜYÜK HARFLİ kısa eylem adı; altyazı değildir, çevrilmez.
+    /// </summary>
+    public static bool IsButtonPrompt(string s)
+    {
+        var toks = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (toks.Length == 0 || toks.Length > 8) return false;
+        int icons = 0;
+        var words = new List<string>();
+        foreach (var t in toks)
+        {
+            if (PromptToken.IsMatch(t) || t.All(c => !char.IsLetter(c))) { icons++; continue; }
+            words.Add(t);
+        }
+        if (icons == 0 || words.Count == 0 || words.Count > 5) return false;
+        // Kalan kelimelerin hepsi BÜYÜK HARF ve cümle noktalaması yok
+        bool allCaps = words.All(w => w.Where(char.IsLetter).All(char.IsUpper) && w.Count(char.IsLetter) >= 2);
+        return allCaps && !words.Any(w => w.Any(c => c is '.' or '?' or '!' or ','));
     }
 
     /// <summary>0–1 arası benzerlik (yalnızca harf/rakamlar, büyük-küçük harf duyarsız, Levenshtein).</summary>

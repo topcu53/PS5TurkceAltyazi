@@ -1,5 +1,17 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.22 – Takılı kalan altyazı düzeltildi
+
+- **Türkçe artık ekranda takılı kalmıyor:** İngilizce altyazı tamamen kalktıktan **2 saniye sonra** Türkçe de kesin kalkar.
+  (Hata: altyazı kalkıp yerinde bozuk okunan bir şey kalınca gizleme zamanlayıcısı duruyor, Türkçe ekranda kalıyordu.)
+- Alanda okunur altyazı kalmadıysa (üst üste iki kez okunamadı) altyazı bitmiş sayılır.
+- TV güvenliği: PC'den "sil" mesajı herhangi bir nedenle gelmezse altyazı 15 sn sonra kendiliğinden kalkar.
+- Arka arkaya gelen konuşmalarda Türkçe artık yanıp sönmüyor (2 sn içinde yeni altyazı gelirse doğrudan değişir).
+- Oyunun etkileşim istemleri ("@ APPLE", "O WARDROBE O DRESS", "@ TURN OFF" gibi tuş simgeli yazılar) artık altyazı
+  sanılıp çevrilmiyor ve yazı boyu ölçümünü bozmuyor.
+- Günlükteki gecikme ölçümü düzeltildi (önceki boş okumalardan kalan eski zaman sayılmıyor; gerçek gecikme görünür).
+- TV uygulaması 1.0.14.
+
 ## v2.21 – Doğru boyda altyazı, daha temiz okuma
 
 - **Dev altyazı düzeltildi:** bazı karelerde birden çok satır tek satır sanılıp yazı boyu 136–141 px ölçülüyordu

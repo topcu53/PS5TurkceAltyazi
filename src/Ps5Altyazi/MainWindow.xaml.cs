@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.21 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.22 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1096,7 +1096,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private int _ocrAltWins;
+    private int _ocrAltWins, _junkWhileShown;
 
     /// <summary>OCR sonucunun kalitesi: 0 çöp … 2 temiz İngilizce (geçerli + kelimelerin çoğu sözlükte).</summary>
     private static double OcrScore(OcrOutput o)
@@ -1133,9 +1133,19 @@ public partial class MainWindow : Window
         if (!_subPresent && _presentStreak == 0) return; // altyazı bu arada kayboldu
 
         string text = SubtitleText.Normalize(output.Lines);
-        _hideTimer.Stop(); // yeni metin geldi: bekleyen gizleme iptal
         if (!SubtitleText.IsPlausible(text))
         {
+            // Alanın görüntüsü değişti ama artık okunur bir altyazı yok (İngilizce kalktı, yerinde HUD/doku kaldı):
+            // mevcut altyazıyı bitir. Eskiden bu durumda gizleme zamanlayıcısı da duruyordu → Türkçe ekranda takılı kalıyordu.
+            if (_currentText != null)
+            {
+                // Tek bir bozuk okuma (solma, arkadan geçen araba) yetmesin: bir sonraki karede yeniden oku,
+                // üst üste iki kez okunamazsa İngilizce gerçekten kalkmıştır.
+                _lastSkippedText = text;
+                if (++_junkWhileShown >= 2) { _junkWhileShown = 0; EndSubtitle(); }
+                else _lastOcrFp = null;
+                return;
+            }
             // Altyazı henüz belirme (fade-in) aşamasında olabilir: bir sonraki karede yeniden okunsun
             // (önceden aynı görüntü tekrar okunmuyordu → Türkçe ancak altyazı değişince geliyordu)
             if (_currentText == null) { _lastOcrFp = null; _changeStart ??= changeStart; }
@@ -1145,6 +1155,8 @@ public partial class MainWindow : Window
             return;
         }
 
+        _junkWhileShown = 0;
+        _hideTimer.Stop(); // okunur yeni metin geldi: bekleyen gizleme iptal
         if (_currentText != null && SubtitleText.Similarity(text, _currentText) >= 0.85)
         {
             // Aynı altyazı (OCR farkı). Belirgin şekilde uzadıysa (ör. 2. satır sonradan geldi) yeniden çevir.
@@ -1161,6 +1173,9 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Gecikme ölçümü bu altyazının görünmesinden başlasın (önceki boş/çöp okumalardan kalan eski zaman sayılmasın)
+        var since = _subSince.AddMilliseconds(-150);
+        if (changeStart < since) changeStart = since;
         _currentText = text;
         _currentSince = DateTime.Now;
         _committedCount++;
@@ -1196,6 +1211,8 @@ public partial class MainWindow : Window
 
     /// <summary>Kısa altyazılar da okunabilsin diye Türkçe en az bu kadar ekranda kalır.</summary>
     private static readonly TimeSpan MinTurkishDisplay = TimeSpan.FromSeconds(1.5);
+    /// <summary>İngilizce altyazı tamamen kalktıktan sonra Türkçe bu kadar daha ekranda kalır, sonra kesin kalkar.</summary>
+    private static readonly TimeSpan LingerAfterEnglish = TimeSpan.FromSeconds(2);
     private readonly DispatcherTimer _hideTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private DateTime _hideAt, _turkishShownAt;
     private bool _turkishVisible;
@@ -1217,7 +1234,7 @@ public partial class MainWindow : Window
         SetText(EnglishText, "—", Gray);
         _server?.Unmask();
         _maskSent = null;
-        if (_turkishVisible) ScheduleHide(Max(DateTime.Now, _turkishShownAt + MinTurkishDisplay));
+        if (_turkishVisible) ScheduleHide(Max(DateTime.Now + LingerAfterEnglish, _turkishShownAt + MinTurkishDisplay));
     }
 
     private static DateTime Max(DateTime a, DateTime b) => a > b ? a : b;
@@ -1483,7 +1500,7 @@ public partial class MainWindow : Window
             AddHistory(english, o.Text, o.Engine);
             _turkishVisible = true;
             _turkishShownAt = DateTime.Now;
-            if (_currentText == null) ScheduleHide(DateTime.Now + MinTurkishDisplay); // İngilizcesi çoktan bitti
+            if (_currentText == null) ScheduleHide(DateTime.Now + LingerAfterEnglish); // İngilizcesi çoktan bitti
             string src = o.FromCache ? (o.Fuzzy ? "önbellek (benzer)" : "önbellek") : o.Engine;
             UpdateTranslationStatus();
             Log.Success($"ÇEVİRİ (TR): \"{o.Text}\"  [{src} {o.Milliseconds:F0} ms, metin değişiminden Türkçeye {total:F0} ms]");
