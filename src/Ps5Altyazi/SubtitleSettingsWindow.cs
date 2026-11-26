@@ -25,6 +25,14 @@ public sealed class SubtitleSettingsWindow : Window
     public event Action<string>? SampleRequested;
     private bool _sampleOn;
 
+    private static readonly (string Key, string Label)[] Placements =
+    {
+        ("cover", "Orijinalin yerine – İngilizce altta kalır, siyah zeminle tamamen örtülür"),
+        ("above", "Çeviri üstte, İngilizce altyazı altında görünür"),
+        ("below", "İngilizce üstte, çeviri altında"),
+        ("bottom", "Ekranın altında sabit"),
+    };
+
     private static readonly (string Name, string Value)[] TextColors =
     {
         ("Otomatik (oyundaki gibi)", "auto"), ("Beyaz", "#FFFFFF"), ("Sarı", "#FFE066"), ("Açık mor", "#D8C8FF"),
@@ -90,6 +98,15 @@ public sealed class SubtitleSettingsWindow : Window
             v => _s.SubtitleBackgroundOpacity = v / 100));
         root.Children.Add(SliderRow("Pencere genişliği (ekranın)", 30, 100, _s.SubtitleWidthFraction * 100, v => $"%{v:F0}",
             v => _s.SubtitleWidthFraction = v / 100));
+
+        root.Children.Add(new TextBlock { Text = "Çevirinin yeri (TV)", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 4, 0, 4) });
+        foreach (var (key, label) in Placements)
+        {
+            var rb = new RadioButton { Content = label, GroupName = "yer", IsChecked = _s.TvPlacement == key, Margin = new Thickness(0, 3, 0, 3) };
+            string k = key;
+            rb.Checked += (_, _) => { _s.TvPlacement = k; _s.TvMaskEnglish = k == "cover"; Changed?.Invoke(); };
+            root.Children.Add(rb);
+        }
 
         root.Children.Add(new TextBlock { Text = "Renkler ve zemin", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 4) });
         root.Children.Add(ColorRow("Yazı rengi", TextColors, _s.SubtitleTextColor, v => _s.SubtitleTextColor = v));

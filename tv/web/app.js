@@ -127,7 +127,10 @@
     var text = showText ? state.text : noticeText;
     if (!text) { sub.style.display = 'none'; return; }
 
-    var anchor = showText ? (state.mask || state.lastMask || (s.cover ? state.cover : null)) : null;
+    // Yerleşim: cover = orijinalin yerine (orijinal siyahla örtülür), above = orijinalin üstünde, below = altında,
+    // bottom = ekranın altında sabit
+    var place = s.place || 'cover';
+    var anchor = showText && place !== 'bottom' ? (state.mask || state.lastMask) : null;
     var base = Math.round(s.font * state.fontScale);
     if (showText && s.match !== false && gf && gf.em > 0) {
       // Oyunun yazı tipiyle ölçülmüş boy: harfler orijinalle aynı yükseklikte (örtme kapalıyken de)
@@ -147,26 +150,22 @@
     // Zemin rengi (kullanıcı seçimi); örtme modunda tam opak: İngilizce alttan görünmesin
     var bgc = s.bgc && /^#[0-9A-Fa-f]{6}$/.test(s.bgc) ? s.bgc : '#000000';
     var br = parseInt(bgc.substr(1, 2), 16), bgg = parseInt(bgc.substr(3, 2), 16), bb = parseInt(bgc.substr(5, 2), 16);
-    sub.style.background = anchor ? bgc : 'rgba(' + br + ',' + bgg + ',' + bb + ',' + s.bg + ')';
+    sub.style.background = anchor && place === 'cover' ? '#000' : 'rgba(' + br + ',' + bgg + ',' + bb + ',' + s.bg + ')';
     sub.style.textShadow = showText && s.shadow !== false ? '0 2px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)' : '';
     sub.style.fontSize = showText ? base + 'px' : '';
     sub.style.lineHeight = anchor ? '1.15' : '';
-    sub.style.padding = anchor ? '6px 20px 8px' : '';
+    sub.style.padding = anchor ? '6px 18px 8px' : '';
     sub.style.borderRadius = (typeof s.radius === 'number' ? Math.max(0, Math.min(30, s.radius)) : 12) + 'px';
     sub.style.minWidth = '';
     sub.style.minHeight = '';
     sub.setAttribute('data-base', base);
 
-    if (anchor) {
-      // Maskeyle birebir aynı kutu (maske: rect + 10 px kenar payı)
-      var c = anchor, pad = 10; // oyun alanına göre 0..1 (HDMI görüntüsü = oyun alanı)
+    var c = anchor;
+    if (c) {
       sub.style.left = ((c.x + c.w / 2) * 1920) + 'px';
-      // Üstten sabit: uzun çeviri orijinal satırın yerinden başlayıp aşağıya doğru satır satır iner
       sub.style.bottom = 'auto';
-      sub.style.top = Math.max(0, c.y * 1080 - pad) + 'px';
-      sub.style.minWidth = (c.w * 1920 + 2 * pad) + 'px';
-      sub.style.minHeight = (c.h * 1080 + 2 * pad) + 'px';
-      sub.style.maxWidth = Math.max(c.w * 1920 + 2 * pad, s.width / 100 * 1920) + 'px';
+      sub.style.top = '0px';
+      sub.style.maxWidth = Math.max(c.w * 1920 + 40, s.width / 100 * 1920) + 'px';
     } else {
       sub.style.left = '50%';
       sub.style.top = 'auto';
@@ -174,20 +173,15 @@
       sub.style.maxWidth = (s.width / 100 * 1920) + 'px';
     }
     sub.style.display = 'block';
-    // Yazı küçültülmez (orijinalle aynı boy); uzun metin satır satır aşağı iner.
-    // Ekranın altından taşarsa kutu yalnızca gerektiği kadar yukarı kaydırılır.
-    if (anchor) {
-      // Yazıyı siyah kutunun içinde dikeyde ortala: kutu en az orijinal altyazı kadar yüksek, yazı tam ortada
-      var target = parseFloat(sub.style.minHeight) || 0;
-      sub.style.minHeight = '';
-      var natural = sub.offsetHeight; // 6 + 8 px iç boşlukla yazının kendi yüksekliği
-      if (target > natural) {
-        var extra = (target - natural) / 2;
-        sub.style.paddingTop = (6 + extra) + 'px';
-        sub.style.paddingBottom = (8 + extra) + 'px';
-      }
-      var top = parseFloat(sub.style.top) || 0, h = sub.offsetHeight;
-      if (top + h > 1072) sub.style.top = Math.max(0, 1072 - h) + 'px';
+    if (c) {
+      // Kutu yazı kadar (büyütülmez); yeri seçilen yerleşime göre
+      var h = sub.offsetHeight, top;
+      if (place === 'above') top = c.y * 1080 - 10 - h;
+      else if (place === 'below') {
+        top = (c.y + c.h) * 1080 + 10;
+        if (top + h > 1072) top = c.y * 1080 - 10 - h; // altta yer yoksa üste
+      } else top = (c.y + c.h / 2) * 1080 - h / 2;       // orijinalin tam ortasına
+      sub.style.top = Math.max(0, Math.min(1072 - h, top)) + 'px';
     }
   }
 
@@ -289,8 +283,9 @@
 
   function drawMask() {
     var c = state.mask;
-    if (!c) { maskEl.style.display = 'none'; return; }
-    var pad = 10;
+    // Orijinal yalnız "yerine" yerleşiminde örtülür; üstünde/altında seçiliyse orijinal görünür kalır
+    if (!c || (state.style.place || 'cover') !== 'cover' || state.muted) { maskEl.style.display = 'none'; return; }
+    var pad = 4;
     maskEl.style.left = (c.x * 1920 - pad) + 'px';
     maskEl.style.top = (c.y * 1080 - pad) + 'px';
     maskEl.style.width = (c.w * 1920 + 2 * pad) + 'px';
@@ -367,6 +362,7 @@
       case 'screen2': state.pieces = m.items || []; renderPieces(); break;
       case 'style':
         for (var k in m) if (k !== 't' && m.hasOwnProperty(k)) state.style[k] = m[k];
+        drawMask();
         render();
         break;
       case 'hdmi': if (m.port >= 1 && m.port <= 4) setHdmi(m.port); break;

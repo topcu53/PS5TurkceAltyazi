@@ -77,6 +77,9 @@ public sealed class AppSettings
     public bool TvAutoLaunch { get; set; } = true;
     /// <summary>TV'de İngilizce altyazının üstünü Türkçe gelene kadar siyah kutuyla ört.</summary>
     public bool TvMaskEnglish { get; set; } = true;
+    /// <summary>TV'de çevirinin yeri: "cover" orijinalin yerine (orijinal siyahla örtülür), "above" orijinalin üstünde,
+    /// "below" orijinalin altında, "bottom" ekranın altında sabit.</summary>
+    public string TvPlacement { get; set; } = "cover";
     public DateTime? TvLastExtend { get; set; }
     /// <summary>LG geliştirici modu oturum jetonu (DPAPI ile şifreli). Süreyi TV'ye bağlanmadan yenilemek için.</summary>
     public string? TvDevTokenProtected { get; set; }

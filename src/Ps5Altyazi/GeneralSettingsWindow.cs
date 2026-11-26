@@ -45,7 +45,7 @@ public sealed class GeneralSettingsWindow : Window
         root.Children.Add(Head("TV"));
         root.Children.Add(Check("TV / telefon yayını açık", s.TvServerEnabled, v => s.TvServerEnabled = v));
         root.Children.Add(Check("Çeviri başlayınca TV uygulamasını da aç (LG)", s.TvAutoLaunch, v => s.TvAutoLaunch = v));
-        root.Children.Add(Check("TV'de İngilizce altyazıyı siyah kutuyla ört", s.TvMaskEnglish, v => s.TvMaskEnglish = v));
+        root.Children.Add(Note("Çevirinin TV'deki yeri ve renkleri: '✎ Altyazı Görünümü'."));
 
         root.Children.Add(Head("Bu bilgisayar"));
         root.Children.Add(Check("Türkçe altyazıyı bu bilgisayarın ekranında da göster (oyun görüntüsünün üstünde)", s.PcSubtitleVisible, v => s.PcSubtitleVisible = v));

@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.13 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.14 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1653,6 +1653,13 @@ public partial class MainWindow : Window
             _settings.SettingsVersion = 6;
             _settings.Save();
         }
+        if (_settings.SettingsVersion < 7)
+        {
+            // v2.14: TV'de çevirinin yeri seçilebilir; eski "İngilizce'yi örtme" kapalıysa ekranın altında kalsın.
+            _settings.TvPlacement = _settings.TvMaskEnglish ? "cover" : "bottom";
+            _settings.SettingsVersion = 7;
+            _settings.Save();
+        }
     }
 
     // ───────────────────────────── TV / telefon yayını (Aşama 8) ─────────────────────────────
@@ -1665,7 +1672,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void SendTvMask(double[] rect, bool extendPrevious)
     {
-        if (_server == null || !_settings.TvMaskEnglish) return;
+        if (_server == null || _settings.TvPlacement == "bottom") return;
         if (!extendPrevious) _maskSent = null; // yeni altyazı: önceki kutuyu büyütme, yenisini koy
         if (_maskSent != null && Math.Abs(_maskSent[0] - rect[0]) < 0.01 && Math.Abs(_maskSent[1] - rect[1]) < 0.01 &&
             Math.Abs(_maskSent[2] - rect[2]) < 0.01 && Math.Abs(_maskSent[3] - rect[3]) < 0.01)
@@ -1739,7 +1746,8 @@ public partial class MainWindow : Window
             color: _settings.SubtitleTextColor,
             bgColor: _settings.SubtitleBgColor,
             shadow: _settings.SubtitleShadow,
-            radius: _settings.SubtitleCornerRadius);
+            radius: _settings.SubtitleCornerRadius,
+            place: _settings.TvPlacement);
     }
 
     private void TvServerCheck_Changed(object sender, RoutedEventArgs e)

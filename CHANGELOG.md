@@ -1,5 +1,12 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.14 – TV'de çevirinin yeri seçilebilir, kutu yazı kadar
+
+- TV'deki Türkçe kutu artık yazı kadar; orijinal altyazının alanı kadar büyütülmüyor.
+- ✎ Altyazı Görünümü → **Çevirinin yeri (TV)**: orijinalin yerine (İngilizce siyah zeminle tamamen örtülür) • çeviri üstte,
+  İngilizce altta görünür • İngilizce üstte, çeviri altta • ekranın altında sabit.
+- TV uygulaması 1.0.12.
+
 ## v2.13 – Altyazı renkleri, zemin seçenekleri; PC ekranında altyazı kapalı
 
 - Türkçe altyazı artık varsayılan olarak yalnız TV'de / telefonda görünür; bilgisayar ekranında (oyun üstünde) gösterilmez.

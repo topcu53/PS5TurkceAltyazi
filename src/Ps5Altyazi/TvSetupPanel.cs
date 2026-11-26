@@ -170,15 +170,7 @@ public sealed class TvSetupPanel : UserControl
         rbAnd.Checked += (_, _) => ShowPlatform("android");
         (_s.TvPlatform == "tizen" ? rbSam : _s.TvPlatform == "android" ? rbAnd : rbLg).IsChecked = true;
 
-        var mask = new CheckBox
-        {
-            Content = "TV'de İngilizce altyazıyı siyah kutuyla ört (Türkçe aynı yere gelir)",
-            IsChecked = _s.TvMaskEnglish,
-            Margin = new Thickness(0, 6, 0, 0)
-        };
-        mask.Checked += (_, _) => { _s.TvMaskEnglish = true; _saveSettings(); };
-        mask.Unchecked += (_, _) => { _s.TvMaskEnglish = false; _saveSettings(); };
-        root.Children.Add(mask);
+        root.Children.Add(Note("Çevirinin TV'deki yeri (orijinalin yerine / üstünde / altında) ve renkleri: ana penceredeki '✎ Altyazı Görünümü'."));
         root.Children.Add(Note("TV kumandası (TV uygulamasında): Sol/Sağ = HDMI girişi • Yukarı/Aşağı = yazı boyutu • OK = bilgi • Geri = çıkış."));
 
         // Telefon / tarayıcı
