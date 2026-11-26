@@ -1,5 +1,15 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.23 – Okunan her altyazı çevrilir
+
+- **Okunup çevrilmeyen altyazılar düzeltildi:** OCR aynı altyazıyı art arda biraz farklı okuyunca (GTA'da aynı anda konuşan
+  kişiler, arkadan geçen araba) her yeni okuma bir öncekinin çevirisini iptal ediyordu; çeviri hiç yetişmiyordu.
+  Artık aynı altyazının farklı okumaları birbirini iptal etmiyor – hangisi önce gelirse gösteriliyor.
+- **Cümle cümle çeviri:** her cümle önbelleğe ayrı girer; "A! B?" okunup sonra "B? C." okununca B tekrar çevrilmez,
+  anında gelir. Uzun, çok konuşmacılı altyazılar çok daha hızlı Türkçeye döner.
+- Yarım okumalar ("the", "do", "on our", "okay?") yeni altyazı sayılmıyor; asıl çeviriyi bozmuyor.
+- Algılama bir an kesilip aynı altyazı yeniden görülünce baştan başlanmıyor (ekran boşalıp dolmuyor).
+
 ## v2.22 – Takılı kalan altyazı düzeltildi
 
 - **Türkçe artık ekranda takılı kalmıyor:** İngilizce altyazı tamamen kalktıktan **2 saniye sonra** Türkçe de kesin kalkar.

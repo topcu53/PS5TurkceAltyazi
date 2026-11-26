@@ -88,6 +88,34 @@ public static class SubtitleText
         return allCaps && !words.Any(w => w.Any(c => c is '.' or '?' or '!' or ','));
     }
 
+    /// <summary><paramref name="small"/> (harf/rakam anahtarı) <paramref name="big"/> içinde geçiyor mu? (kısmi okuma)</summary>
+    public static bool ContainsKey(string big, string small)
+    {
+        string k = Key(small);
+        return k.Length >= 2 && Key(big).Contains(k, StringComparison.Ordinal);
+    }
+
+    private static readonly Regex SentenceBreak = new(@"(?<=[.!?…])[""')\]]*\s+(?=[""'¿¡(\-]*[A-Z0-9])", RegexOptions.Compiled);
+    private static readonly Regex Abbrev = new(@"(?:\b(?:Mr|Mrs|Ms|Dr|St|Jr|Sr|vs|Lt|Sgt|Capt)\.)$", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Metni cümlelere böler ("Okay, we're done. I have nothing for you." → 2 parça). Kısaltmalarda (Dr., Mr.) bölmez.
+    /// Her cümle ayrı çevrilip önbelleğe girer; aynı cümle başka satırla birlikte okunduğunda yeniden çevrilmez.
+    /// </summary>
+    public static List<string> Sentences(string text)
+    {
+        var raw = SentenceBreak.Split(text.Trim());
+        var list = new List<string>();
+        foreach (var r in raw)
+        {
+            string p = r.Trim();
+            if (p.Length == 0) continue;
+            if (list.Count > 0 && (Abbrev.IsMatch(list[^1]) || p.Count(char.IsLetter) < 2)) list[^1] += " " + p;
+            else list.Add(p);
+        }
+        return list;
+    }
+
     /// <summary>0–1 arası benzerlik (yalnızca harf/rakamlar, büyük-küçük harf duyarsız, Levenshtein).</summary>
     public static double Similarity(string a, string b)
     {

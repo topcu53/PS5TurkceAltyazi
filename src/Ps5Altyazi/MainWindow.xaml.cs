@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.22 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.23 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1156,8 +1156,24 @@ public partial class MainWindow : Window
         }
 
         _junkWhileShown = 0;
+        // Kısmi okuma: yeni metin ekrandaki (ya da az önce biten) altyazının bir parçasıysa ("the", "on our", "do")
+        // yeni altyazı sayılmaz – yarım kelimeler çevrilip asıl çeviriyi bozmasın / iptal etmesin.
+        string? refText = _currentText ?? (DateTime.Now - _lastEndedAt < TimeSpan.FromSeconds(1.0) ? _lastEnglish : null);
+        if (refText != null && text.Length < refText.Length && SubtitleText.ContainsKey(refText, text))
+        {
+            if (_currentText == null) { _hideTimer.Stop(); _currentText = refText; _currentSince = DateTime.Now; } // aynı altyazı sürüyor
+            return;
+        }
         _hideTimer.Stop(); // okunur yeni metin geldi: bekleyen gizleme iptal
-        if (_currentText != null && SubtitleText.Similarity(text, _currentText) >= 0.85)
+        // Az önce biten altyazı yeniden görüldüyse (algılama bir an kesildi) aynı altyazı sayılır
+        if (_currentText == null && _lastEnglish != null && DateTime.Now - _lastEndedAt < TimeSpan.FromSeconds(1.5) &&
+            (SubtitleText.Similarity(text, _lastEnglish) >= 0.85 || SubtitleText.ContainsKey(text, _lastEnglish)))
+        {
+            _currentText = _lastEnglish;
+            _currentSince = DateTime.Now;
+        }
+        if (_currentText != null && (SubtitleText.Similarity(text, _currentText) >= 0.85 ||
+                                     (text.Length > _currentText.Length && SubtitleText.ContainsKey(text, _currentText))))
         {
             // Aynı altyazı (OCR farkı). Belirgin şekilde uzadıysa (ör. 2. satır sonradan geldi) yeniden çevir.
             if (text.Length >= _currentText.Length + 3)
@@ -1177,6 +1193,7 @@ public partial class MainWindow : Window
         var since = _subSince.AddMilliseconds(-150);
         if (changeStart < since) changeStart = since;
         _currentText = text;
+        _lastEnglish = text;
         _currentSince = DateTime.Now;
         _committedCount++;
         double latency = (DateTime.Now - changeStart).TotalMilliseconds;
@@ -1221,10 +1238,17 @@ public partial class MainWindow : Window
     /// İngilizce altyazı ekrandan kalktı. Bekleyen çeviri iptal EDİLMEZ (kısa altyazılar kaybolmasın);
     /// Türkçe en az MinTurkishDisplay kadar gösterilip sonra gizlenir.
     /// </summary>
+    private string? _lastEnglish;
+    private DateTime _lastEndedAt = DateTime.MinValue;
+
     private void EndSubtitle()
     {
         if (_currentText != null)
+        {
             Log.Info($"Altyazı bitti ({(DateTime.Now - _currentSince).TotalSeconds:F1} sn ekranda kaldı).");
+            _lastEnglish = _currentText;
+            _lastEndedAt = DateTime.Now;
+        }
         _currentText = null;
         _prevFp = null;
         _lastOcrFp = null;
@@ -1456,9 +1480,28 @@ public partial class MainWindow : Window
         Log.Info(TranslateCheck.IsChecked == true ? "Çeviri açıldı." : "Çeviri kapatıldı.");
     }
 
+    private long _trReq, _trShown;
+    private string? _trEnglish;
+
+    /// <summary>
+    /// Metni cümle cümle çevirir: her cümle önbelleğe ayrı girer, aynı cümle başka satırla birlikte (ya da hafif farklı
+    /// okunarak) geldiğinde anında önbellekten gelir. Tek cümleyse doğrudan çevrilir.
+    /// </summary>
+    private async Task<TranslationOutcome> TranslateBySentenceAsync(string english, string? context, CancellationToken ct)
+    {
+        var parts = SubtitleText.Sentences(english);
+        if (parts.Count <= 1 || parts.Count > 6) return await _translation!.TranslateAsync(english, context, ct);
+        var tasks = parts.Select(p => _translation!.TranslateAsync(p, context, ct)).ToArray();
+        var res = await Task.WhenAll(tasks);
+        string text = string.Join(" ", res.Select(r => r.Text.Trim()).Where(t => t.Length > 0));
+        bool cache = res.All(r => r.FromCache);
+        string engine = res.FirstOrDefault(r => !r.FromCache)?.Engine ?? res[0].Engine;
+        return new TranslationOutcome(text, cache, res.Any(r => r.Fuzzy), res.Max(r => r.Milliseconds), engine);
+    }
+
     private void CancelTranslation()
     {
-        _trSeq++; // yoldaki çeviri sonuçları artık geçersiz
+        _trSeq = ++_trReq; // yoldaki çeviri sonuçları artık geçersiz
         try { _trCts?.Cancel(); } catch { }
         _trCts = null;
     }
@@ -1476,21 +1519,31 @@ public partial class MainWindow : Window
 
         if (_translation == null || TranslateCheck.IsChecked != true) return;
 
-        CancelTranslation();
+        // Önceki istek aynı altyazının OCR farkıysa (benzer / biri diğerini içeriyor) İPTAL EDİLMEZ: hangisi önce
+        // gelirse gösterilir. Eskiden her titrek okuma bir öncekini iptal ediyordu → bazı altyazılar hiç çevrilmiyordu.
+        string? prev = _trEnglish;
+        bool variant = prev != null && (SubtitleText.Similarity(english, prev) >= 0.6 ||
+                                        SubtitleText.ContainsKey(english, prev) || SubtitleText.ContainsKey(prev, english));
+        if (!variant) CancelTranslation();
         var cts = new CancellationTokenSource();
         _trCts = cts;
-        long seq = _trSeq;
+        long seq = ++_trReq;
+        if (!variant) _trSeq = seq;
+        _trEnglish = english;
         SetText(TurkishText, "…", Gray);
-        if (!replacesPrevious) ShowTurkish(""); // eski çeviri yeni altyazının üzerinde kalmasın
+        // Eski çeviri yalnızca bambaşka bir altyazı geldiyse silinir (titrek okumada ekran boşalıp dolmasın)
+        if (!replacesPrevious && !variant && !_turkishVisible) ShowTurkish("");
 
         try
         {
-            var o = await _translation.TranslateAsync(english, context, cts.Token);
-            if (seq != _trSeq || cts.IsCancellationRequested)
+            var o = await TranslateBySentenceAsync(english, context, cts.Token);
+            // Yalnızca hâlâ geçerli (aynı altyazıya ait) ve daha yeni bir sonuç gösterilmemişse uygula
+            if (seq < _trSeq || seq < _trShown || cts.IsCancellationRequested)
             {
                 Log.Info($"Geç gelen çeviri atıldı (altyazı değişmişti): \"{o.Text}\"");
                 return;
             }
+            _trShown = seq;
 
             double total = (DateTime.Now - changeStart).TotalMilliseconds;
             _trCount++;
