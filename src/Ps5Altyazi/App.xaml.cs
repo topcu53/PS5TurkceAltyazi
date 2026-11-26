@@ -18,6 +18,12 @@ public partial class App : Application
             Log.Error($"Gözlemlenmeyen görev hatası: {args.Exception}");
             args.SetObserved();
         };
+        try { ThemePalettes.Apply(this, Settings.AppSettings.Load().ThemeName); }
+        catch (Exception ex)
+        {
+            Log.Error("Tema yüklenemedi, eski tema kullanılıyor: " + ex.Message);
+            ThemePalettes.Apply(this, "mavi");
+        }
         base.OnStartup(e);
     }
 

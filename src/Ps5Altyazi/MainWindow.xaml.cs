@@ -155,7 +155,7 @@ public partial class MainWindow : Window
         MinHeight = Math.Min(MinHeight, wa.Height);
         Width = Math.Min(Width, wa.Width - 16);
         Height = Math.Min(Height, wa.Height - 16);
-        if (wa.Width < 1320 || wa.Height < 900) WindowState = WindowState.Maximized;
+        if (wa.Width < 1240 || wa.Height < 840) WindowState = WindowState.Maximized;
         AdaptLayout();
     }
 
@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.11 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.12 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -988,11 +988,38 @@ public partial class MainWindow : Window
 
         _lastOcrFp = fp;
         long seq = ++_ocrSeq;
-        var job = (r.Game, r.Presence.Lines.ToList(), seq, _changeStart ?? r.Game.Timestamp);
+        var lines = SubtitleLines(r.Presence.Lines.ToList());
+        if (lines.Count == 0) return;
+        var job = (r.Game, lines, seq, _changeStart ?? r.Game.Timestamp);
         _changeStart = null;
 
         if (_ocrBusy) _pendingOcr = job; // yalnızca en yenisi bekler
         else _ = RunOcrAsync(job);
+    }
+
+    /// <summary>
+    /// Altyazı alanında bulunan yazı satırlarından yalnızca asıl altyazıyı bırakır: boyu diğerlerinden çok farklı satırlar
+    /// (simge, harita, arka plandaki tabela) ve altyazı bloğundan uzaktaki satırlar atılır. Böylece hem OCR'a çöp gitmez hem
+    /// TV'deki siyah kutu gereksiz büyümez. En çok 4 satır kalır (alttan, altyazı genelde en altta).
+    /// </summary>
+    private static List<TextLine> SubtitleLines(List<TextLine> lines)
+    {
+        if (lines.Count <= 1) return lines;
+        var hs = lines.Select(x => x.Bounds.Height).OrderBy(x => x).ToList();
+        double med = hs[hs.Count / 2];
+        var kept = lines.Where(x => x.Bounds.Height >= med * 0.6 && x.Bounds.Height <= med * 1.6)
+                        .OrderBy(x => x.Bounds.Y).ToList();
+        if (kept.Count == 0) return lines;
+        // Dikeyde bitişik gruplara ayır; en çok yazı içeren grubu (eşitse en alttakini) al.
+        var groups = new List<List<TextLine>> { new() { kept[0] } };
+        for (int i = 1; i < kept.Count; i++)
+        {
+            var prev = groups[^1][^1];
+            if (kept[i].Bounds.Y - prev.Bounds.Bottom > med * 1.2) groups.Add(new());
+            groups[^1].Add(kept[i]);
+        }
+        var best = groups.OrderByDescending(g => g.Sum(x => x.PixelCount)).ThenByDescending(g => g[^1].Bounds.Bottom).First();
+        return best.Count > 4 ? best.Skip(best.Count - 4).ToList() : best;
     }
 
     /// <summary>Altyazı satırlarının ekrandaki yeri (fiziksel piksel) – örtme modu için.</summary>

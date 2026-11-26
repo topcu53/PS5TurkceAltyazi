@@ -52,10 +52,14 @@ public static class SubtitleText
         if (s.Any(c => char.IsLetter(c) && c > 127 && AllowedAccents.IndexOf(c) < 0)) return false;
         int good = s.Count(c => char.IsLetter(c) || c == ' ');
         if (good < s.Length * 0.5) return false;
-        if (EndPunctuation.IndexOf(s[^1]) >= 0) return true;
         var tokens = s.Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Select(t => t.ToLowerInvariant().Trim('.', ',', '!', '?', ';', ':', '\'', '"', '…', '-'))
             .Where(t => t.Length > 0).ToList();
+        // Sözlük denetimi: kelimelerin çoğu İngilizce değilse (OCR'ın dokudan/simgeden uydurduğu harfler) çöp sayılır.
+        // Özel adlar (Arthur, Dutch…) için eşik düşük tutuldu; kısa satırlar aşağıdaki kurallarla değerlendirilir.
+        if (tokens.Count >= 3 && EnglishWords.IsLoaded && EnglishWords.KnownRatio(s) < 0.4) return false;
+        if (tokens.Any(t => t.Length >= 5 && t.All(char.IsLetter) && !t.Any(c => "aeiouy".IndexOf(c) >= 0))) return false;
+        if (EndPunctuation.IndexOf(s[^1]) >= 0) return true;
         if (tokens.Count >= 3) return true;
         return tokens.Any(t => t.Length >= 2 && CommonWords.Contains(t));
     }

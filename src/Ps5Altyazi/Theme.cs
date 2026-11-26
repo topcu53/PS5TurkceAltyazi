@@ -15,17 +15,18 @@ namespace Ps5Altyazi;
 /// </summary>
 public static class Theme
 {
-    public static readonly Brush Bg = Frozen("#0B0F1A");
-    public static readonly Brush Bar = Frozen("#070A12");
-    public static readonly Brush Text = Frozen("#E8EDF7");
-    public static readonly Brush Dim = Frozen("#8B97AD");
-    public static readonly Brush Good = Frozen("#4ADE80");
-    public static readonly Brush Accent = Frozen("#33C6FF");
-    public static readonly Brush Warn = Frozen("#FFB03B");
-    public static readonly Brush Bad = Frozen("#FF6B6B");
-    public static readonly Brush Line = Frozen("#222C42");
+    // Renkler seçili temadan gelir (ThemePalettes.Apply açılışta ayarlar).
+    public static Brush Bg { get; internal set; } = Frozen("#0E0C13");
+    public static Brush Bar { get; internal set; } = Frozen("#09080D");
+    public static Brush Text { get; internal set; } = Frozen("#ECE8F3");
+    public static Brush Dim { get; internal set; } = Frozen("#A097B3");
+    public static Brush Good { get; internal set; } = Frozen("#6EE7A8");
+    public static Brush Accent { get; internal set; } = Frozen("#B49CF2");
+    public static Brush Warn { get; internal set; } = Frozen("#F6C177");
+    public static Brush Bad { get; internal set; } = Frozen("#F38BA8");
+    public static Brush Line { get; internal set; } = Frozen("#2A2535");
 
-    private static Brush Frozen(string hex)
+    internal static Brush Frozen(string hex)
     {
         var b = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
         b.Freeze();
@@ -138,7 +139,7 @@ public static class Theme
         bd.AppendChild(cp);
         t.VisualTree = bd;
         var hover = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
-        hover.Setters.Add(new Setter(Border.BackgroundProperty, danger ? Frozen("#E81123") : Frozen("#1F2A42"), "Bd"));
+        hover.Setters.Add(new Setter(Border.BackgroundProperty, danger ? Frozen("#E81123") : Frozen(ThemePalettes.Map("#1F2A42")), "Bd"));
         t.Triggers.Add(hover);
         return t;
     }

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Altyazı+ – PS5 oyunları için canlı Türkçe altyazı"
         Icon="Resources/logo-256.png"
-        Height="900" Width="1300" MinHeight="500" MinWidth="760"
+        Height="820" Width="1220" MinHeight="500" MinWidth="760"
         Background="{StaticResource Bg}" Foreground="{StaticResource TextMain}"
         FontFamily="Segoe UI" WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded" Closing="Window_Closing" KeyDown="Window_KeyDown">
@@ -27,7 +27,7 @@
             <Image x:Name="HeaderLogo" Source="Resources/logo-256.png" Width="56" Height="56" RenderOptions.BitmapScalingMode="HighQuality"/>
             <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
                 <TextBlock FontSize="26" FontWeight="Bold">
-                    <Run Text="Altyazı"/><Run Text="+" Foreground="#33C6FF"/>
+                    <Run Text="Altyazı"/><Run Text="+" Foreground="{StaticResource Cyan}"/>
                 </TextBlock>
                 <TextBlock x:Name="HeaderSub" Foreground="{StaticResource TextDim}" FontSize="13"
                            Text="PS5 oyunları için canlı Türkçe altyazı  •  Yapımcı: Burak Topcu"/>
@@ -54,7 +54,7 @@
                         Content="⬇ Şimdi güncelle" ToolTip="Yeni sürüm hazır"/>
                 <Border Background="{StaticResource CardAlt}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="16" Padding="14,6" Margin="0,0,10,0" VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="●" Foreground="#33C6FF" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="●" Foreground="{StaticResource Cyan}" Margin="0,0,8,0" VerticalAlignment="Center"/>
                         <TextBlock x:Name="CaptureStatus" Text="Durduruldu" FontSize="13" VerticalAlignment="Center"
                                    MaxWidth="220" TextTrimming="CharacterEllipsis"/>
                     </StackPanel>
@@ -87,9 +87,11 @@
                               Checked="OcrCheck_Changed" Unchecked="OcrCheck_Changed"/>
                     <CheckBox x:Name="TranslateCheck" IsChecked="True" Content="Çeviri"
                               Checked="TranslateCheck_Changed" Unchecked="TranslateCheck_Changed"/>
-                    <Button Content="🎨 Altyazı Görünümü" Click="SubtitleAppearance_Click"/>
+                    <Button Content="✎ Altyazı Görünümü" Click="SubtitleAppearance_Click"/>
                     <Button Content="🔤 Yazı Tipi" Click="SubtitleAppearance_Click" ToolTip="Altyazı yazı tipini seçin ya da kendi fontunuzu ekleyin"/>
-                    <Button Content="🌐 Çeviri Ayarları" Click="TranslationSettings_Click"/>
+                    <Button Content="🌐 Çeviri" Click="TranslationSettings_Click" ToolTip="Çeviri servisleri ve anahtarlar"/>
+                    <Button Content="⚙ Ayarlar" Click="GeneralSettings_Click" ToolTip="Genel ayarlar"/>
+                    <Button Content="🎨 Tema" Click="ThemeSettings_Click" ToolTip="Arayüz teması"/>
                     <Button Content="📺 TV Modu" FontWeight="Bold" Click="TvMode_Click"/>
                     <CheckBox x:Name="TvServerCheck" Content="TV / telefon yayını"
                               Checked="TvServerCheck_Changed" Unchecked="TvServerCheck_Changed"/>
@@ -128,7 +130,8 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Border Grid.Row="0" Background="Black" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="12">
+                <Border Grid.Row="0" Background="Black" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="12"
+                        MaxWidth="800" MaxHeight="452" HorizontalAlignment="Center" VerticalAlignment="Top">
                     <Grid x:Name="PreviewHost" SizeChanged="PreviewHost_SizeChanged" ClipToBounds="True" Margin="1">
                         <Image x:Name="PreviewImage" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
                                RenderOptions.BitmapScalingMode="LowQuality"/>
@@ -141,9 +144,9 @@
                         <Canvas x:Name="Overlay" Background="Transparent"
                                 MouseLeftButtonDown="Overlay_MouseDown" MouseMove="Overlay_MouseMove" MouseLeftButtonUp="Overlay_MouseUp">
                             <Canvas x:Name="LinesLayer" IsHitTestVisible="False"/>
-                            <Rectangle x:Name="RegionRect" Stroke="#33C6FF" StrokeThickness="2" StrokeDashArray="4 2"
-                                       Fill="#2233C6FF" Visibility="Collapsed" IsHitTestVisible="False"/>
-                            <Rectangle x:Name="DragRect" Stroke="#2F8BFF" StrokeThickness="2"
+                            <Rectangle x:Name="RegionRect" Stroke="{StaticResource Cyan}" StrokeThickness="2" StrokeDashArray="4 2"
+                                       Fill="{StaticResource AccentSoft}" Visibility="Collapsed" IsHitTestVisible="False"/>
+                            <Rectangle x:Name="DragRect" Stroke="{StaticResource Accent}" StrokeThickness="2"
                                        Fill="#222F8BFF" Visibility="Collapsed" IsHitTestVisible="False"/>
                         </Canvas>
                     </Grid>
@@ -258,7 +261,7 @@
         <!-- ═════════ Günlük ═════════ -->
         <Expander Grid.Row="4" Header="Günlük (log)" Margin="0,10,0,0" IsExpanded="True">
             <ListBox x:Name="LogList" Height="130" Margin="0,6,0,0"
-                     Background="#070A12" Foreground="#AFC0DA" BorderBrush="{StaticResource Line}"
+                     Background="{StaticResource LogBg}" Foreground="{StaticResource LogText}" BorderBrush="{StaticResource Line}"
                      FontFamily="Consolas" FontSize="12"/>
         </Expander>
     </Grid>

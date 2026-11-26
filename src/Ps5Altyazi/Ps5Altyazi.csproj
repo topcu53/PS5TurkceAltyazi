@@ -14,7 +14,7 @@
     <AssemblyName>AltyaziPlus</AssemblyName>
     <RootNamespace>Ps5Altyazi</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.11.0</Version>
+    <Version>2.12.0</Version>
     <Product>Altyazı+</Product>
     <Authors>Burak Topcu</Authors>
     <Company>Burak Topcu</Company>
@@ -43,6 +43,9 @@
     <!-- TV uygulamaları programın içine gömülür; kullanıcı ayrı dosya indirmez -->
     <EmbeddedResource Include="..\..\tv\tr.ps5altyazi.tv_1.0.10_all.ipk" LogicalName="tvapp.webos.ipk" />
     <EmbeddedResource Include="Resources\en_words.txt.gz" LogicalName="en_words.txt.gz" />
+    <!-- Tema şablonu: açılışta seçilen temanın renkleriyle yüklenir (ThemePalettes.cs); derlenmiş sayfa değil -->
+    <Page Remove="Resources\Theme.template.xaml" />
+    <EmbeddedResource Include="Resources\Theme.template.xaml" LogicalName="theme.template.xaml" />
     <!-- Oyunun altyazısına benzetilen yazı tipleri (açık lisanslı, Türkçe karakterli) -->
     <EmbeddedResource Include="Resources\Fonts\*.ttf" LogicalName="fonts/%(Filename)%(Extension)" />
     <EmbeddedResource Include="Resources\Fonts\catalog.json" LogicalName="fonts/catalog.json" />

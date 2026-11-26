@@ -1,5 +1,16 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.12 – Yeni tema, ayrı ayar pencereleri, daha temiz altyazı
+
+- Yeni varsayılan tema **Gece Moru** (siyaha yakın zemin, yumuşak mor vurgular); ayrıca **Grafit** ve eski **Okyanus Mavisi**.
+  Seçim: **🎨 Tema**.
+- Ayrı pencereler: **⚙ Ayarlar** (başlangıç, doğrudan bağlantı, okuma hızı, TV, PC altyazısı, güncelleme denetimi),
+  **🌐 Çeviri**, **🎨 Tema**.
+- Altyazı alanında altyazıdan başka yazılar (simge, tabela, arayüz) artık okunmuyor: boyu farklı ya da altyazı bloğundan uzak
+  satırlar atılıyor (en çok 4 satır). TV'deki siyah kutu da bu yüzden gereksiz büyümüyor.
+- Anlamsız okumalar sözlükle de eleniyor (kelimelerin çoğu İngilizce değilse çevrilmez).
+- Önizleme küçüldü (en çok 800×450), pencere varsayılan olarak daha küçük açılıyor.
+
 ## v2.11 – Kurulum sihirbazı, durum ışıkları, test altyazısı
 
 - İlk açılışta **kurulum sihirbazı**: Hoş geldin → PS5 bağlantısı (ikinci PSN hesabıyla giriş, PS5 eşleme, deneme) → Çeviri
