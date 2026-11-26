@@ -21,6 +21,46 @@ public sealed class SubtitleSettingsWindow : Window
     private const string SampleText = "Ah, sen de mi? Bırakın beni rahat, hepiniz.";
 
     public event Action? Changed;
+    /// <summary>Örnek altyazı TV'ye ve PC'ye gönderilsin ("" = sil).</summary>
+    public event Action<string>? SampleRequested;
+    private bool _sampleOn;
+
+    private static readonly (string Name, string Value)[] TextColors =
+    {
+        ("Otomatik (oyundaki gibi)", "auto"), ("Beyaz", "#FFFFFF"), ("Sarı", "#FFE066"), ("Açık mor", "#D8C8FF"),
+        ("Camgöbeği", "#9EEBFF"), ("Açık yeşil", "#B8F5C8"),
+    };
+    private static readonly (string Name, string Value)[] BgColors =
+    {
+        ("Siyah", "#000000"), ("Koyu mor", "#1E1630"), ("Gece mavisi", "#0D1628"), ("Koyu gri", "#1C1C1E"),
+    };
+
+    private FrameworkElement ColorRow(string label, (string Name, string Value)[] items, string current, Action<string> set)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 0) };
+        row.Children.Add(new TextBlock { Text = label + ":", Width = 110, VerticalAlignment = VerticalAlignment.Center });
+        var box = new ComboBox { Width = 230 };
+        foreach (var (name, value) in items)
+        {
+            var item = new StackPanel { Orientation = Orientation.Horizontal };
+            item.Children.Add(new Border
+            {
+                Width = 16, Height = 16, CornerRadius = new CornerRadius(4), Margin = new Thickness(0, 0, 8, 0), BorderThickness = new Thickness(1),
+                BorderBrush = Brushes.Gray,
+                Background = value == "auto" ? Brushes.Transparent : new SolidColorBrush((Color)ColorConverter.ConvertFromString(value))
+            });
+            item.Children.Add(new TextBlock { Text = name });
+            box.Items.Add(new ComboBoxItem { Content = item, Tag = value });
+        }
+        int idx = Array.FindIndex(items, i => string.Equals(i.Value, current, StringComparison.OrdinalIgnoreCase));
+        box.SelectedIndex = idx < 0 ? 0 : idx;
+        box.SelectionChanged += (_, _) =>
+        {
+            if (box.SelectedItem is ComboBoxItem { Tag: string v }) { set(v); Changed?.Invoke(); }
+        };
+        row.Children.Add(box);
+        return row;
+    }
     /// <summary>Yazı tipi ayarı değişti (true = başka oyuna geçildi).</summary>
     public event Action<bool>? FontChanged;
 
@@ -50,6 +90,17 @@ public sealed class SubtitleSettingsWindow : Window
             v => _s.SubtitleBackgroundOpacity = v / 100));
         root.Children.Add(SliderRow("Pencere genişliği (ekranın)", 30, 100, _s.SubtitleWidthFraction * 100, v => $"%{v:F0}",
             v => _s.SubtitleWidthFraction = v / 100));
+
+        root.Children.Add(new TextBlock { Text = "Renkler ve zemin", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 4) });
+        root.Children.Add(ColorRow("Yazı rengi", TextColors, _s.SubtitleTextColor, v => _s.SubtitleTextColor = v));
+        root.Children.Add(ColorRow("Zemin rengi", BgColors, _s.SubtitleBgColor, v => _s.SubtitleBgColor = v));
+        root.Children.Add(SliderRow("Köşe yuvarlaklığı", 0, 24, _s.SubtitleCornerRadius, v => $"{v:F0} px", v => _s.SubtitleCornerRadius = v));
+        var shadow = new CheckBox { Content = "Yazı gölgesi (her zeminde okunur)", IsChecked = _s.SubtitleShadow, Margin = new Thickness(0, 6, 0, 0) };
+        shadow.Checked += (_, _) => { _s.SubtitleShadow = true; Changed?.Invoke(); };
+        shadow.Unchecked += (_, _) => { _s.SubtitleShadow = false; Changed?.Invoke(); };
+        root.Children.Add(shadow);
+        root.Children.Add(new TextBlock { Text = "Değişiklikler TV'de ve (açıksa) PC'de anında uygulanır. 'Örnek Altyazı Göster' ile deneyin.",
+                                          Foreground = Theme.Dim, TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new Thickness(0, 4, 0, 0) });
 
         var topmost = new CheckBox { Content = "Her zaman üstte", IsChecked = _s.SubtitleTopmost, Margin = new Thickness(0, 10, 0, 0) };
         topmost.Checked += (_, _) => { _s.SubtitleTopmost = true; Changed?.Invoke(); };
@@ -85,7 +136,12 @@ public sealed class SubtitleSettingsWindow : Window
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 14, 0, 0) };
         var sample = new Button { Content = "Örnek Altyazı Göster", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
-        sample.Click += (_, _) => _sub.ShowSubtitle(_sub.CurrentText == SampleText ? "" : SampleText);
+        sample.Click += (_, _) =>
+        {
+            _sampleOn = !_sampleOn;
+            if (SampleRequested != null) SampleRequested(_sampleOn ? SampleText : "");
+            else _sub.ShowSubtitle(_sampleOn ? SampleText : "");
+        };
         buttons.Children.Add(sample);
 
         var reset = new Button { Content = "Varsayılan Konum", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
@@ -111,7 +167,7 @@ public sealed class SubtitleSettingsWindow : Window
         Closed += (_, _) =>
         {
             _sub.SetEditMode(false);
-            if (_sub.CurrentText == SampleText) _sub.ShowSubtitle("");
+            if (_sampleOn) { if (SampleRequested != null) SampleRequested(""); else _sub.ShowSubtitle(""); }
         };
     }
 

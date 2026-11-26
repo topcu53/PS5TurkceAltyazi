@@ -48,7 +48,8 @@ public sealed class GeneralSettingsWindow : Window
         root.Children.Add(Check("TV'de İngilizce altyazıyı siyah kutuyla ört", s.TvMaskEnglish, v => s.TvMaskEnglish = v));
 
         root.Children.Add(Head("Bu bilgisayar"));
-        root.Children.Add(Check("Türkçe altyazıyı PC ekranında da göster (F8)", s.SubtitleWindowEnabled, v => s.SubtitleWindowEnabled = v));
+        root.Children.Add(Check("Türkçe altyazıyı bu bilgisayarın ekranında da göster (oyun görüntüsünün üstünde)", s.PcSubtitleVisible, v => s.PcSubtitleVisible = v));
+        root.Children.Add(Note("Kapalıyken altyazı yalnız TV'de / telefonda görünür; ana penceredeki 'Canlı çeviri' kartı yine gösterir."));
 
         root.Children.Add(Head("Diğer"));
         var row = new WrapPanel();

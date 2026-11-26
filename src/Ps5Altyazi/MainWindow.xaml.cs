@@ -174,7 +174,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.12 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.13 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1735,7 +1735,11 @@ public partial class MainWindow : Window
             width: _settings.SubtitleWidthFraction * 100,
             cover: _settings.SubtitleCoverOriginal,
             match: _settings.SubtitleMatchOriginalSize,
-            gameFont: GameFontForScreens());
+            gameFont: GameFontForScreens(),
+            color: _settings.SubtitleTextColor,
+            bgColor: _settings.SubtitleBgColor,
+            shadow: _settings.SubtitleShadow,
+            radius: _settings.SubtitleCornerRadius);
     }
 
     private void TvServerCheck_Changed(object sender, RoutedEventArgs e)
@@ -1872,11 +1876,26 @@ public partial class MainWindow : Window
         _subWin.SetCoverMode(_settings.SubtitleCoverOriginal);
         _subWin.SetMatchOriginalSize(_settings.SubtitleMatchOriginalSize);
         SubtitleWindowCheck.IsChecked = _settings.SubtitleWindowEnabled;
-        _subWin.SetMuted(!_settings.SubtitleWindowEnabled);
+        ApplySubtitleStyle();
+        _subWin.SetMuted(!PcSubtitleOn);
         Log.Info($"Türkçe altyazı penceresi {(_settings.SubtitleWindowEnabled ? "açık" : "kapalı")} " +
                  $"(yazı {_settings.SubtitleFontSize:F0} pt, zemin %{_settings.SubtitleBackgroundOpacity * 100:F0}, " +
                  $"genişlik %{_settings.SubtitleWidthFraction * 100:F0}, her zaman üstte: {(_settings.SubtitleTopmost ? "evet" : "hayır")}).");
     }
+
+    /// <summary>PC ekranındaki (oyun üstü) Türkçe altyazı açık mı: genel altyazı açık ve "PC'de de göster" seçili.</summary>
+    private bool PcSubtitleOn => _settings.SubtitleWindowEnabled && _settings.PcSubtitleVisible;
+
+    private static System.Windows.Media.Color? ParseColor(string? hex)
+    {
+        if (string.IsNullOrEmpty(hex) || hex == "auto") return null;
+        try { return (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex); }
+        catch { return null; }
+    }
+
+    private void ApplySubtitleStyle() =>
+        _subWin?.ApplyStyle(ParseColor(_settings.SubtitleTextColor), ParseColor(_settings.SubtitleBgColor) ?? System.Windows.Media.Colors.Black,
+                            _settings.SubtitleShadow, _settings.SubtitleCornerRadius);
 
     private void SubtitleWindowCheck_Changed(object sender, RoutedEventArgs e)
     {
@@ -1884,7 +1903,7 @@ public partial class MainWindow : Window
         bool on = SubtitleWindowCheck.IsChecked == true;
         _settings.SubtitleWindowEnabled = on;
         SaveSettings();
-        _subWin.SetMuted(!on);
+        _subWin.SetMuted(!PcSubtitleOn);
         _server?.Mute(!on);
         PushScreen(force: true);
         Log.Info(on ? "Türkçe altyazı gösteriliyor." : "Türkçe altyazı gizlendi.");
@@ -1899,8 +1918,12 @@ public partial class MainWindow : Window
         }
         var dlg = new SubtitleSettingsWindow(_settings, _subWin, DescribeGameFont) { Owner = this };
         dlg.FontChanged += gameChanged => { OnFontSettingChanged(gameChanged); SaveSettings(); };
+        // Ayar yaparken örnek PC'de de görünsün (PC altyazısı kapalı olsa bile); kapanınca eski hâline döner.
+        _subWin.SetMuted(false);
+        dlg.SampleRequested += text => ShowTurkish(text);
         dlg.Changed += () =>
         {
+            ApplySubtitleStyle();
             _subWin.ApplyAppearance(_settings.SubtitleFontSize, _settings.SubtitleBackgroundOpacity,
                 _settings.SubtitleWidthFraction, _settings.SubtitleTopmost);
             _subWin.SetMatchOriginalSize(_settings.SubtitleMatchOriginalSize);
@@ -1908,6 +1931,7 @@ public partial class MainWindow : Window
             SaveSettings();
         };
         dlg.ShowDialog();
+        _subWin.SetMuted(!PcSubtitleOn);
         Log.Info($"Altyazı görünümü: yazı {_settings.SubtitleFontSize:F0} pt, zemin %{_settings.SubtitleBackgroundOpacity * 100:F0}, " +
                  $"genişlik %{_settings.SubtitleWidthFraction * 100:F0}, her zaman üstte: {(_settings.SubtitleTopmost ? "evet" : "hayır")}.");
     }

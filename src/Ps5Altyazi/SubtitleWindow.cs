@@ -26,6 +26,9 @@ public sealed class SubtitleWindow : Window
 
     private bool _editMode, _muted, _coverMode, _matchSize = true;
     private Brush _userBackground = new SolidColorBrush(Color.FromArgb(153, 0, 0, 0));
+    private Color _bgColor = Colors.Black;
+    private double _bgOpacity = 0.6;
+    private Brush? _userTextColor;
     private double _coverLineHeightPx;
     private string _current = "";
     private string _notice = "";
@@ -100,9 +103,8 @@ public sealed class SubtitleWindow : Window
     public void ApplyAppearance(double fontSize, double backgroundOpacity, double widthFraction, bool topmost)
     {
         _baseFontSize = Math.Clamp(fontSize, 16, 120);
-        byte a = (byte)Math.Round(Math.Clamp(backgroundOpacity, 0, 1) * 255);
-        _userBackground = new SolidColorBrush(Color.FromArgb(a, 0, 0, 0));
-        _box.Background = _userBackground;
+        _bgOpacity = Math.Clamp(backgroundOpacity, 0, 1);
+        RebuildBackground();
         Topmost = topmost;
 
         var wa = SystemParameters.WorkArea;
@@ -115,6 +117,27 @@ public sealed class SubtitleWindow : Window
         _normalWidth = newWidth;
         ApplyLayout();
     }
+
+    private void RebuildBackground()
+    {
+        byte a = (byte)Math.Round(_bgOpacity * 255);
+        _userBackground = new SolidColorBrush(Color.FromArgb(a, _bgColor.R, _bgColor.G, _bgColor.B));
+        if (!_coverActive) _box.Background = _userBackground;
+    }
+
+    /// <summary>Yazı rengi (null = oyunun rengi / beyaz), zemin rengi, yazı gölgesi, köşe yuvarlaklığı.</summary>
+    public void ApplyStyle(Color? textColor, Color bgColor, bool shadow, double cornerRadius)
+    {
+        _userTextColor = textColor is { } c ? new SolidColorBrush(c) : null;
+        _userTextColor?.Freeze();
+        _bgColor = bgColor;
+        _text.Effect = shadow ? new DropShadowEffect { Color = Colors.Black, BlurRadius = 6, ShadowDepth = 2, Opacity = 0.9 } : null;
+        _box.CornerRadius = new CornerRadius(Math.Clamp(cornerRadius, 0, 30));
+        RebuildBackground();
+        Render();
+    }
+
+    private bool _coverActive;
 
     /// <summary>Kayıtlı konum yoksa ekranın alt ortasına yerleştirir.</summary>
     public void Place(double? left, double? bottom)
@@ -200,7 +223,8 @@ public sealed class SubtitleWindow : Window
             _coverTop = px.Y / sy - 6;
             _box.MinWidth = px.Width / sx + 30;
             _box.MinHeight = px.Height / sy + 12;
-            _box.Background = Brushes.Black; // tam örtücü: İngilizce alttan görünmesin
+            _coverActive = true;
+            _box.Background = new SolidColorBrush(_bgColor); // tam örtücü: İngilizce alttan görünmesin
         }
         else
         {
@@ -209,6 +233,7 @@ public sealed class SubtitleWindow : Window
             _bottom = _normalBottom;
             _box.MinWidth = 0;
             _box.MinHeight = 0;
+            _coverActive = false;
             _box.Background = _userBackground;
         }
         _text.MaxWidth = Math.Max(100, Width - 60);
@@ -282,7 +307,7 @@ public sealed class SubtitleWindow : Window
 
         bool isNotice = !showSub && _notice.Length > 0;
         _text.Text = shown;
-        _text.Foreground = isNotice ? Brushes.Gold : (_gameColor ?? Brushes.White);
+        _text.Foreground = isNotice ? Brushes.Gold : (_userTextColor ?? _gameColor ?? Brushes.White);
         _text.FontSize = isNotice ? Math.Max(16, _baseFontSize * 0.55) : FitFontSize(shown, CurrentBaseSize());
         _box.BorderBrush = _editMode ? Brushes.Gold : null;
         _box.BorderThickness = new Thickness(_editMode ? 2 : 0);

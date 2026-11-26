@@ -24,6 +24,7 @@ public partial class MainWindow
         if (fi >= 0 && FpsCombo.SelectedIndex != fi) FpsCombo.SelectedIndex = fi;
         if (tv0 != _settings.TvServerEnabled) TvServerCheck.IsChecked = _settings.TvServerEnabled;
         if (sub0 != _settings.SubtitleWindowEnabled) SubtitleWindowCheck.IsChecked = _settings.SubtitleWindowEnabled;
+        _subWin?.SetMuted(!PcSubtitleOn);
         SaveSettings();
         if (direct0 != _settings.DirectConnect)
         {

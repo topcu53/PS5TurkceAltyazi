@@ -39,6 +39,14 @@ public sealed class AppSettings
 
     // ── Türkçe altyazı penceresi (Aşama 5) ──
     public bool SubtitleWindowEnabled { get; set; } = true;
+    /// <summary>Türkçe altyazı bu bilgisayarın ekranında da (oyun üstünde) gösterilsin mi. Kapalıyken yalnız TV/telefonda.</summary>
+    public bool PcSubtitleVisible { get; set; } = false;
+    /// <summary>Altyazı yazı rengi: "auto" (oyundaki renk) ya da #RRGGBB.</summary>
+    public string SubtitleTextColor { get; set; } = "auto";
+    /// <summary>Altyazı zemin rengi (#RRGGBB); koyuluğu SubtitleBackgroundOpacity.</summary>
+    public string SubtitleBgColor { get; set; } = "#000000";
+    public bool SubtitleShadow { get; set; } = true;
+    public double SubtitleCornerRadius { get; set; } = 12;
 
     // Ekran çevirisi (menüler, HUD, görev yazıları) – F7
     public bool ScreenTranslateEnabled { get; set; } = false;

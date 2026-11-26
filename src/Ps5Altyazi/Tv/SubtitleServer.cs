@@ -125,9 +125,11 @@ public sealed class SubtitleServer : IDisposable
 
     /// <summary>font: 1080p ekranda piksel; bg: 0–1; bottom/width: ekran yüzdesi; cover: İngilizce altyazıyı ört.</summary>
     /// <param name="gameFont">Oyuna benzetilen yazı tipi (null = varsayılan): css, file, bold, em (yazı boyu / yükseklik), color.</param>
-    public void Style(double font, double bg, double bottom, double width, bool cover, bool match, object? gameFont = null)
+    public void Style(double font, double bg, double bottom, double width, bool cover, bool match, object? gameFont = null,
+                      string color = "auto", string bgColor = "#000000", bool shadow = true, double radius = 12)
     {
-        _lastStyle = JsonSerializer.Serialize(new { t = "style", font = Math.Round(font), bg = Math.Round(bg, 2), bottom, width = Math.Round(width), cover, match, gf = gameFont });
+        _lastStyle = JsonSerializer.Serialize(new { t = "style", font = Math.Round(font), bg = Math.Round(bg, 2), bottom, width = Math.Round(width), cover, match, gf = gameFont,
+                                                    color, bgc = bgColor, shadow, radius = Math.Round(radius) });
         Broadcast(_lastStyle);
     }
 

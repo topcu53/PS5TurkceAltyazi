@@ -142,13 +142,17 @@
     // Oyunun yazı tipi, kalınlığı ve rengi (yalnızca altyazıda; bildirimler varsayılan yazıyla)
     sub.style.fontFamily = showText && gf ? "'" + gf.css + "', 'LG Smart UI', 'Samsung One', Roboto, Arial, sans-serif" : '';
     sub.style.fontWeight = showText && gf ? (gf.bold ? 'bold' : 'normal') : '';
-    sub.style.color = showText && gf && /^#[0-9A-Fa-f]{6}$/.test(gf.color) ? gf.color : '';
-    // Örtme modunda zemin tam opak: İngilizce alttan görünmesin
-    sub.style.background = anchor ? '#000' : 'rgba(0,0,0,' + s.bg + ')';
+    var userColor = s.color && /^#[0-9A-Fa-f]{6}$/.test(s.color) ? s.color : null;
+    sub.style.color = showText ? (userColor || (gf && /^#[0-9A-Fa-f]{6}$/.test(gf.color) ? gf.color : '')) : '';
+    // Zemin rengi (kullanıcı seçimi); örtme modunda tam opak: İngilizce alttan görünmesin
+    var bgc = s.bgc && /^#[0-9A-Fa-f]{6}$/.test(s.bgc) ? s.bgc : '#000000';
+    var br = parseInt(bgc.substr(1, 2), 16), bgg = parseInt(bgc.substr(3, 2), 16), bb = parseInt(bgc.substr(5, 2), 16);
+    sub.style.background = anchor ? bgc : 'rgba(' + br + ',' + bgg + ',' + bb + ',' + s.bg + ')';
+    sub.style.textShadow = showText && s.shadow !== false ? '0 2px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)' : '';
     sub.style.fontSize = showText ? base + 'px' : '';
     sub.style.lineHeight = anchor ? '1.15' : '';
     sub.style.padding = anchor ? '6px 20px 8px' : '';
-    sub.style.borderRadius = anchor ? '12px' : '';
+    sub.style.borderRadius = (typeof s.radius === 'number' ? Math.max(0, Math.min(30, s.radius)) : 12) + 'px';
     sub.style.minWidth = '';
     sub.style.minHeight = '';
     sub.setAttribute('data-base', base);

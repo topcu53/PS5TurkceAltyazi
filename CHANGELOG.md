@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.13 – Altyazı renkleri, zemin seçenekleri; PC ekranında altyazı kapalı
+
+- Türkçe altyazı artık varsayılan olarak yalnız TV'de / telefonda görünür; bilgisayar ekranında (oyun üstünde) gösterilmez.
+  İstenirse: ⚙ Ayarlar → "Türkçe altyazıyı bu bilgisayarın ekranında da göster".
+- ✎ Altyazı Görünümü'ne **yazı rengi** (otomatik / beyaz / sarı / açık mor / camgöbeği / açık yeşil), **zemin rengi**
+  (siyah / koyu mor / gece mavisi / koyu gri), zemin koyuluğu, **köşe yuvarlaklığı** ve **yazı gölgesi** eklendi; TV'de ve
+  PC'de anında uygulanır. "Örnek Altyazı Göster" örneği TV'ye de gönderir.
+- TV uygulaması 1.0.11 (yeni görünüm seçenekleri; LG'de kendiliğinden güncellenir).
+
 ## v2.12 – Yeni tema, ayrı ayar pencereleri, daha temiz altyazı
 
 - Yeni varsayılan tema **Gece Moru** (siyaha yakın zemin, yumuşak mor vurgular); ayrıca **Grafit** ve eski **Okyanus Mavisi**.
