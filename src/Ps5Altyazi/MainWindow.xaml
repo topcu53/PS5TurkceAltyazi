@@ -381,6 +381,15 @@
                         <TextBlock Text="Servisler sırayla denenir: DeepL → Gemini → Azure → MyMemory." Foreground="{StaticResource TextDim}" Margin="0,2,0,14"/>
                         <Border Style="{StaticResource Panel}">
                             <StackPanel>
+                                <TextBlock Text="Hız ve kalite" FontSize="17" FontWeight="SemiBold"/>
+                                <Border Background="{StaticResource Bg}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="22" Padding="3" Margin="0,8,0,4" HorizontalAlignment="Left">
+                                    <StackPanel Orientation="Horizontal">
+                                        <RadioButton x:Name="ModeFast" Style="{StaticResource NavTab}" GroupName="trmode" Content="Hızlı" Checked="TrMode_Checked"/>
+                                        <RadioButton x:Name="ModeBalanced" Style="{StaticResource NavTab}" GroupName="trmode" Content="Dengeli" Checked="TrMode_Checked"/>
+                                        <RadioButton x:Name="ModeNatural" Style="{StaticResource NavTab}" GroupName="trmode" Content="En doğal" Checked="TrMode_Checked"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock x:Name="TrModeHint" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" FontSize="12" Margin="0,2,0,16" Text=""/>
                                 <TextBlock Text="Etkin servisler" FontSize="17" FontWeight="SemiBold"/>
                                 <TextBlock x:Name="TranslationSummaryText" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" Text="—"/>
                                 <Button Style="{StaticResource LinkRow}" Click="TranslationSettings_Click">

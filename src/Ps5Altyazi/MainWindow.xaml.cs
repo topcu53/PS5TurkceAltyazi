@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.16 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.17 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1283,6 +1283,22 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(_azureKey)) engines.Add(new AzureTranslator(_azureKey, _settings.AzureRegion));
         if (_settings.MyMemoryEnabled) engines.Add(new MyMemoryTranslator(_settings.MyMemoryEmail));
 
+        // Hız / kalite modu: sıra ve yedeğin ne zaman devreye gireceği
+        //  fast     : DeepL önde; 400 ms'de yanıt yoksa Gemini de başlar
+        //  balanced : DeepL ve Gemini AYNI ANDA yarışır, önce gelen gösterilir (en düşük gecikme)
+        //  natural  : Gemini (bağlamlı, en doğal Türkçe) önde; 1 sn'de yanıt yoksa DeepL de başlar
+        string mode = _settings.TranslationMode;
+        if (mode == "natural")
+        {
+            var g = engines.FirstOrDefault(e => e is GeminiTranslator);
+            if (g != null) { engines.Remove(g); engines.Insert(0, g); }
+        }
+        _translation.HedgeDelay = mode switch
+        {
+            "fast" => TimeSpan.FromMilliseconds(400),
+            "natural" => TimeSpan.FromMilliseconds(1000),
+            _ => TimeSpan.Zero,
+        };
         _translation.SetEngines(engines, _settings.EngineCooldowns);
         if (engines.Count == 0)
         {
@@ -1290,7 +1306,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            Log.Info($"Çeviri zinciri: {_translation.DescribeChain()}");
+            Log.Info($"Çeviri zinciri: {_translation.DescribeChain()} • mod: {(mode == "fast" ? "Hızlı" : mode == "natural" ? "En doğal" : "Dengeli (yarış)")}");
             if (deepL == null) Log.Warn("DeepL anahtarı girilmedi; çeviri yedek servislerle yapılacak (kalite düşük olabilir).");
         }
         UpdateTranslationStatus();

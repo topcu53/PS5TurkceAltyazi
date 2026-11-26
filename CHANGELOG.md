@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.17 – Daha hızlı ve daha doğal çeviri
+
+- Ayarlar → Çeviri → **Hız ve kalite**: **Hızlı** (DeepL önde), **Dengeli** (varsayılan: DeepL ve Gemini aynı anda sorulur,
+  önce gelen gösterilir – en düşük gecikme), **En doğal** (Gemini önceki satırları da okuyarak yazar, DeepL yedekte).
+- Konuşan adı olan satırlarda ("ARTHUR: Let's go.") ad olduğu gibi kalır, yalnız cümle çevrilir.
+- Gemini'ye profesyonel Türkçe yerelleştirme talimatı: kelimesi kelimesine değil, Türkçe dublajdaki gibi; sen/siz, deyimler,
+  argo ve noktalama kurallı.
+
 ## v2.16 – Tek parça pencere
 
 - Ana penceredeki ayrı başlık çubuğu (logo + başlık şeridi) kaldırıldı: uygulama tek parça. Küçült / büyüt / kapat düğmeleri

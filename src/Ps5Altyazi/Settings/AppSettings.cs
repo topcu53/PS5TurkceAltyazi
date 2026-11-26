@@ -91,6 +91,8 @@ public sealed class AppSettings
     public bool SetupCompleted { get; set; } = false;
     /// <summary>Arayüz teması: "mor" (Gece Moru), "grafit", "mavi" (eski).</summary>
     public string ThemeName { get; set; } = "mor";
+    /// <summary>Çeviri modu: "fast" (Hızlı), "balanced" (Dengeli: DeepL ve Gemini yarışır), "natural" (En doğal: Gemini önde).</summary>
+    public string TranslationMode { get; set; } = "balanced";
     /// <summary>İkinci PSN hesabının 8 baytlık hesap kimliği (onaltılık, DPAPI ile şifreli). Şifre ya da token saklanmaz.</summary>
     public string? PsnAccountIdProtected { get; set; }
     /// <summary>Eşlenmiş PS5'in bilgileri (JSON: adres, ad, kayıt anahtarları; DPAPI ile şifreli).</summary>

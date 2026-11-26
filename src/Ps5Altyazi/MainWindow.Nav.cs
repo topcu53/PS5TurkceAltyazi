@@ -32,9 +32,32 @@ public partial class MainWindow
         RefreshSettingsTexts();
     }
 
+    private bool _modeLoading;
+
+    private void TrMode_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_modeLoading || !_settingsReady || ModeFast == null) return;
+        string mode = ModeFast.IsChecked == true ? "fast" : ModeNatural.IsChecked == true ? "natural" : "balanced";
+        if (mode == _settings.TranslationMode) return;
+        _settings.TranslationMode = mode;
+        SaveSettings();
+        ApplyTranslators(checkUsage: false);
+        RefreshSettingsTexts();
+    }
+
     private void RefreshSettingsTexts()
     {
         if (TranslationSummaryText == null || !_settingsReady) return;
+        _modeLoading = true;
+        (_settings.TranslationMode == "fast" ? ModeFast : _settings.TranslationMode == "natural" ? ModeNatural : ModeBalanced).IsChecked = true;
+        _modeLoading = false;
+        bool both = _deepLKey != null && _geminiKey != null;
+        TrModeHint.Text = _settings.TranslationMode switch
+        {
+            "fast" => "DeepL önce sorulur (genelde 200–400 ms). Geç kalırsa Gemini devreye girer.",
+            "natural" => "Gemini önceki satırları da okuyarak en doğal Türkçeyi yazar; biraz daha yavaş olabilir. Geç kalırsa DeepL devreye girer.",
+            _ => "DeepL ve Gemini aynı anda sorulur, hangisi önce gelirse o gösterilir: en düşük gecikme. (Gemini'nin ücretsiz kotası daha çabuk dolabilir.)",
+        } + (both ? "" : "  Not: Bu modların tam çalışması için hem DeepL hem Gemini anahtarı önerilir.");
         TranslationSummaryText.Text = TranslationSummary();
         ThemeNameText.Text = "Şu anki tema: " + ThemePalettes.Get(_settings.ThemeName).Name;
     }

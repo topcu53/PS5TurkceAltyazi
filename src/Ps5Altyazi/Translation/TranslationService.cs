@@ -33,7 +33,12 @@ public sealed class TranslationService : IDisposable
     /// <summary>Tek bir motor denemesi için süre sınırı (altyazı ekranda kısa kalır).</summary>
     public static readonly TimeSpan AttemptTimeout = TimeSpan.FromSeconds(3);
     /// <summary>Birinci servis bu sürede yanıt vermezse yedek servis AYNI ANDA denenir; önce gelen kullanılır.</summary>
-    public static readonly TimeSpan HedgeDelay = TimeSpan.FromMilliseconds(700);
+    public static readonly TimeSpan DefaultHedgeDelay = TimeSpan.FromMilliseconds(700);
+    /// <summary>
+    /// Yedek servisin başlama gecikmesi. 0 = iki servis aynı anda yarışır, önce gelen kullanılır (en hızlısı).
+    /// Mod: Hızlı / Dengeli / En doğal (MainWindow, ApplyTranslators).
+    /// </summary>
+    public TimeSpan HedgeDelay { get; set; } = DefaultHedgeDelay;
     public long HedgeWins { get; private set; }
 
     /// <summary>Sıradaki çeviri servisinin bağlantısını açık / sıcak tutar (hata olursa sessizce geçer).</summary>
@@ -105,7 +110,23 @@ public sealed class TranslationService : IDisposable
             : s.Translator.Name));
     }
 
+    // "ARTHUR: Let's go." gibi konuşan adı: ad olduğu gibi kalır, yalnız cümle çevrilir (adlar çevrilip bozulmasın).
+    private static readonly System.Text.RegularExpressions.Regex SpeakerPrefix =
+        new(@"^\s*([A-Z][A-Za-z'\- ]{0,22}[A-Za-z])\s*:\s+(?=\S)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
     public async Task<TranslationOutcome> TranslateAsync(string text, string? context, CancellationToken ct)
+    {
+        var m = SpeakerPrefix.Match(text);
+        if (m.Success && m.Groups[1].Value.Split(' ').Length <= 3 && text.Length - m.Length >= 2)
+        {
+            string name = m.Groups[1].Value.Trim();
+            var inner = await TranslateCoreAsync(text[m.Length..], context, ct).ConfigureAwait(false);
+            return inner with { Text = $"{name}: {inner.Text}" };
+        }
+        return await TranslateCoreAsync(text, context, ct).ConfigureAwait(false);
+    }
+
+    private async Task<TranslationOutcome> TranslateCoreAsync(string text, string? context, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
         if (_cache.TryGet(text, out string cached, out bool fuzzy))
@@ -143,7 +164,7 @@ public sealed class TranslationService : IDisposable
                 var backup = _slots.Skip(si + 1).FirstOrDefault(s2 => s2.IsUsable(now));
                 if (backup != null)
                 {
-                    var first = await Task.WhenAny(primary, Task.Delay(HedgeDelay, ct));
+                    var first = HedgeDelay <= TimeSpan.Zero ? null : await Task.WhenAny(primary, Task.Delay(HedgeDelay, ct));
                     ct.ThrowIfCancellationRequested();
                     if (first != primary)
                     {

@@ -23,9 +23,13 @@ public sealed class GeminiTranslator : ITranslator, IWarmable
 
     private const string Base = "https://generativelanguage.googleapis.com/v1beta/models/";
     private const string Instruction =
-        "You translate English video game subtitles into natural, spoken Turkish, as in a professional Turkish localization. " +
-        "Keep it short enough to read quickly. Keep character names, places and brand names as they are. " +
-        "Match the tone (slang, swearing, formality). Output ONLY the Turkish translation of the given line, nothing else.";
+        "You are a professional Turkish game localizer. Translate the given English subtitle line into natural, fluent, " +
+        "spoken Turkish, exactly as a Turkish dub/subtitle would say it — never word-for-word. " +
+        "Rules: keep it about as short as the original so it can be read quickly; keep character names, place names and " +
+        "brand names unchanged; use 'sen' between friends/family and 'siz' only for clearly formal speech; match the tone " +
+        "(slang, jokes, swearing, anger); translate idioms by meaning; use correct Turkish spelling and punctuation; " +
+        "use the previous lines only to understand who is speaking and what 'it/he/she/that' refers to. " +
+        "Output ONLY the Turkish translation of the given line, without quotes or explanations.";
 
     private readonly string _key;
     private string _model;
