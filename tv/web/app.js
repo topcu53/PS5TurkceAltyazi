@@ -54,7 +54,7 @@
     server: load('server', ''),
     hdmi: parseInt(load('hdmi', '1'), 10) || 1,
     fontScale: parseFloat(load('fontScale', '1')) || 1,
-    style: { font: 58, bg: 0.6, bottom: 6, width: 70, cover: false, match: true },
+    style: { font: 46, bg: 0.6, bottom: 8.3, width: 88, cover: false, match: false },
     lineH: 0,        // İngilizce altyazının tek satır yüksekliği (0..1) – Türkçe aynı boyda olsun
     cover: null,
     mask: null,      // İngilizce altyazıyı örten kutu (0..1)
@@ -131,14 +131,14 @@
     // bottom = ekranın altında sabit
     var place = s.place || 'cover';
     var anchor = showText && place !== 'bottom' ? (state.mask || state.lastMask) : null;
-    var base = Math.round(s.font * state.fontScale);
-    if (showText && s.match !== false && gf && gf.em > 0) {
-      // Oyunun yazı tipiyle ölçülmüş boy: harfler orijinalle aynı yükseklikte (örtme kapalıyken de)
-      base = Math.round(gf.em * 1080 * state.fontScale);
-    } else if (anchor && s.match !== false && state.lineH > 0) {
-      // Orijinal İngilizce altyazıyla aynı boy
-      base = Math.round(state.lineH * 1080 * 0.95 * state.fontScale);
-    }
+    // Boy: PC'de seçilen seviye (1080p'de px; sayfa 1920x1080 olduğu için TV çözünürlüğüne göre kendiliğinden ölçeklenir).
+    // Oyunlar için önerilen en küçük altyazı 46 px @1080p. "Orijinal boy" yalnızca açıkça istenirse ve ölçüm
+    // akla yatkınsa (ekran yüksekliğinin %2,4–%6,8'i) kullanılır – yanlış ölçüm yazıyı devleştirmesin.
+    var std = s.font > 0 ? s.font : 46;
+    var base = std;
+    if (showText && s.match === true && gf && gf.em >= 0.024 && gf.em <= 0.068) base = gf.em * 1080;
+    else if (anchor && s.match === true && state.lineH >= 0.022 && state.lineH <= 0.07) base = state.lineH * 1080 * 0.95;
+    base = Math.round(Math.max(26, Math.min(80, base)) * state.fontScale);
 
     sub.className = showText ? '' : 'notice';
     sub.textContent = text;
@@ -153,26 +153,41 @@
     sub.style.background = anchor && place === 'cover' ? '#000' : 'rgba(' + br + ',' + bgg + ',' + bb + ',' + s.bg + ')';
     sub.style.textShadow = showText && s.shadow !== false ? '0 2px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)' : '';
     sub.style.fontSize = showText ? base + 'px' : '';
-    sub.style.lineHeight = anchor ? '1.15' : '';
+    sub.style.lineHeight = '1.22';
     sub.style.padding = anchor ? '6px 18px 8px' : '';
     sub.style.borderRadius = (typeof s.radius === 'number' ? Math.max(0, Math.min(30, s.radius)) : 12) + 'px';
     sub.style.minWidth = '';
     sub.style.minHeight = '';
     sub.setAttribute('data-base', base);
 
+    // Satır uzunluğu: ~42 karakter (Netflix/BBC). Arial kalın ortalama harf ≈ 0,55 em → 42 harf ≈ 23 em.
+    // Ekranın %88'ini hiç geçmesin (TV güvenli alanı).
+    var lineW = Math.min(1920 * 0.88, base * 23 + 64);
     var c = anchor;
     if (c) {
-      sub.style.left = ((c.x + c.w / 2) * 1920) + 'px';
+      var cx = (c.x + c.w / 2) * 1920;
+      // Kutunun yarısı ekran dışına taşmasın
+      cx = Math.max(lineW / 2 + 16, Math.min(1920 - lineW / 2 - 16, cx));
+      sub.style.left = cx + 'px';
       sub.style.bottom = 'auto';
       sub.style.top = '0px';
-      sub.style.maxWidth = Math.max(c.w * 1920 + 40, s.width / 100 * 1920) + 'px';
+      sub.style.maxWidth = Math.min(1920 * 0.9, Math.max(c.w * 1920 + 40, lineW)) + 'px';
     } else {
       sub.style.left = '50%';
       sub.style.top = 'auto';
-      sub.style.bottom = (s.bottom / 100 * 1080) + 'px';
-      sub.style.maxWidth = (s.width / 100 * 1920) + 'px';
+      // En alt satır ekran yüksekliğinin en az 1/12'si kadar yukarıda (BBC); eski PC'ler 6 gönderir
+      sub.style.bottom = (Math.max(8.3, s.bottom || 0) / 100 * 1080) + 'px';
+      sub.style.maxWidth = Math.min(lineW, (s.width > 0 ? s.width : 88) / 100 * 1920) + 'px';
     }
     sub.style.display = 'block';
+    // En fazla 2 satır: sığmazsa yazıyı en çok %20 küçült (yine de sığmazsa 3. satıra izin verilir)
+    if (showText) {
+      var size = base, pad = 22;
+      for (var k = 0; k < 6 && sub.offsetHeight > size * 1.22 * 2 + pad && size > base * 0.8; k++) {
+        size = Math.round(size * 0.95);
+        sub.style.fontSize = size + 'px';
+      }
+    }
     if (c) {
       // Kutu yazı kadar (büyütülmez); yeri seçilen yerleşime göre
       var h = sub.offsetHeight, top;

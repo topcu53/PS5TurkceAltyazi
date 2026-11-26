@@ -1,5 +1,19 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.21 – Doğru boyda altyazı, daha temiz okuma
+
+- **Dev altyazı düzeltildi:** bazı karelerde birden çok satır tek satır sanılıp yazı boyu 136–141 px ölçülüyordu
+  (olması gereken ~34 px). Artık ölçüm mantık sınırlarının dışındaysa kullanılmaz; eski hatalı ölçümler silindi.
+- **Yeni boy seçimi:** Küçük (38 px) · **Orta (46 px, önerilen)** · Büyük (56 px) · Çok büyük (68 px) – 1080p'ye göre,
+  TV'nin çözünürlüğüne göre kendiliğinden ölçeklenir. (Oyun erişilebilirlik kılavuzları ve Channel 4/BBC kuralı:
+  TV'de altyazı 1080p'de en az 46 px.)
+- **TV yerleşimi standartlara göre:** satır başına ~42 karakter (Netflix/BBC), en fazla 2 satır (sığmazsa yazı biraz
+  küçülür), en alt satır ekran yüksekliğinin 1/12'si kadar yukarıda (güvenli alan), kutu ekran dışına taşmaz.
+- "Orijinal altyazıyla aynı boy" artık isteğe bağlı (varsayılan kapalı) ve yalnızca ölçüm akla yatkınsa kullanılır.
+- **Daha temiz OCR:** okuma zayıfsa ikinci bir yöntem (yalnız kenar çizgili parlak yazı) devreye girer; gökyüzü, beyaz
+  araba, ışık arkasındaki altyazılar daha az bozuk okunur → daha az "anlamsız sonuç", Türkçe daha erken gelir.
+- TV uygulaması 1.0.13 (program kendisi günceller).
+
 ## v2.20 – Kurulum ana pencerede, daha şık pencereler
 
 - İlk açılışta kurulum artık ayrı bir pencerede değil, **doğrudan ana pencerede** açılıyor: solda adımlar

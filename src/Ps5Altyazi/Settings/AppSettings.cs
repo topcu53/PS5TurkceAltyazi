@@ -60,7 +60,17 @@ public sealed class AppSettings
     /// <summary>Türkçe kutuyu oyunun İngilizce altyazısının tam üstüne yerleştir (onu örter).</summary>
     public bool SubtitleCoverOriginal { get; set; } = false;
     /// <summary>Örtme modunda (PC ve TV) Türkçe yazı boyutu orijinal İngilizce altyazıyla aynı olsun.</summary>
-    public bool SubtitleMatchOriginalSize { get; set; } = true;
+    public bool SubtitleMatchOriginalSize { get; set; } = false;
+    /// <summary>Altyazı boyu: 0 Küçük, 1 Orta (önerilen), 2 Büyük, 3 Çok büyük. TV'de ekran yüksekliğine göre ölçeklenir.</summary>
+    public int SubtitleSizeLevel { get; set; } = 1;
+
+    /// <summary>
+    /// Seviyenin 1080p'deki yazı boyu (px). Kaynak: oyun erişilebilirlik kılavuzları ve Channel 4/BBC TV altyazı
+    /// kuralları – 1080p'de en az 46 px; seçenek olarak küçük ve büyük boylar.
+    /// </summary>
+    public static double SizePx(int level) => level switch { 0 => 38, 2 => 56, 3 => 68, _ => 46 };
+    /// <summary>Ölçülen oyun yazısı ancak bu aralıktaysa "orijinal boy" kullanılır (oransal, ekran yüksekliğine göre).</summary>
+    public const double MinEmNorm = 0.024, MaxEmNorm = 0.068;
 
     // Oyunun yazı tipi (oyun başına): "auto" = altyazıya en benzer font otomatik seçilir; ya da sabit bir font anahtarı
     public string ActiveGame { get; set; } = "Genel";

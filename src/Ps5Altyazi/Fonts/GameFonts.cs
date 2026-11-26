@@ -253,6 +253,10 @@ public sealed class SubtitleFontMatcher
         {
             var m = Measure(game, lines[i], texts[i]);
             if (m == null) continue;
+            // Mantık sınırı: altyazı harfleri ekran yüksekliğinin %0,6'sından küçük ya da %4,5'inden büyük olamaz.
+            // (Birden çok satır / ekran yazısı tek satır sanılınca 136 px gibi dev boylar ölçülüyordu.)
+            double xhn = m.Xh / Math.Max(1.0, game.Height);
+            if (xhn < 0.006 || xhn > 0.045) continue;
             var list = m.Caps ? _caps : _lower;
             if (IsOutlier(list, m)) continue;
             list.Add(m);
@@ -376,6 +380,8 @@ public sealed class SubtitleFontMatcher
 
         double perEm = useCaps ? chosen.CapPerEm : chosen.XhPerEm;
         double em = xh / Math.Max(0.2, perEm) / frameH;
+        // Yine de akla yatkın aralıkta tut (ekran yüksekliğinin %1,6 – %7,5'i)
+        em = Math.Clamp(em, 0.016, 0.075);
         // Boy kararlılığı: yeterli ölçüm varsa küçük oynamalarda eski boy korunur (yazı her altyazıda aynı boyda kalsın)
         if (!_restyled && Current != null && Current.EmNorm > 0 && Current.Font.Key == chosen.Key && Current.Samples >= 6 &&
             Math.Abs(Current.EmNorm - em) < Current.EmNorm * 0.10)

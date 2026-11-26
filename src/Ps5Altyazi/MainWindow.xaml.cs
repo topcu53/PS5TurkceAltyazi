@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.20 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.21 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1049,6 +1049,24 @@ public partial class MainWindow : Window
             var input = await Task.Run(() => OcrPreprocessor.Build(job.Game, job.Lines, maxDim));
             if (input == null) return;
             var output = await Task.Run(() => engine.RecognizeAsync(input));
+            // Okuma zayıfsa (parlak gökyüzü / araba / ışık arkasında harfler karışınca) ikinci yöntemle
+            // (yalnız kenar çizgili parlak yazı) yeniden oku ve daha iyisini al. Windows OCR ~5 ms: gecikme hissedilmez.
+            double score = OcrScore(output);
+            if (score < 1.75)
+            {
+                var alt = await Task.Run(() => OcrPreprocessor.BuildOutlined(job.Game, job.Lines, maxDim));
+                if (alt != null)
+                {
+                    var altOut = await Task.Run(() => engine.RecognizeAsync(alt));
+                    double altScore = OcrScore(altOut);
+                    if (altScore > score + 0.05)
+                    {
+                        output = altOut with { Milliseconds = output.Milliseconds + altOut.Milliseconds };
+                        input = alt;
+                        _ocrAltWins++;
+                    }
+                }
+            }
             _lastOcrInput = input;
             _ocrCount++;
             _ocrMsSum += output.Milliseconds;
@@ -1076,6 +1094,19 @@ public partial class MainWindow : Window
                 _ = RunOcrAsync(next);
             }
         }
+    }
+
+    private int _ocrAltWins;
+
+    /// <summary>OCR sonucunun kalitesi: 0 çöp … 2 temiz İngilizce (geçerli + kelimelerin çoğu sözlükte).</summary>
+    private static double OcrScore(OcrOutput o)
+    {
+        string t = SubtitleText.Normalize(o.Lines);
+        if (t.Length == 0) return 0;
+        double known = EnglishWords.IsLoaded ? EnglishWords.KnownRatio(t) : 0.5;
+        int odd = t.Count(c => !(char.IsLetterOrDigit(c) || char.IsWhiteSpace(c) || ".,!?'\"-…:;()".IndexOf(c) >= 0));
+        double oddPenalty = Math.Min(0.5, odd * 0.08);
+        return (SubtitleText.IsPlausible(t) ? 1 : 0) + known - oddPenalty;
     }
 
     /// <summary>Altyazı satırlarının oyun alanına göre oransal yeri (TV'de örtme modu için).</summary>
@@ -1683,6 +1714,22 @@ public partial class MainWindow : Window
             _settings.SettingsVersion = 7;
             _settings.Save();
         }
+        if (_settings.SettingsVersion < 8)
+        {
+            // v2.21: altyazı boyu artık seviye (Küçük/Orta/Büyük/Çok büyük); "orijinal boy" varsayılan kapalı.
+            // Hatalı ölçülmüş (dev) yazı boyları silinir, oyun yeniden ölçer.
+            _settings.SubtitleMatchOriginalSize = false;
+            _settings.SubtitleSizeLevel = 1;
+            _settings.SubtitleFontSize = AppSettings.SizePx(1) / 1.38;
+            foreach (var p in _settings.GameFonts.Values)
+                if (p.LearnedEm > AppSettings.MaxEmNorm || (p.LearnedEm > 0 && p.LearnedEm < AppSettings.MinEmNorm * 0.5))
+                {
+                    p.LearnedEm = 0;
+                    p.LearnedSamples = 0;
+                }
+            _settings.SettingsVersion = 8;
+            _settings.Save();
+        }
     }
 
     // ───────────────────────────── TV / telefon yayını (Aşama 8) ─────────────────────────────
@@ -1756,12 +1803,14 @@ public partial class MainWindow : Window
     }
 
     /// <summary>PC'deki altyazı görünüm ayarlarını TV/telefon ekranlarına aktarır (1080p ölçeğinde).</summary>
+    private static string SizeName(int level) => level switch { 0 => "Küçük", 2 => "Büyük", 3 => "Çok büyük", _ => "Orta" };
+
     private void SendStyleToScreens()
     {
         _server?.Style(
-            font: _settings.SubtitleFontSize * 1.38,
+            font: AppSettings.SizePx(_settings.SubtitleSizeLevel),
             bg: _settings.SubtitleBackgroundOpacity,
-            bottom: 6,
+            bottom: 8.5, // en alt satır ekran yüksekliğinin ~1/12'si kadar yukarıda (TV güvenli alan)
             width: _settings.SubtitleWidthFraction * 100,
             cover: _settings.SubtitleCoverOriginal,
             match: _settings.SubtitleMatchOriginalSize,
@@ -1958,12 +2007,12 @@ public partial class MainWindow : Window
             _subWin.ApplyAppearance(_settings.SubtitleFontSize, _settings.SubtitleBackgroundOpacity,
                 _settings.SubtitleWidthFraction, _settings.SubtitleTopmost);
             _subWin.SetMatchOriginalSize(_settings.SubtitleMatchOriginalSize);
-            SendStyleToScreens();
+            ApplyGameFont(); // boy seçimi / "orijinal boy" değişince PC'de de hemen uygulansın (TV'ye de gönderir)
             SaveSettings();
         };
         dlg.ShowDialog();
         _subWin.SetMuted(!PcSubtitleOn);
-        Log.Info($"Altyazı görünümü: yazı {_settings.SubtitleFontSize:F0} pt, zemin %{_settings.SubtitleBackgroundOpacity * 100:F0}, " +
+        Log.Info($"Altyazı görünümü: boy {SizeName(_settings.SubtitleSizeLevel)} ({AppSettings.SizePx(_settings.SubtitleSizeLevel):F0} px @1080p), zemin %{_settings.SubtitleBackgroundOpacity * 100:F0}, " +
                  $"genişlik %{_settings.SubtitleWidthFraction * 100:F0}, her zaman üstte: {(_settings.SubtitleTopmost ? "evet" : "hayır")}.");
     }
 
@@ -2151,7 +2200,7 @@ public partial class MainWindow : Window
         if (_ocrCount > 0)
             Log.Info($"OCR özeti: {_ocrCount} çalışma, ort. {_ocrMsSum / _ocrCount:F0} ms | tanınan altyazı {_committedCount}" +
                      (_committedCount > 0 ? $", ort. gecikme (metin değişiminden ekrana) {_latencySum / _committedCount:F0} ms" : "") +
-                     $" | atlanan anlamsız sonuç {_ocrSkipped}");
+                     $" | atlanan anlamsız sonuç {_ocrSkipped} | kenar çizgisi yöntemi {_ocrAltWins} kez daha iyi okudu");
         if (_translation != null && (_trCount > 0 || _trErrors > 0))
             Log.Info($"Çeviri özeti: {_trCount} çeviri | API {_translation.ApiCalls} çağrı, ort. {_translation.ApiMsSum / Math.Max(1, _translation.ApiCalls):F0} ms, " +
                      $"{_translation.CharsSent} karakter | önbellekten {_translation.CacheHits} | hata {_trErrors} | " +

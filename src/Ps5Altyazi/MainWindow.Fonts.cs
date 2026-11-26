@@ -55,6 +55,7 @@ public partial class MainWindow
         {
             double em = p.LearnedEm;
             if (em > 0 && learned != null && font != learned) em *= learned.XhPerEm / Math.Max(0.2, font.XhPerEm);
+            if (em > AppSettings.MaxEmNorm * 1.1) em = 0; // eski sürümden kalma hatalı (dev) ölçüm
             _fontMatcher.Seed(new GameFontChoice(font, Math.Max(0, em), p.LearnedColor, p.LearnedOutline, p.LearnedSamples));
         }
         _lastFontLog = null;
@@ -156,7 +157,9 @@ public partial class MainWindow
             }
             Color? color = null;
             try { color = (Color)ColorConverter.ConvertFromString(c.ColorHex); } catch { }
-            double emPx = _lastFrameH > 0 && c.EmNorm > 0 ? c.EmPx(_lastFrameH) : 0;
+            // Orijinal boy yalnızca istenirse ve ölçüm akla yatkınsa; yoksa seçilen boy (Küçük/Orta/Büyük) kullanılır
+            bool useEm = _settings.SubtitleMatchOriginalSize && c.EmNorm >= AppSettings.MinEmNorm && c.EmNorm <= AppSettings.MaxEmNorm;
+            double emPx = useEm && _lastFrameH > 0 ? c.EmPx(_lastFrameH) : 0;
             _subWin?.SetGameFont(family, c.Font.IsBold, emPx, color);
 
             string desc = $"{c.Font.DisplayName}|{c.EmNorm:F4}|{c.ColorHex}";

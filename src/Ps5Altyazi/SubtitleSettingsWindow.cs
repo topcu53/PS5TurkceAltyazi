@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using Ps5Altyazi.Fonts;
 using Ps5Altyazi.Settings;
@@ -78,6 +79,49 @@ public sealed class SubtitleSettingsWindow : Window
     private readonly ComboBox _fontBox = new() { MinWidth = 260 };
     private bool _loadingFont;
 
+    private static readonly (string Name, string Hint)[] Sizes =
+    {
+        ("Küçük", "38 px"), ("Orta", "46 px · önerilen"), ("Büyük", "56 px"), ("Çok büyük", "68 px"),
+    };
+
+    /// <summary>
+    /// Boy seçimi. Boylar 1080p'de piksel olarak verilir ve TV'de ekran yüksekliğine göre ölçeklenir; satır en fazla
+    /// ~42 karakter, en fazla 2 satır olur (Netflix/BBC altyazı kuralları; oyunlar için önerilen en küçük boy 46 px).
+    /// </summary>
+    private FrameworkElement SizeRow()
+    {
+        var box = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
+        box.Children.Add(new TextBlock { Text = "Yazı boyu", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 0, 0, 6) });
+        var row = new UniformGrid { Columns = Sizes.Length };
+        for (int i = 0; i < Sizes.Length; i++)
+        {
+            int level = i;
+            var content = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center };
+            content.Children.Add(new TextBlock { Text = Sizes[i].Name, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, FontSize = 12 + 2 * i });
+            content.Children.Add(new TextBlock { Text = Sizes[i].Hint, Foreground = Theme.Dim, FontSize = 11, HorizontalAlignment = HorizontalAlignment.Center });
+            var rb = new RadioButton
+            {
+                GroupName = "boy", Content = content, IsChecked = _s.SubtitleSizeLevel == i, Margin = new Thickness(0, 0, 6, 0),
+                Padding = new Thickness(6, 6, 6, 6), HorizontalContentAlignment = HorizontalAlignment.Center
+            };
+            if (TryFindResource("NavTab") is Style st) rb.Style = st;
+            rb.Checked += (_, _) =>
+            {
+                _s.SubtitleSizeLevel = level;
+                _s.SubtitleFontSize = AppSettings.SizePx(level) / 1.38; // PC penceresi de aynı boyda
+                Changed?.Invoke();
+            };
+            row.Children.Add(rb);
+        }
+        box.Children.Add(row);
+        box.Children.Add(new TextBlock
+        {
+            Text = "Boy TV'nin çözünürlüğüne göre otomatik ölçeklenir; uzun çeviriler en fazla 2 satıra bölünür. Kumandada ▲/▼ ile ince ayar yapabilirsiniz.",
+            Foreground = Theme.Dim, FontSize = 11.5, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 6, 0, 0)
+        });
+        return box;
+    }
+
     private const string AutoLabel = "Otomatik – oyunun altyazısına en benzer";
 
     public SubtitleSettingsWindow(AppSettings settings, SubtitleWindow sub, Func<string> describeFont)
@@ -93,7 +137,7 @@ public sealed class SubtitleSettingsWindow : Window
 
         var root = new StackPanel { Margin = new Thickness(16) };
 
-        root.Children.Add(SliderRow("Yazı boyutu", 20, 96, _s.SubtitleFontSize, v => $"{v:F0} pt", v => _s.SubtitleFontSize = v));
+        root.Children.Add(SizeRow());
         root.Children.Add(SliderRow("Arka plan saydamlığı (koyuluk)", 0, 100, _s.SubtitleBackgroundOpacity * 100, v => $"%{v:F0}",
             v => _s.SubtitleBackgroundOpacity = v / 100));
         root.Children.Add(SliderRow("Pencere genişliği (ekranın)", 30, 100, _s.SubtitleWidthFraction * 100, v => $"%{v:F0}",
@@ -137,9 +181,10 @@ public sealed class SubtitleSettingsWindow : Window
 
         var match = new CheckBox
         {
-            Content = "Örtme modunda yazı boyutu orijinal altyazıyla aynı olsun (TV'de de)",
+            Content = "Yazı boyu oyunun İngilizce altyazısıyla aynı olsun (ölçülebildiğinde)",
             IsChecked = _s.SubtitleMatchOriginalSize,
-            Margin = new Thickness(0, 6, 0, 0)
+            Margin = new Thickness(0, 6, 0, 0),
+            ToolTip = "Kapalıyken yukarıda seçtiğiniz boy kullanılır (önerilen). Ölçüm akla yatkın değilse yine seçilen boy kullanılır."
         };
         match.Checked += (_, _) => { _s.SubtitleMatchOriginalSize = true; Changed?.Invoke(); };
         match.Unchecked += (_, _) => { _s.SubtitleMatchOriginalSize = false; Changed?.Invoke(); };
