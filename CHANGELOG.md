@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.20 – Kurulum ana pencerede, daha şık pencereler
+
+- İlk açılışta kurulum artık ayrı bir pencerede değil, **doğrudan ana pencerede** açılıyor: solda adımlar
+  (Hoş geldin → PS5 → Çeviri → TV → Bitti) ve **ilerleme yüzdesi**; hepsi bitince normal ana sayfa açılır.
+  "Şimdilik geç" ile sonraya bırakılabilir (Ayarlar → Bağlantı → Kurulum Adımlarını Aç).
+- Ayrı açılan pencereler (TV kurulumu, PS5 bağlantısı, altyazı, çeviri, tema…) yenilendi: büyük başlık, ince ayraç,
+  Windows 11'de yuvarlak köşeler.
+- Oyun listesine **Grand Theft Auto VI** eklendi.
+
 ## v2.19 – Güncelleme kartı, düzgün üst bant
 
 - "Şimdi güncelle" artık üst bantta sekmelerin üstüne binmiyor: sağ sütunun en üstünde ayrı bir **yeni sürüm kartı**

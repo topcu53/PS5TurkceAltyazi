@@ -16,22 +16,35 @@ public partial class MainWindow
 
     private const string TestText = "Bu bir test altyazısıdır. Altyazı+ çalışıyor! ✔";
 
+    /// <summary>Kurulum adımlarını ana pencerenin içinde (sekmelerin yerine) gösterir; bitince ana sayfa açılır.</summary>
     private void RunSetupWizard()
     {
+        if (SetupPage.Visibility == Visibility.Visible) return;
         bool wasRunning = DirectRunning;
         if (wasRunning) StopCapture("Kurulum açıldı.");
-        var w = new SetupWizardWindow(_settings, SaveSettings, EnsureServer,
-            () => TranslationSettings_Click(this, new RoutedEventArgs()), TranslationSummary, SendTestSubtitle) { Owner = this };
-        bool? done = w.ShowDialog();
-        UpdateSourceUi();
-        if (done == true)
+        var panel = new SetupWizardPanel(_settings, SaveSettings, EnsureServer,
+            () => TranslationSettings_Click(this, new RoutedEventArgs()), TranslationSummary, SendTestSubtitle);
+        panel.Finished += done =>
         {
-            Log.Success("Kurulum tamamlandı. Çeviriyi başlatmak için ▶ Başlat (F6).");
-            Notify("Kurulum tamam – ▶ Başlat (F6)");
-        }
-        else if (!_settings.SetupCompleted)
-            Log.Info("Kurulum yarıda kaldı; üstteki '🧭 Kurulum' ile devam edebilirsiniz.");
-        if (wasRunning && UseDirect()) StartCapture();
+            SetupPage.Content = null;
+            SetupPage.Visibility = Visibility.Collapsed;
+            NavBar.Visibility = Visibility.Visible;
+            NavHome.IsChecked = true;
+            Nav_Checked(this, new RoutedEventArgs());
+            UpdateSourceUi();
+            if (done)
+            {
+                Log.Success("Kurulum tamamlandı. Çeviriyi başlatmak için ▶ Başlat (F6).");
+                Notify("Kurulum tamam – ▶ Başlat (F6)");
+            }
+            else if (!_settings.SetupCompleted)
+                Log.Info("Kurulum şimdilik geçildi; Ayarlar → Bağlantı → 'Kurulum Adımlarını Aç' ile devam edebilirsiniz.");
+            if (wasRunning && UseDirect()) StartCapture();
+        };
+        SetupPage.Content = panel;
+        HomePage.Visibility = HistoryPage.Visibility = SettingsPage.Visibility = Visibility.Collapsed;
+        NavBar.Visibility = Visibility.Hidden;
+        SetupPage.Visibility = Visibility.Visible;
     }
 
     private void SetupWizard_Click(object sender, RoutedEventArgs e) => RunSetupWizard();

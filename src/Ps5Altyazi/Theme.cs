@@ -47,7 +47,7 @@ public static class Theme
 
         WindowChrome.SetWindowChrome(w, new WindowChrome
         {
-            CaptionHeight = 40,
+            CaptionHeight = 56,
             CornerRadius = new CornerRadius(0),
             GlassFrameThickness = new Thickness(0),
             UseAeroCaptionButtons = false,
@@ -65,28 +65,27 @@ public static class Theme
                                          HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
 
         var root = new Grid();
-        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
+        root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(56) });
         root.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
 
-        var bar = new Grid { Background = Bar };
+        var bar = new Grid { Background = Bg };
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         bar.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var logo = new Image
+        var logo = new Border
         {
-            Source = new BitmapImage(new Uri("pack://application:,,,/Resources/logo-256.png")),
-            Width = 22, Height = 22, Margin = new Thickness(12, 0, 8, 0), VerticalAlignment = VerticalAlignment.Center
+            Width = 6, Height = 22, CornerRadius = new CornerRadius(3), Margin = new Thickness(20, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center, Background = Accent
         };
-        RenderOptions.SetBitmapScalingMode(logo, BitmapScalingMode.HighQuality);
         bar.Children.Add(logo);
 
-        var title = new TextBlock { Foreground = Dim, FontSize = 13, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+        var title = new TextBlock { Foreground = Text, FontSize = 18, FontWeight = FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
         title.SetBinding(TextBlock.TextProperty, new Binding(nameof(Window.Title)) { Source = w });
         Grid.SetColumn(title, 1);
         bar.Children.Add(title);
 
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal };
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Top };
         Grid.SetColumn(buttons, 2);
         if (canResize || w.ResizeMode != ResizeMode.NoResize)
         {
@@ -105,6 +104,10 @@ public static class Theme
         bar.Children.Add(buttons);
 
         root.Children.Add(bar);
+        // Başlığın altında ince, yumuşak ayraç
+        var divider = new Border { Height = 1, VerticalAlignment = VerticalAlignment.Bottom, Margin = new Thickness(20, 0, 20, 0), Background = Line };
+        root.Children.Add(divider);
+        RoundCorners(w);
         if (content != null)
         {
             Grid.SetRow(content, 1);
@@ -131,6 +134,7 @@ public static class Theme
             UseAeroCaptionButtons = false,
             ResizeBorderThickness = new Thickness(6)
         });
+        RoundCorners(w);
         buttonHost.Children.Add(CaptionButton("\uE921", "Küçült", false, () => w.WindowState = WindowState.Minimized));
         var max = CaptionButton("\uE922", "Büyüt", false,
             () => w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized);
@@ -142,6 +146,27 @@ public static class Theme
         }
         w.StateChanged += (_, _) => Sync();
         Sync();
+    }
+
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int value, int size);
+
+    /// <summary>Windows 11'de pencere köşelerini yuvarlatır (Windows 10'da etkisizdir).</summary>
+    public static void RoundCorners(Window w)
+    {
+        void Do()
+        {
+            try
+            {
+                var h = new System.Windows.Interop.WindowInteropHelper(w).Handle;
+                if (h == IntPtr.Zero) return;
+                int round = 2; // DWMWCP_ROUND
+                DwmSetWindowAttribute(h, 33, ref round, sizeof(int));
+            }
+            catch { /* eski Windows */ }
+        }
+        if (new System.Windows.Interop.WindowInteropHelper(w).Handle != IntPtr.Zero) Do();
+        else w.SourceInitialized += (_, _) => Do();
     }
 
     private static Button CaptionButton(string glyph, string tip, bool danger, Action click)

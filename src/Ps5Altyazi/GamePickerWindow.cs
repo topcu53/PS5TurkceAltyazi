@@ -17,7 +17,7 @@ public sealed class GamePickerWindow : Window
     /// <summary>Sık oynanan PS5 oyunları (liste yalnız kolaylık içindir; listede olmayan oyun da yazılabilir).</summary>
     public static readonly string[] KnownGames =
     {
-        "Red Dead Redemption 2", "Grand Theft Auto V", "The Last of Us Part I", "The Last of Us Part II Remastered",
+        "Grand Theft Auto VI", "Red Dead Redemption 2", "Grand Theft Auto V", "The Last of Us Part I", "The Last of Us Part II Remastered",
         "God of War Ragnarök", "Ghost of Tsushima", "Marvel's Spider-Man 2", "Marvel's Spider-Man: Miles Morales",
         "Horizon Forbidden West", "Elden Ring", "Cyberpunk 2077", "Baldur's Gate 3", "Hogwarts Legacy",
         "Resident Evil 4", "Resident Evil Village", "Alan Wake 2", "Death Stranding", "Days Gone",
