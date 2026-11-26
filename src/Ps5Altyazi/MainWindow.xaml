@@ -210,6 +210,23 @@
                         </Border>
                     </Grid>
 
+                    <!-- Oyun -->
+                    <Border Style="{StaticResource Tile}" Margin="0,12,0,0">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Content="Değiştir" Click="PickGame_Click" VerticalAlignment="Center" ToolTip="Oyunu seç"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Border Style="{StaticResource IconBox}" Background="#4A2A55">
+                                    <TextBlock Text="🎯" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock x:Name="GameTileLabel" Text="Oyun" Foreground="{StaticResource TextDim}" FontSize="12"/>
+                                    <TextBlock x:Name="GameTileText" Text="Seçilmedi" FontSize="14" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="200"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
                     <!-- Ayrıntılı durum -->
                     <Border Style="{StaticResource Panel}" Margin="0,12,0,0" Padding="18,14">
                         <StackPanel>

@@ -39,8 +39,8 @@ public partial class MainWindow
     /// <summary>Etkin oyunun yazı tipi ayarını yükler (açılışta ve oyun değişince).</summary>
     private void InitGameFont()
     {
-        // Tamamen otomatik: oyun adı / font seçimi yok. Tek profil; oyun değişince eşleştirici bunu kendisi fark eder.
-        _settings.ActiveGame = "Genel";
+        // Oyun başına profil (yazı tipi + altyazı alanı); oyun seçilmediyse "Genel".
+        if (string.IsNullOrWhiteSpace(_settings.ActiveGame)) _settings.ActiveGame = "Genel";
         var p = ActiveFontProfile;
         UseFontBesideExe(p);
         _fontMatcher.Reset();

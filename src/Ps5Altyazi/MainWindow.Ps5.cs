@@ -100,6 +100,7 @@ public partial class MainWindow
                 _lastFrameTime = DateTime.MinValue;
                 _captureStart = DateTime.Now;
                 Log.Success($"PS5'e doğrudan bağlanıldı: {src.ConsoleName}.");
+                _ = DetectRunningGameAsync();
             }
             _directStreaming = streaming;
             SetText(RemotePlayStatus, text, streaming ? Green : Orange);

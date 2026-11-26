@@ -1,5 +1,11 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.18 – Oyun seçimi
+
+- Ana ekranda **🎯 Oyun** kutucuğu ve "Değiştir": listeden (son oynananlar üstte + sık oynanan PS5 oyunları) seç ya da adını yaz.
+- Her oyunun **kendi altyazı alanı ve yazı tipi** saklanır; oyunu seçince kendiliğinden geri gelir.
+- PS5'e doğrudan bağlıyken **PS5'te açık oyun kendiliğinden seçilir** (kapatılabilir).
+
 ## v2.17 – Daha hızlı ve daha doğal çeviri
 
 - Ayarlar → Çeviri → **Hız ve kalite**: **Hızlı** (DeepL önde), **Dengeli** (varsayılan: DeepL ve Gemini aynı anda sorulur,

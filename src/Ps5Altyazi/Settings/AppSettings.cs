@@ -64,6 +64,8 @@ public sealed class AppSettings
 
     // Oyunun yazı tipi (oyun başına): "auto" = altyazıya en benzer font otomatik seçilir; ya da sabit bir font anahtarı
     public string ActiveGame { get; set; } = "Genel";
+    /// <summary>PS5'te açık oyunu (doğrudan bağlantıda) kendiliğinden seç.</summary>
+    public bool AutoGame { get; set; } = true;
     public System.Collections.Generic.Dictionary<string, GameFontProfile> GameFonts { get; set; } = new();
     public bool AutoStart { get; set; } = true;
 
@@ -174,4 +176,7 @@ public sealed class GameFontProfile
     public string LearnedColor { get; set; } = "#FFFFFF";
     public bool LearnedOutline { get; set; }
     public int LearnedSamples { get; set; }
+    /// <summary>Bu oyunun altyazı alanı (oranlarla x, y, genişlik, yükseklik); oyun seçilince geri yüklenir.</summary>
+    public double[]? Region { get; set; }
+    public DateTime? LastPlayed { get; set; }
 }

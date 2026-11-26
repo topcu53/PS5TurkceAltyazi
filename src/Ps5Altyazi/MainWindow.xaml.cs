@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.17 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.18 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -203,6 +203,7 @@ public partial class MainWindow : Window
         InitScreenTranslation();
         InitGameFont();
         InitUpdater();
+        InitGamePicker();
         InitLgDevModeKeepAlive();
         LgWebOsTv.GetPinnedHostKey = ip => _settings.TvHostKeys.TryGetValue(ip, out var fp) ? fp : null;
         LgWebOsTv.SavePinnedHostKey = (ip, fp) => Dispatcher.Invoke(() => { _settings.TvHostKeys[ip] = fp; SaveSettings(); });
@@ -848,6 +849,7 @@ public partial class MainWindow : Window
     {
         _region = rect is { } r ? new RegionHolder(r) : null;
         _settings.SetRegion(rect, source);
+        ActiveFontProfile.Region = _settings.SubtitleRegion; // oyuna özel alan
         SaveSettings();
         _subPresent = false;
         _presentStreak = _absentStreak = 0;
