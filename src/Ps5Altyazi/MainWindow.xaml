@@ -31,7 +31,8 @@
                 </StackPanel>
             </StackPanel>
 
-            <Border Grid.Column="1" Background="{StaticResource Card}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="22" Padding="3">
+            <Border Grid.Column="1" Background="{StaticResource Card}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="22" Padding="3"
+                    WindowChrome.IsHitTestVisibleInChrome="True">
                 <StackPanel Orientation="Horizontal">
                     <RadioButton x:Name="NavHome" Style="{StaticResource NavTab}" GroupName="nav" Content="Ana Ekran" IsChecked="True" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavHistory" Style="{StaticResource NavTab}" GroupName="nav" Content="Geçmiş" Checked="Nav_Checked"/>
@@ -39,7 +40,8 @@
                 </StackPanel>
             </Border>
 
-            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,150,0"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
                 <Button x:Name="UpdateButton" Visibility="Collapsed" Click="Update_Click" Margin="0,0,10,0" FontWeight="Bold"
                         Background="#1F9D55" BorderBrush="#2FC76E" Foreground="White" Padding="14,7"
                         Content="⬇ Şimdi güncelle" ToolTip="Yeni sürüm hazır"/>
@@ -52,6 +54,10 @@
                 </Border>
             </StackPanel>
         </Grid>
+
+        <!-- Pencere düğmeleri (küçült / büyüt / kapat) – uygulamanın kendi üst bandında, sağ üst köşede -->
+        <StackPanel x:Name="CaptionButtons" Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                    Margin="0,-14,-22,0"/>
 
         <!-- ═════════════════════════ ANA EKRAN ═════════════════════════ -->
         <Grid x:Name="HomePage" Grid.Row="1">

@@ -1,5 +1,10 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.16 – Tek parça pencere
+
+- Ana penceredeki ayrı başlık çubuğu (logo + başlık şeridi) kaldırıldı: uygulama tek parça. Küçült / büyüt / kapat düğmeleri
+  üst bandın sağ köşesinde; pencere üst banttan sürüklenir, çift tıklayınca büyür.
+
 ## v2.15 – Yeni arayüz
 
 - Üstte sekmeler: **Ana Ekran · Geçmiş · Ayarlar**.

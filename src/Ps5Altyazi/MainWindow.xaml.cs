@@ -134,9 +134,10 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        Theme.Apply(this, canResize: true);
+        Theme.ApplyMerged(this, CaptionButtons, MainGrid, 60);
         FitToScreen();
         SizeChanged += (_, _) => AdaptLayout();
+        StateChanged += (_, _) => AdaptLayout();
         _hideTimer.Tick += HideTimer_Tick;
         Log.Written += OnLogWritten;
         _timer.Tick += Timer_Tick;
@@ -168,12 +169,16 @@ public partial class MainWindow : Window
         TurkishText.FontSize = narrow ? 17 : 21;
         HeaderLogo.Width = HeaderLogo.Height = shortH ? 32 : 40;
         HeaderSub.Visibility = tiny ? Visibility.Collapsed : Visibility.Visible;
-        MainGrid.Margin = shortH ? new Thickness(12, 8, 12, 8) : new Thickness(22, 14, 22, 16);
+        double extra = WindowState == WindowState.Maximized ? 7 : 0;
+        var m = shortH ? new Thickness(12, 8, 12, 8) : new Thickness(22, 14, 22, 16);
+        MainGrid.Margin = new Thickness(m.Left + extra, m.Top + extra, m.Right + extra, m.Bottom + extra);
+        // Pencere düğmeleri sağ üst köşeye yapışık kalsın
+        CaptionButtons.Margin = new Thickness(0, -m.Top, -m.Right, 0);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.15 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.16 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 

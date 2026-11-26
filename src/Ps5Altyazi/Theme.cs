@@ -113,6 +113,37 @@ public static class Theme
         w.Content = root;
     }
 
+    /// <summary>
+    /// Ana pencere için: ayrı başlık çubuğu yok, uygulama tek parça. Pencere, üstteki <paramref name="captionHeight"/> piksellik
+    /// alandan sürüklenir; küçült / büyüt / kapat düğmeleri <paramref name="buttonHost"/>'a (uygulamanın kendi üst bandına) eklenir.
+    /// </summary>
+    public static void ApplyMerged(Window w, Panel buttonHost, FrameworkElement root, double captionHeight)
+    {
+        w.Background = Bg;
+        w.Foreground = Text;
+        w.BorderBrush = Line;
+        w.BorderThickness = new Thickness(1);
+        WindowChrome.SetWindowChrome(w, new WindowChrome
+        {
+            CaptionHeight = captionHeight,
+            CornerRadius = new CornerRadius(0),
+            GlassFrameThickness = new Thickness(0),
+            UseAeroCaptionButtons = false,
+            ResizeBorderThickness = new Thickness(6)
+        });
+        buttonHost.Children.Add(CaptionButton("\uE921", "Küçült", false, () => w.WindowState = WindowState.Minimized));
+        var max = CaptionButton("\uE922", "Büyüt", false,
+            () => w.WindowState = w.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized);
+        buttonHost.Children.Add(max);
+        buttonHost.Children.Add(CaptionButton("\uE8BB", "Kapat", true, w.Close));
+        void Sync()
+        {
+            ((TextBlock)max.Content).Text = w.WindowState == WindowState.Maximized ? "\uE923" : "\uE922";
+        }
+        w.StateChanged += (_, _) => Sync();
+        Sync();
+    }
+
     private static Button CaptionButton(string glyph, string tip, bool danger, Action click)
     {
         var b = new Button
