@@ -13,6 +13,10 @@ public partial class MainWindow
     private bool _updating;
     private readonly DispatcherTimer _updateTimer = new() { Interval = TimeSpan.FromHours(6) };
 
+    /// <summary>Sürüm notu: GitHub sürüm metni yerine CHANGELOG'daki bu sürümün maddeleri (internetten), yoksa kısa metin.</summary>
+    private static string NotesFor(Updater.Release r) =>
+        string.IsNullOrWhiteSpace(r.ChangeNotes) ? "Ayrıntılar GitHub'daki sürüm sayfasında." : r.ChangeNotes;
+
     private void InitUpdater()
     {
         _updateTimer.Tick += async (_, _) => await CheckUpdateAsync();
@@ -33,9 +37,11 @@ public partial class MainWindow
             if (r == null) return;
             bool isNew = _update == null || r.Version != _update.Version;
             _update = r;
-            UpdateButton.Content = $"⬇ Şimdi güncelle (v{r.Version})";
-            UpdateButton.ToolTip = $"Yeni sürüm: v{r.Version} (kurulu: v{Updater.Current}). Tıklayınca indirilip kurulur, program yeniden açılır; ayarlarınız korunur.";
-            UpdateButton.Visibility = Visibility.Visible;
+            UpdateTitle.Text = $"Yeni sürüm hazır: v{r.Version}";
+            UpdateSub.Text = $"Kurulu: v{Updater.Current}. İndirilip kurulur, program yeniden açılır; ayarların korunur.";
+            UpdateNotes.Text = NotesFor(r);
+            UpdateButton.Content = "⬇  Şimdi güncelle";
+            UpdateCard.Visibility = Visibility.Visible;
             if (isNew)
             {
                 Log.Success($"Yeni sürüm var: v{r.Version} (kurulu: v{Updater.Current}). Üstteki 'Şimdi güncelle' düğmesine basın.");
@@ -57,7 +63,12 @@ public partial class MainWindow
         try
         {
             Log.Info($"v{r.Version} indiriliyor…");
-            var progress = new Progress<double>(p => UpdateButton.Content = $"İndiriliyor… %{p * 100:F0}");
+            UpdateProgress.Visibility = Visibility.Visible;
+            var progress = new Progress<double>(p =>
+            {
+                UpdateProgress.Value = p;
+                UpdateButton.Content = $"İndiriliyor… %{p * 100:F0}";
+            });
             await Updater.DownloadAndRunAsync(r, progress);
             UpdateButton.Content = "Kuruluyor…";
             Log.Success($"v{r.Version} kuruluyor; program kapanıp yeni sürümle yeniden açılacak.");
@@ -67,7 +78,8 @@ public partial class MainWindow
         catch (Exception ex)
         {
             Log.Error("Güncelleme yapılamadı: " + ex.Message);
-            UpdateButton.Content = $"⬇ Şimdi güncelle (v{r.Version})";
+            UpdateButton.Content = "⬇  Şimdi güncelle";
+            UpdateProgress.Visibility = Visibility.Collapsed;
             UpdateButton.IsEnabled = true;
             _updating = false;
         }

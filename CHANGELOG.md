@@ -1,5 +1,12 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.19 – Güncelleme kartı, düzgün üst bant
+
+- "Şimdi güncelle" artık üst bantta sekmelerin üstüne binmiyor: sağ sütunun en üstünde ayrı bir **yeni sürüm kartı**
+  (sürüm numarası, indirme çubuğu, "Neler değişti?" listesi).
+- Üst bant yeniden düzenlendi: sekmeler ortada, hiçbir şey üst üste gelmiyor.
+- Durum kutucuklarında uzun yazılar artık kesilmiyor (iki satıra iniyor).
+
 ## v2.18 – Oyun seçimi
 
 - Ana ekranda **🎯 Oyun** kutucuğu ve "Değiştir": listeden (son oynananlar üstte + sık oynanan PS5 oyunları) seç ya da adını yaz.

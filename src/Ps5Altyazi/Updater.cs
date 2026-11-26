@@ -29,7 +29,11 @@ public static class Updater
         return c;
     }
 
-    public sealed record Release(Version Version, string Tag, string SetupUrl, long SetupSize, string Notes);
+    public sealed record Release(Version Version, string Tag, string SetupUrl, long SetupSize, string Notes)
+    {
+        /// <summary>Kurulu sürümden bu yana CHANGELOG.md'deki değişiklikler (düz metin).</summary>
+        public string ChangeNotes { get; init; } = "";
+    }
 
     public static Version Current
     {
@@ -57,7 +61,33 @@ public static class Updater
             .FirstOrDefault(a => string.Equals(a.GetProperty("name").GetString(), SetupName, StringComparison.OrdinalIgnoreCase));
         if (asset.ValueKind != JsonValueKind.Object) return null;
         string notes = root.TryGetProperty("body", out var b) ? b.GetString() ?? "" : "";
-        return new Release(ver, tag, asset.GetProperty("browser_download_url").GetString() ?? "", asset.GetProperty("size").GetInt64(), notes);
+        var rel = new Release(ver, tag, asset.GetProperty("browser_download_url").GetString() ?? "", asset.GetProperty("size").GetInt64(), notes);
+        try { rel = rel with { ChangeNotes = await ChangesSinceAsync(tag, cts.Token) }; } catch { }
+        return rel;
+    }
+
+    /// <summary>CHANGELOG.md'den kurulu sürümden yeni olan bölümler ("## vX.Y – Başlık" + maddeler), düz metin.</summary>
+    private static async Task<string> ChangesSinceAsync(string tag, CancellationToken ct)
+    {
+        string url = $"https://raw.githubusercontent.com/topcu53/PS5TurkceAltyazi/{tag}/CHANGELOG.md";
+        string md = await Http.GetStringAsync(url, ct);
+        var lines = new System.Collections.Generic.List<string>();
+        bool take = false;
+        foreach (var raw in md.Split('\n'))
+        {
+            string line = raw.TrimEnd();
+            if (line.StartsWith("## v"))
+            {
+                string v = line[4..].Split(' ', '–', '-')[0].Trim();
+                take = Version.TryParse(v.Count(c => c == '.') == 1 ? v + ".0" : v, out var lv) && lv > Current;
+                if (take) { if (lines.Count > 0) lines.Add(""); lines.Add(line[3..].Trim()); }
+                continue;
+            }
+            if (!take) continue;
+            if (line.StartsWith("- ")) lines.Add("• " + line[2..].Replace("**", ""));
+            else if (line.StartsWith("  ") && lines.Count > 0) lines[^1] += " " + line.Trim().Replace("**", "");
+        }
+        return string.Join("\n", lines).Trim();
     }
 
     /// <summary>Kurulumu indirir (ilerleme 0–1) ve sessiz başlatır. Sonra program kapanmalıdır.</summary>
