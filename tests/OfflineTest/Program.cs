@@ -42,7 +42,46 @@ Check("Yalnız GPU + ekran kartı yok → açık hata", g1.Engine == null && g1.
 var miss = OfflineEngine.Open(Path.Combine(dir, "yok"), OfflineMode.Auto, true, 0, 0, 0, true, false);
 Check("Model yok → çökmeden hata", miss.Engine == null && miss.IsError, miss.Message);
 
+// 5b) Ekran kartı kod yolu (FP16 modeller + decoder_with_past + Float16 tensörler), DirectML'siz işlemcide taklit.
+//     Gerçek kartı olmayan makinede GPU yolundaki mantık hatalarını yakalar (DirectML'in kendisini sınamaz).
+if (MarianOnnx.HasFiles(dir, MarianDevice.Gpu))
+{
+    MarianOnnx.SimulateGpuOnCpu = true;
+    try
+    {
+        using var sim = new MarianOnnx(dir, MarianDevice.Gpu);
+        int same = 0;
+        for (int i = 0; i < samples.Length; i++)
+        {
+            string o = sim.Translate(samples[i]);
+            if (o == cpuOut[i]) same++;
+            Console.WriteLine($"   FP16 {samples[i]}\n     → {o}{(o == cpuOut[i] ? "  (INT8 ile aynı)" : "  (INT8: " + cpuOut[i] + ")")}");
+        }
+        Check("Ekran kartı kod yolu (FP16, işlemcide taklit)", same >= samples.Length / 2, $"{same}/{samples.Length} INT8 ile birebir aynı");
+    }
+    catch (Exception ex) { Check("Ekran kartı kod yolu (FP16, işlemcide taklit)", false, ex.GetType().Name + ": " + ex.Message); }
+    finally { MarianOnnx.SimulateGpuOnCpu = false; }
+}
+
+// Gerçek DirectX 12 aygıtı var mı? (GitHub Windows makinelerinde yalnız "Hyper-V Video" var, D3D12 yok)
+bool d3d12 = false;
 if (windows)
+{
+    var probe = OfflineEngine.Open(dir, OfflineMode.GpuOnly, gpuAvailable: true, 0, 0, 0, cpuFallback: false, benchmark: false);
+    d3d12 = probe.Engine != null;
+    probe.Engine?.Dispose();
+    if (!d3d12) Console.WriteLine("ATLANDI | Gerçek ekran kartı testleri (6, 8, 9): bu makinede DirectX 12 aygıtı yok → " + probe.Message);
+}
+
+// 7) Ekran kartı yükleme hatası (olmayan aygıt) → Otomatik CPU'ya döner (DirectX 12 olmadan da sınanabilir)
+if (windows)
+{
+    var bad0 = OfflineEngine.Open(dir, OfflineMode.Auto, gpuAvailable: true, gpuIndex: 99, 0, 0, true, true);
+    Check("GPU yükleme hatası → CPU'ya dönüş", bad0.Engine?.Device == MarianDevice.Cpu && !bad0.IsError, bad0.Message);
+    bad0.Engine?.Dispose();
+}
+
+if (windows && d3d12)
 {
     // 6) Ekran kartında (DirectML) gerçek çeviri, FP16. CI makinesinde gerçek kart yok: DXGI sırasındaki
     //    aygıtlar denenir; D3D12 açabilen ilk aygıt (CI'da "Microsoft Basic Render Driver" = WARP) kullanılır.
@@ -69,10 +108,6 @@ if (windows)
         g.Engine.Dispose();
     }
 
-    // 7) Ekran kartı yükleme hatası (olmayan aygıt) → Otomatik CPU'ya döner
-    var bad = OfflineEngine.Open(dir, OfflineMode.Auto, gpuAvailable: true, gpuIndex: 99, 0, 0, true, true);
-    Check("GPU yükleme hatası → CPU'ya dönüş", bad.Engine?.Device == MarianDevice.Cpu && !bad.IsError, bad.Message);
-    bad.Engine?.Dispose();
 
     // 8) Otomatik + ekran kartı var → hız testiyle seçim (iki ölçüm de raporlanır)
     var auto = OfflineEngine.Open(dir, OfflineMode.Auto, gpuAvailable: true, gi, 0, 0, true, true);

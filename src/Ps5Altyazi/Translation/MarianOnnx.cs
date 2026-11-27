@@ -49,6 +49,9 @@ public sealed class MarianOnnx : IDisposable
 
     public MarianDevice Device { get; }
     public string DeviceName { get; }
+    /// <summary>Yalnız testler: ekran kartı yolu (FP16 modeller, ayrık decoder, Float16 tensörler) DirectML olmadan
+    /// işlemcide çalıştırılır – ekran kartı olmayan test makinelerinde kod yolunu doğrulamak için.</summary>
+    public static bool SimulateGpuOnCpu { get; set; }
     public int Threads { get; }
     public TimeSpan LoadTime { get; }
 
@@ -127,13 +130,13 @@ public sealed class MarianOnnx : IDisposable
                     ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
                     IntraOpNumThreads = Math.Min(Threads, 4),
                 };
-                o.AppendExecutionProvider_DML(gpuIndex);
+                if (!SimulateGpuOnCpu) o.AppendExecutionProvider_DML(gpuIndex);
                 return o;
             }
             _enc = new InferenceSession(Path.Combine(onnx, GpuEncoderFile), Gpu());
             _decFirst = new InferenceSession(Path.Combine(onnx, GpuDecoderFile), Gpu());
             _decPast = new InferenceSession(Path.Combine(onnx, GpuDecoderPastFile), Gpu());
-            DeviceName = $"Ekran kartı #{gpuIndex} (DirectML, FP16)";
+            DeviceName = SimulateGpuOnCpu ? "Ekran kartı modeli (FP16, test: işlemcide)" : $"Ekran kartı #{gpuIndex} (DirectML, FP16)";
         }
         else
         {

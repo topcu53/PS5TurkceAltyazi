@@ -31,7 +31,7 @@ jobs:
           M=model; mkdir -p $M/onnx
           B=https://huggingface.co/onnx-community/opus-mt-tc-big-en-tr/resolve/main
           FILES="config.json generation_config.json tokenizer.json vocab.json onnx/encoder_model_quantized.onnx onnx/decoder_model_merged_quantized.onnx"
-          if [ "$RUNNER_OS" = "Windows" ]; then FILES="$FILES onnx/encoder_model_fp16.onnx onnx/decoder_model_fp16.onnx onnx/decoder_with_past_model_fp16.onnx"; fi
+          FILES="$FILES onnx/encoder_model_fp16.onnx onnx/decoder_model_fp16.onnx onnx/decoder_with_past_model_fp16.onnx"
           for f in $FILES; do curl -sSfL -o $M/$f $B/$f; done
           ls -la $M/onnx
       - name: Donanım
