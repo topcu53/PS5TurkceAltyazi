@@ -180,6 +180,9 @@
                                     </StackPanel>
                                     <TextBlock x:Name="Ps5PillText" Text="bağlı değil" FontSize="13" FontWeight="SemiBold"
                                                TextWrapping="Wrap" MaxWidth="120"/>
+                                    <Button x:Name="Ps5ReconnectButton" Content="↻ Yeniden bağlan" Visibility="Collapsed"
+                                            Click="Ps5Reconnect_Click" FontSize="12" Padding="10,4" Margin="0,6,0,0"
+                                            HorizontalAlignment="Left" ToolTip="Bağlantıyı kapatıp baştan kurar"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -196,6 +199,9 @@
                                     </StackPanel>
                                     <TextBlock x:Name="TvPillText" Text="bağlı değil" FontSize="13" FontWeight="SemiBold"
                                                TextWrapping="Wrap" MaxWidth="120"/>
+                                    <Button x:Name="TvReconnectButton" Content="↻ Yeniden bağlan" Visibility="Collapsed"
+                                            Click="TvReconnect_Click" FontSize="12" Padding="10,4" Margin="0,6,0,0"
+                                            HorizontalAlignment="Left" ToolTip="Bağlantıyı kapatıp baştan kurar"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>

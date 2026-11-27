@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.30 – "Yeniden bağlan" düğmeleri
+
+- Ana sayfadaki PS5 ve TV kartlarında, bağlantı yokken ya da koptuğunda "↻ Yeniden bağlan" düğmesi çıkar.
+  - PS5: bağlantı kapatılıp baştan kurulur.
+  - TV: yayın yeniden açılır; LG'de TV uygulaması yeniden başlatılır (gerekirse güncellenir). Bağlanana kadar
+    düğme "Bağlanıyor…" gösterir; ~15 sn içinde bağlanmazsa logda ne kontrol edileceği yazar.
+- Bağlıyken düğmeler görünmez.
+
 ## v2.29 – Saydam zemin gerçekten saydam
 
 - Altyazı zemini %0 seçildiğinde TV'de ve bilgisayarda artık hiçbir yerde siyah kutu çizilmiyor. Önceden "orijinalin

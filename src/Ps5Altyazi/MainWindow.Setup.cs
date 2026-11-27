@@ -119,6 +119,60 @@ public partial class MainWindow
         TvPillText.Text = tvText;
         TranslatorTileText.Text = TranslationShort();
         TvPillText.ToolTip = TvPillText.Text;
+
+        // Bağlı değilken kartın altında "↻ Yeniden bağlan" (yalnız kurulmuşsa; kurulmadıysa Kurulum gerekir)
+        bool ps5Busy = DateTime.Now < _ps5ReconnectUntil, tvBusy = DateTime.Now < _tvReconnectUntil;
+        Ps5ReconnectButton.Visibility = ps5 < 2 && (_directReady || _capture != null || ps5Busy) ? Visibility.Visible : Visibility.Collapsed;
+        Ps5ReconnectButton.IsEnabled = !ps5Busy;
+        Ps5ReconnectButton.Content = ps5Busy ? "Bağlanıyor…" : "↻ Yeniden bağlan";
+        TvReconnectButton.Visibility = tv < 2 && (tvSetUp || tvBusy) ? Visibility.Visible : Visibility.Collapsed;
+        TvReconnectButton.IsEnabled = !tvBusy;
+        TvReconnectButton.Content = tvBusy ? "Bağlanıyor…" : "↻ Yeniden bağlan";
+    }
+
+    private DateTime _ps5ReconnectUntil, _tvReconnectUntil;
+
+    /// <summary>PS5 kartındaki "Yeniden bağlan": bağlantıyı kapatıp baştan kurar.</summary>
+    private void Ps5Reconnect_Click(object sender, RoutedEventArgs e)
+    {
+        _ps5ReconnectUntil = DateTime.Now.AddSeconds(8);
+        Log.Info("PS5'e yeniden bağlanılıyor (kullanıcı istedi)…");
+        if (_capture != null) StopCapture("Yeniden bağlanılıyor.");
+        _userStopped = false;
+        StartCapture();
+        UpdateConnectionPills();
+    }
+
+    /// <summary>TV kartındaki "Yeniden bağlan": yayını yeniden açar, LG'de TV uygulamasını yeniden başlatır.</summary>
+    private async void TvReconnect_Click(object sender, RoutedEventArgs e)
+    {
+        _tvReconnectUntil = DateTime.Now.AddSeconds(30);
+        UpdateConnectionPills();
+        try
+        {
+            Log.Info("TV'ye yeniden bağlanılıyor (kullanıcı istedi)…");
+            // Ekran bağlı değilse yayın sunucusunu baştan aç (takılı kalmış bağlantılar temizlenir)
+            if (_server is not { IsRunning: true } || _server.ClientCount == 0)
+            {
+                _server?.Dispose();
+                _server = null;
+            }
+            EnsureServer();
+            if (_settings.TvPlatform == "webos" && _settings.TvKeyProtected != null)
+                await AutoLaunchTvAsync(); // TV uygulamasını yeniden açar (gerekirse günceller)
+            else
+                Log.Info("TV'de Altyazı+ uygulamasını açın: uygulama bu bilgisayara kendiliğinden bağlanır.");
+            // Ekran bağlanana kadar (en çok ~15 sn) düğme "Bağlanıyor…" kalır
+            for (int i = 0; i < 30 && (_server?.ClientCount ?? 0) == 0; i++) await Task.Delay(500);
+            if ((_server?.ClientCount ?? 0) > 0) Log.Success("TV bağlandı.");
+            else Log.Warn("TV henüz bağlanmadı. TV açık mı, bilgisayarla aynı ağda mı? TV'de Altyazı+ uygulamasının açık olduğunu kontrol edin.");
+        }
+        catch (Exception ex) { Log.Warn("TV'ye yeniden bağlanılamadı: " + ex.Message); }
+        finally
+        {
+            _tvReconnectUntil = DateTime.MinValue;
+            UpdateConnectionPills();
+        }
     }
 
     /// <summary>Doğrudan bağlantının durumunu ışığa yansıtır.</summary>
