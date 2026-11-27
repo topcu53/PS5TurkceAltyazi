@@ -47,7 +47,7 @@ public sealed class TvSetupPanel : UserControl
         bool lgReady = _s.TvPlatform == "webos" && _s.TvKeyProtected != null;
         if (n > 0) { _tvDot.Foreground = Theme.Good; _tvState.Text = $"TV bağlı ({n} ekran)"; }
         else if (_launching) { _tvDot.Foreground = Theme.Warn; _tvState.Text = "TV uygulaması açılıyor…"; }
-        else { _tvDot.Foreground = Theme.Bad; _tvState.Text = lgReady ? "TV bağlı değil – 'TV'de Başlat' ya da test düğmesi" : "TV bağlı değil – TV uygulamasını açın"; }
+        else { _tvDot.Foreground = Theme.Bad; _tvState.Text = lgReady ? "TV bağlı değil – \"TV'de başlat\" ya da test düğmesi" : "TV bağlı değil – TV uygulamasını açın"; }
     }
 
     private bool _launching;
@@ -69,7 +69,7 @@ public sealed class TvSetupPanel : UserControl
         }
         if (Connected == 0)
         {
-            Write("✖ TV bağlı değil. TV'de Altyazı+ uygulamasını açın (LG'de 'TV'de Başlat'), sonra tekrar deneyin.");
+            Write("✖ TV bağlı değil. TV'de Altyazı+ uygulamasını açın (LG'de \"TV'de başlat\"), sonra tekrar deneyin.");
             return;
         }
         _sendTest?.Invoke();
@@ -110,7 +110,7 @@ public sealed class TvSetupPanel : UserControl
         var ipRow = new StackPanel { Orientation = Orientation.Horizontal };
         _ipBox.Text = _s.TvIp ?? "";
         ipRow.Children.Add(_ipBox);
-        var findBtn = Btn("Ağda Bul", async () => await DiscoverAsync());
+        var findBtn = Btn("Ağda bul", async () => await DiscoverAsync());
         ipRow.Children.Add(findBtn);
         lg.Children.Add(ipRow);
         lg.Children.Add(Note("Bulamazsa: TV'de Ayarlar → Genel → Ağ → (Kablolu/Wi-Fi) → Gelişmiş ayarlar altında IP adresi yazar."));
@@ -127,16 +127,16 @@ public sealed class TvSetupPanel : UserControl
         // 4–5. adım
         lg.Children.Add(Header("4) Kur ve başlat"));
         var actRow = new StackPanel { Orientation = Orientation.Horizontal };
-        var installBtn = Btn("TV'ye Kur", async () => await InstallAsync());
+        var installBtn = Btn("TV'ye kur", async () => await InstallAsync());
         actRow.Children.Add(installBtn);
         actRow.Children.Add(new TextBlock { Text = "PS5'in HDMI girişi:", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 6, 0) });
         for (int i = 1; i <= 4; i++) _hdmiCombo.Items.Add($"HDMI {i}");
         _hdmiCombo.SelectedIndex = Math.Clamp(_s.TvHdmi - 1, 0, 3);
         _hdmiCombo.SelectionChanged += (_, _) => { _s.TvHdmi = _hdmiCombo.SelectedIndex + 1; _saveSettings(); };
         actRow.Children.Add(_hdmiCombo);
-        var launchBtn = Btn("TV'de Başlat", async () => await LaunchAsync());
+        var launchBtn = Btn("TV'de başlat", async () => await LaunchAsync());
         actRow.Children.Add(launchBtn);
-        var extendBtn = Btn("Geliştirici Süresini Uzat", async () => await ExtendAsync());
+        var extendBtn = Btn("Geliştirici süresini uzat", async () => await ExtendAsync());
         actRow.Children.Add(extendBtn);
         lg.Children.Add(actRow);
 
@@ -170,7 +170,7 @@ public sealed class TvSetupPanel : UserControl
         rbAnd.Checked += (_, _) => ShowPlatform("android");
         (_s.TvPlatform == "tizen" ? rbSam : _s.TvPlatform == "android" ? rbAnd : rbLg).IsChecked = true;
 
-        root.Children.Add(Note("Çevirinin TV'deki yeri (orijinalin yerine / üstünde / altında) ve renkleri: ana penceredeki '✎ Altyazı Görünümü'."));
+        root.Children.Add(Note("Çevirinin TV'deki yeri (orijinalin yerine / üstünde / altında) ve renkleri: Ayarlar → Altyazı görünümü."));
         root.Children.Add(Note("TV kumandası (TV uygulamasında): Sol/Sağ = HDMI girişi • Yukarı/Aşağı = yazı boyutu • OK = bilgi • Geri = çıkış."));
 
         // Telefon / tarayıcı
@@ -247,7 +247,7 @@ public sealed class TvSetupPanel : UserControl
         }
         catch { /* jeton okunamazsa eski yöntemle (TV'de Developer Mode açılarak) uzatılır */ }
         _saveSettings();
-        Write($"✔ Eşleştirildi: {info}. Şimdi 'TV'ye Kur'a basın. (Key Server'ı artık kapatabilirsiniz; bir daha gerekmez.)");
+        Write($"✔ Eşleştirildi: {info}. Şimdi \"TV'ye kur\" düğmesine basın. (Key Server'ı artık kapatabilirsiniz; bir daha gerekmez.)");
         if (_s.TvDevTokenProtected != null) Write("✔ Geliştirici süresi bundan sonra program açıkken kendiliğinden yenilenecek (TV kapalı olsa bile).");
         Log.Success($"LG TV eşleştirildi: {ip} – {info}");
     }
@@ -266,7 +266,7 @@ public sealed class TvSetupPanel : UserControl
         var tv = RequireTv();
         var progress = new Progress<string>(Write);
         await tv.InstallAsync(progress, CancellationToken.None);
-        Write("✔ TV uygulaması kuruldu (TV'nin uygulama listesinde \"Altyazı+\"). Şimdi 'TV'de Başlat'.");
+        Write("✔ TV uygulaması kuruldu (TV'nin uygulama listesinde \"Altyazı+\"). Şimdi \"TV'de başlat\" düğmesine basın.");
         Log.Success("LG TV uygulaması kuruldu.");
     }
 
@@ -304,7 +304,7 @@ public sealed class TvSetupPanel : UserControl
         }
         if (!await LgWebOsTv.ResetDevSessionAsync(tok))
         {
-            Write("✖ LG oturumu bulunamadı: Developer Mode kapanmış olabilir. TV'de açın, Key Server'ı açın ve 'Bağlan'a basın.");
+            Write("✖ LG oturumu bulunamadı: Developer Mode kapanmış olabilir. TV'de açın, Key Server'ı açın ve \"Bağlan\" düğmesine basın.");
             return;
         }
         _s.TvLastExtend = DateTime.Now;
@@ -325,7 +325,7 @@ public sealed class TvSetupPanel : UserControl
             catch (Exception ex)
             {
                 Write("✖ " + ex.Message);
-                Log.Warn("TV modu: " + ex.Message);
+                Log.Warn("TV kurulumu: " + ex.Message);
             }
             finally
             {
@@ -348,12 +348,12 @@ public sealed class TvSetupPanel : UserControl
         new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 0) };
 }
 
-/// <summary>"📺 TV Modu" penceresi: TV kurulum panelini gösterir.</summary>
+/// <summary>"📺 TV kurulumu" penceresi: TV kurulum panelini gösterir.</summary>
 public sealed class TvModeWindow : PageWindow
 {
     public TvModeWindow(AppSettings settings, Func<SubtitleServer> ensureServer, Action saveSettings, Action? sendTest = null)
     {
-        Title = "TV Modu – Türkçe altyazıyı TV'de göster";
+        Title = "TV kurulumu – Türkçe altyazıyı TV'de göster";
         Width = 720;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;

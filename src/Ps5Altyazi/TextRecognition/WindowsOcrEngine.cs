@@ -74,11 +74,11 @@ public sealed class WindowsOcrEngine : ISubtitleOcr
             if (fallback != null)
             {
                 status = $"İngilizce OCR dil paketi YOK; yedek olarak {fallback.RecognizerLanguage.LanguageTag} kullanılıyor " +
-                         "(İngilizce metni okur ama doğruluk düşebilir). 'İngilizce OCR Paketini Kur' düğmesini kullanın.";
+                         "(İngilizce metni okur ama doğruluk düşebilir). \"İngilizce OCR paketini kur\" düğmesini kullanın.";
                 return new WindowsOcrEngine(fallback, false);
             }
 
-            status = "Windows OCR için yüklü dil yok. 'İngilizce OCR Paketini Kur' düğmesini kullanın.";
+            status = "Windows OCR için yüklü dil yok. \"İngilizce OCR paketini kur\" düğmesini kullanın.";
             return null;
         }
         catch (Exception ex)

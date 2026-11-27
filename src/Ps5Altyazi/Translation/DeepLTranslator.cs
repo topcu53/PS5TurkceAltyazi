@@ -171,7 +171,7 @@ public sealed class DeepLTranslator : ITranslator, IBatchTranslator, IWarmable
 
     private static TranslationException Error(int code, string body) => code switch
     {
-        401 or 403 => new("DeepL API anahtarı geçersiz (403). 'Çeviri Ayarları'ndan kontrol edin.", TranslationErrorKind.Auth, code),
+        401 or 403 => new("DeepL API anahtarı geçersiz (403). Ayarlar → Çeviri bölümünden kontrol edin.", TranslationErrorKind.Auth, code),
         456 => new("DeepL aylık ücretsiz kotası doldu (456).", TranslationErrorKind.Quota, code),
         429 => new("DeepL'e çok sık istek gönderildi (429).", TranslationErrorKind.Transient, code),
         >= 500 => new($"DeepL sunucusunda geçici hata ({code}).", TranslationErrorKind.Transient, code),

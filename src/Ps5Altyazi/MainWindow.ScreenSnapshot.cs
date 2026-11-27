@@ -66,7 +66,7 @@ public partial class MainWindow
         _screenOcr ??= WindowsOcrEngine.Create(out _);
         if (_screenOcr is not { } engine) return;
         var service = _translation;
-        if (service == null) { Log.Warn("Ekranı çevir: çeviri servisi yok (Çeviri Ayarları)."); return; }
+        if (service == null) { Log.Warn("Ekranı çevir: çeviri servisi yok (Ayarlar → Çeviri)."); return; }
 
         var cts = new CancellationTokenSource();
         _snapCts = cts;

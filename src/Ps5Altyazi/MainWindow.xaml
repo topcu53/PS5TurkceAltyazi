@@ -34,7 +34,7 @@
             <Border x:Name="NavBar" Grid.Column="1" Background="{StaticResource Card}" BorderBrush="{StaticResource Line}" BorderThickness="1" CornerRadius="22" Padding="3"
                     HorizontalAlignment="Center" Margin="16,0" WindowChrome.IsHitTestVisibleInChrome="True">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="NavHome" Style="{StaticResource NavTab}" GroupName="nav" Content="Ana Ekran" IsChecked="True" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavHome" Style="{StaticResource NavTab}" GroupName="nav" Content="Ana ekran" IsChecked="True" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavHistory" Style="{StaticResource NavTab}" GroupName="nav" Content="Geçmiş" Checked="Nav_Checked"/>
                     <RadioButton x:Name="NavSettings" Style="{StaticResource NavTab}" GroupName="nav" Content="Ayarlar" Checked="Nav_Checked"/>
                 </StackPanel>
@@ -123,7 +123,7 @@
                         <Button Content="✕ Alanı temizle" Click="ClearRegion_Click"/>
                         <TextBlock x:Name="RegionText" Foreground="{StaticResource TextDim}" FontSize="12" VerticalAlignment="Center"
                                    Margin="10,0,0,0" Text="Altyazı alanı seçilmedi" TextTrimming="CharacterEllipsis" MaxWidth="420"/>
-                        <Button x:Name="InstallOcrButton" Content="İngilizce OCR Paketini Kur" Click="InstallOcr_Click"
+                        <Button x:Name="InstallOcrButton" Content="İngilizce OCR paketini kur" Click="InstallOcr_Click"
                                 Visibility="Collapsed" FontWeight="Bold"/>
                         <TextBlock x:Name="SelectHint" VerticalAlignment="Center" Margin="10,0,0,0" Foreground="#FFB03B"
                                    Visibility="Collapsed" Text="Önizlemede altyazı alanını fareyle çizin. Vazgeçmek için Esc."/>
@@ -132,7 +132,7 @@
                     <!-- Canlı çeviri -->
                     <Border CornerRadius="20" Padding="22,16" Margin="0,14,0,0" Background="{StaticResource LiveCardBrush}" MaxWidth="820">
                         <StackPanel>
-                            <TextBlock Text="CANLI ÇEVİRİ" FontSize="11" FontWeight="Bold" Foreground="#E6FFFFFF"/>
+                            <TextBlock Text="Canlı çeviri" FontSize="11" FontWeight="Bold" Foreground="#E6FFFFFF"/>
                             <TextBlock x:Name="TurkishText" Text="—" FontSize="21" FontWeight="Bold" Foreground="White"
                                        TextWrapping="Wrap" Margin="0,6,0,0"/>
                             <TextBlock x:Name="PresenceText" Text="—" FontSize="13" Foreground="#DDFFFFFF" TextWrapping="Wrap" Margin="0,8,0,0"/>
@@ -295,11 +295,11 @@
                     <!-- Ayrıntılı durum -->
                     <Border Style="{StaticResource Panel}" Margin="0,12,0,0" Padding="18,14">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource Label}" Text="PS5 BAĞLANTISI" Margin="0,0,0,2"/>
+                            <TextBlock Style="{StaticResource Label}" Text="PS5 bağlantısı" Margin="0,0,0,2"/>
                             <TextBlock x:Name="RemotePlayStatus" Style="{StaticResource Value}" Text="Kontrol ediliyor…"/>
-                            <TextBlock Style="{StaticResource Label}" Text="OKUMA (OCR)"/>
+                            <TextBlock Style="{StaticResource Label}" Text="Okuma (OCR)"/>
                             <TextBlock x:Name="OcrStatusText" Style="{StaticResource Value}" FontSize="12" Text="Başlatılıyor…"/>
-                            <TextBlock Style="{StaticResource Label}" Text="ÇEVİRİ"/>
+                            <TextBlock Style="{StaticResource Label}" Text="Çeviri"/>
                             <TextBlock x:Name="TranslationStatusText" Style="{StaticResource Value}" FontSize="12" Text="Başlatılıyor…"/>
                         </StackPanel>
                     </Border>
@@ -307,7 +307,7 @@
                     <!-- Hızlı anahtarlar -->
                     <Border Style="{StaticResource Panel}" Margin="0,12,0,0" Padding="18,12">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource Label}" Text="HIZLI AYARLAR" Margin="0,0,0,6"/>
+                            <TextBlock Style="{StaticResource Label}" Text="Hızlı ayarlar" Margin="0,0,0,6"/>
                             <CheckBox x:Name="SubtitleWindowCheck" IsChecked="True" Content="Türkçe altyazı (F8)"
                                       Checked="SubtitleWindowCheck_Changed" Unchecked="SubtitleWindowCheck_Changed"/>
                             <CheckBox x:Name="OcrCheck" IsChecked="True" Content="Okuma" ToolTip="Altyazı alanındaki İngilizce yazıyı okur (OCR)"
@@ -375,7 +375,7 @@
                         <RadioButton x:Name="SetSub" Style="{StaticResource SideItem}" GroupName="set" Checked="SettingsNav_Checked">
                             <StackPanel Orientation="Horizontal">
                                 <Border Style="{StaticResource IconBox}" Background="#5A2F45"><TextBlock Text="Aa" FontSize="15" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center"><TextBlock Text="Altyazı Görünümü" FontSize="15" FontWeight="SemiBold"/><TextBlock Text="Yer, renk, yazı tipi" Foreground="{StaticResource TextDim}" FontSize="12"/></StackPanel>
+                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center"><TextBlock Text="Altyazı görünümü" FontSize="15" FontWeight="SemiBold"/><TextBlock Text="Yer, renk, yazı tipi" Foreground="{StaticResource TextDim}" FontSize="12"/></StackPanel>
                             </StackPanel>
                         </RadioButton>
                         <RadioButton x:Name="SetTr" Style="{StaticResource SideItem}" GroupName="set" Checked="SettingsNav_Checked">
@@ -423,14 +423,14 @@
                             <StackPanel>
                                 <TextBlock Text="PS5" FontSize="17" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Text="İkinci PSN hesabıyla giriş, PS5'i bulma ve 'Cihazı Bağla' koduyla eşleme. Bir kez yapılır."/>
+                                           Text="İkinci PSN hesabıyla giriş, PS5'i bulma ve &quot;Cihazı Bağla&quot; koduyla eşleme. Bir kez yapılır."/>
                                 <CheckBox x:Name="DirectCheck" Content="PS5'e doğrudan bağlan (PS Remote Play gerekmez)" Visibility="Collapsed" Margin="0,10,0,0"
                                           Checked="DirectCheck_Changed" Unchecked="DirectCheck_Changed"/>
                                 <Button x:Name="Ps5ConnectButton" Style="{StaticResource LinkRow}" Click="Ps5Connect_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🎮  PS5 Bağlantısını Düzenle"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🎮  PS5 bağlantısını düzenle"/></DockPanel>
                                 </Button>
                                 <Button Style="{StaticResource LinkRow}" Click="SetupWizard_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🧭  Kurulum Adımlarını Aç"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🧭  Kurulum adımlarını aç"/></DockPanel>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -438,7 +438,7 @@
 
                     <!-- Altyazı görünümü -->
                     <StackPanel x:Name="PageSub" Visibility="Collapsed">
-                        <TextBlock Text="Altyazı Görünümü" FontSize="24" FontWeight="Bold"/>
+                        <TextBlock Text="Altyazı görünümü" FontSize="24" FontWeight="Bold"/>
                         <TextBlock Text="Çevirinin TV'deki yeri, renkleri, zemini ve yazı tipi." Foreground="{StaticResource TextDim}" Margin="0,2,0,14"/>
                         <Border Style="{StaticResource Panel}">
                             <StackPanel>
@@ -451,7 +451,7 @@
                                     </Grid>
                                 </Border>
                                 <Button Style="{StaticResource LinkRow}" Click="SubtitleAppearance_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="✎  Altyazı Görünümünü Düzenle"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="✎  Altyazı görünümünü düzenle"/></DockPanel>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -460,7 +460,7 @@
                     <!-- Çeviri -->
                     <StackPanel x:Name="PageTr" Visibility="Collapsed">
                         <TextBlock Text="Çeviri" FontSize="24" FontWeight="Bold"/>
-                        <TextBlock Text="Servisler sırayla denenir: DeepL → Gemini → Azure → MyMemory." Foreground="{StaticResource TextDim}" Margin="0,2,0,14"/>
+                        <TextBlock Text="Servisler sırayla denenir: DeepL → Gemini → Azure → MyMemory. İnternet kesilse de bilgisayardaki model çeviriyi sürdürür." Foreground="{StaticResource TextDim}" Margin="0,2,0,14"/>
                         <Border Style="{StaticResource Panel}">
                             <StackPanel>
                                 <TextBlock Text="Hız ve kalite" FontSize="17" FontWeight="SemiBold"/>
@@ -476,7 +476,7 @@
                                 <TextBlock Text="Etkin servisler" FontSize="17" FontWeight="SemiBold"/>
                                 <TextBlock x:Name="TranslationSummaryText" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0" Text="—"/>
                                 <Button Style="{StaticResource LinkRow}" Click="TranslationSettings_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🌐  Çeviri Servislerini Düzenle"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🌐  Çeviri servislerini düzenle"/></DockPanel>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -490,9 +490,9 @@
                             <StackPanel>
                                 <TextBlock Text="TV uygulaması" FontSize="17" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,4,0,0"
-                                           Text="LG'de program uygulamayı kendisi kurar ve açar. Samsung ve Android TV için adımlar TV Kurulumu penceresinde."/>
+                                           Text="LG'de program, uygulamayı kendisi kurar ve açar. Samsung ve Android TV için adımlar TV kurulumu sayfasındadır."/>
                                 <Button Style="{StaticResource LinkRow}" Click="TvMode_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="📺  TV Kurulumu"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="📺  TV kurulumu"/></DockPanel>
                                 </Button>
                                 <Button Style="{StaticResource LinkRow}" Click="TestSubtitle_Click">
                                     <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🧪  TV'ye test altyazısı gönder"/></DockPanel>
@@ -509,7 +509,7 @@
                             <StackPanel>
                                 <TextBlock x:Name="ThemeNameText" Text="—" FontSize="17" FontWeight="SemiBold"/>
                                 <Button Style="{StaticResource LinkRow}" Click="ThemeSettings_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🎨  Temayı Değiştir"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="🎨  Temayı değiştir"/></DockPanel>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -518,11 +518,11 @@
                     <!-- Genel -->
                     <StackPanel x:Name="PageGeneral" Visibility="Collapsed">
                         <TextBlock Text="Genel" FontSize="24" FontWeight="Bold"/>
-                        <TextBlock Text="Başlangıç, okuma hızı, PC ekranında altyazı, güncelleme." Foreground="{StaticResource TextDim}" Margin="0,2,0,14"/>
+                        <TextBlock Text="Başlangıç, okuma hızı, bilgisayar ekranında altyazı, güncelleme." Foreground="{StaticResource TextDim}" Margin="0,2,0,14"/>
                         <Border Style="{StaticResource Panel}">
                             <StackPanel>
                                 <Button Style="{StaticResource LinkRow}" Margin="0" Click="GeneralSettings_Click">
-                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="⚙  Genel Ayarları Aç"/></DockPanel>
+                                    <DockPanel><TextBlock DockPanel.Dock="Right" Text="→"/><TextBlock Text="⚙  Genel ayarları aç"/></DockPanel>
                                 </Button>
                             </StackPanel>
                         </Border>
@@ -536,15 +536,15 @@
                             <StackPanel>
                                 <TextBlock Text="Eski yöntem: pencereden okuma" FontSize="15" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource TextDim}" TextWrapping="Wrap" Margin="0,2,0,6" FontSize="12"
-                                           Text="Yalnız 'PS5'e doğrudan bağlan' kapalıyken kullanılır."/>
+                                           Text="Yalnızca &quot;PS5'e doğrudan bağlan&quot; kapalıyken kullanılır."/>
                                 <WrapPanel x:Name="WindowSourcePanel">
                                     <ComboBox x:Name="WindowCombo" Width="340"/>
                                     <Button Content="⟳ Yenile" Click="Refresh_Click"/>
-                                    <Button Content="🔍 Remote Play'i Bul" Click="FindRemotePlay_Click"/>
-                                    <Button x:Name="LaunchRemotePlayButton" Content="▶ PS Remote Play'i Aç" Click="LaunchRemotePlay_Click"/>
+                                    <Button Content="🔍 Remote Play'i bul" Click="FindRemotePlay_Click"/>
+                                    <Button x:Name="LaunchRemotePlayButton" Content="▶ PS Remote Play'i aç" Click="LaunchRemotePlay_Click"/>
                                 </WrapPanel>
                                 <WrapPanel VerticalAlignment="Center" Margin="0,10,0,0">
-                                    <TextBlock Style="{StaticResource SectionTitle}" Text="YAKALAMA"/>
+                                    <TextBlock Style="{StaticResource SectionTitle}" Text="Yakalama"/>
                                     <ComboBox x:Name="MethodCombo" Width="250" SelectedIndex="0" SelectionChanged="Setting_Changed">
                                         <ComboBoxItem Content="Windows Graphics Capture (önerilen)"/>
                                         <ComboBoxItem Content="PrintWindow (yedek / teşhis)"/>
@@ -561,11 +561,11 @@
                                               Checked="Setting_Changed" Unchecked="Setting_Changed"/>
                                 </WrapPanel>
                                 <WrapPanel VerticalAlignment="Center" Margin="0,6,0,0">
-                                    <TextBlock Style="{StaticResource SectionTitle}" Text="ARAÇLAR"/>
-                                    <Button x:Name="VerifyButton" Content="✔ 10 sn Doğrulama Testi" Click="Verify_Click"/>
-                                    <Button Content="Kare Kaydet (F9)" Click="SavePng_Click"/>
-                                    <Button Content="Görüntü Dosyasıyla Test Et…" Click="TestImage_Click"/>
-                                    <Button Content="📁 Log / Görüntü Klasörü" Click="OpenFolder_Click"/>
+                                    <TextBlock Style="{StaticResource SectionTitle}" Text="Araçlar"/>
+                                    <Button x:Name="VerifyButton" Content="✔ 10 saniyelik doğrulama testi" Click="Verify_Click"/>
+                                    <Button Content="Kare kaydet (F9)" Click="SavePng_Click"/>
+                                    <Button Content="Görüntü dosyasıyla test et…" Click="TestImage_Click"/>
+                                    <Button Content="📁 Günlük / görüntü klasörü" Click="OpenFolder_Click"/>
                                 </WrapPanel>
                                 <Grid Margin="0,10,0,0">
                                     <Grid.ColumnDefinitions>
@@ -573,31 +573,31 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Margin="0,0,6,0">
-                                        <TextBlock Style="{StaticResource Label}" Margin="0" Text="ALTYAZI ALANI (CANLI)"/>
+                                        <TextBlock Style="{StaticResource Label}" Margin="0" Text="Altyazı alanı (canlı)"/>
                                         <Border Background="Black" Height="90" Margin="0,4,0,0" CornerRadius="8">
                                             <Image x:Name="RegionImage" Stretch="Uniform"/>
                                         </Border>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="6,0,0,0">
-                                        <TextBlock Style="{StaticResource Label}" Margin="0" Text="METİN MASKESİ (OCR'IN GÖRDÜĞÜ)"/>
+                                        <TextBlock Style="{StaticResource Label}" Margin="0" Text="Metin maskesi (OCR'ın gördüğü)"/>
                                         <Border Background="Black" Height="90" Margin="0,4,0,0" CornerRadius="8">
                                             <Image x:Name="MaskImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
                                         </Border>
                                     </StackPanel>
                                 </Grid>
-                                <TextBlock Style="{StaticResource Label}" Text="İNGİLİZCE METİN"/>
+                                <TextBlock Style="{StaticResource Label}" Text="İngilizce metin"/>
                                 <TextBlock x:Name="EnglishText" Style="{StaticResource Value}" FontSize="13" Text="—"/>
-                                <TextBlock Style="{StaticResource Label}" Text="OYUN ALANI / YÖNTEM"/>
+                                <TextBlock Style="{StaticResource Label}" Text="Oyun alanı / yöntem"/>
                                 <TextBlock x:Name="FrameSizeText" Style="{StaticResource Value}" FontSize="12" Text="—"/>
-                                <TextBlock Style="{StaticResource Label}" Text="FPS / İŞLEME SÜRESİ"/>
+                                <TextBlock Style="{StaticResource Label}" Text="FPS / işleme süresi"/>
                                 <TextBlock x:Name="FpsText" Style="{StaticResource Value}" FontSize="12" Text="—"/>
-                                <TextBlock Style="{StaticResource Label}" Text="PARLAKLIK / KONTRAST / HAREKET"/>
+                                <TextBlock Style="{StaticResource Label}" Text="Parlaklık / kontrast / hareket"/>
                                 <TextBlock x:Name="LumaText" Style="{StaticResource Value}" FontSize="12" Text="—"/>
-                                <TextBlock Style="{StaticResource Label}" Text="İSTATİSTİK (BU OTURUM)"/>
+                                <TextBlock Style="{StaticResource Label}" Text="İstatistik (bu oturum)"/>
                                 <TextBlock x:Name="StatsText" Style="{StaticResource Value}" FontSize="12" Text="—"/>
-                                <TextBlock Style="{StaticResource Label}" Text="DOĞRULAMA TESTİ"/>
+                                <TextBlock Style="{StaticResource Label}" Text="Doğrulama testi"/>
                                 <TextBlock x:Name="VerifyText" Style="{StaticResource Value}" FontSize="12"
-                                           Text="Oyunda hareketli bir sahnedeyken '10 sn Doğrulama Testi'ne basın."/>
+                                           Text="Oyunda hareketli bir sahnedeyken &quot;10 saniyelik doğrulama testi&quot; düğmesine basın."/>
                                 <!-- Oyun içi yazı çevirisi şimdilik rafta (kod duruyor, arayüzde gizli) -->
                                 <CheckBox x:Name="ScreenCheck" Visibility="Collapsed" Checked="ScreenCheck_Changed" Unchecked="ScreenCheck_Changed"/>
                             </StackPanel>

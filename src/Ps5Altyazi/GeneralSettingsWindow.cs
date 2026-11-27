@@ -29,7 +29,7 @@ public sealed class GeneralSettingsWindow : PageWindow
         var direct = Check("PS5'e doğrudan bağlan (PS Remote Play uygulaması gerekmez)", s.DirectConnect && ps5Ready, v => s.DirectConnect = v);
         direct.IsEnabled = ps5Ready;
         root.Children.Add(direct);
-        if (!ps5Ready) root.Children.Add(Note("PS5 bağlantısı henüz kurulmadı: '🧭 Kurulum' ya da '🎮 PS5 Bağlantısı'."));
+        if (!ps5Ready) root.Children.Add(Note("PS5 bağlantısı henüz kurulmadı: Ayarlar → Bağlantı → \"Kurulum adımlarını aç\"."));
 
         root.Children.Add(Head("Okuma"));
         var fpsRow = new StackPanel { Orientation = Orientation.Horizontal };
@@ -45,11 +45,11 @@ public sealed class GeneralSettingsWindow : PageWindow
         root.Children.Add(Head("TV"));
         root.Children.Add(Check("TV / telefon yayını açık", s.TvServerEnabled, v => s.TvServerEnabled = v));
         root.Children.Add(Check("Çeviri başlayınca TV uygulamasını da aç (LG)", s.TvAutoLaunch, v => s.TvAutoLaunch = v));
-        root.Children.Add(Note("Çevirinin TV'deki yeri ve renkleri: '✎ Altyazı Görünümü'."));
+        root.Children.Add(Note("Çevirinin TV'deki yeri ve renkleri: Ayarlar → Altyazı görünümü."));
 
         root.Children.Add(Head("Bu bilgisayar"));
         root.Children.Add(Check("Türkçe altyazıyı bu bilgisayarın ekranında da göster (oyun görüntüsünün üstünde)", s.PcSubtitleVisible, v => s.PcSubtitleVisible = v));
-        root.Children.Add(Note("Kapalıyken altyazı yalnız TV'de / telefonda görünür; ana penceredeki 'Canlı çeviri' kartı yine gösterir."));
+        root.Children.Add(Note("Kapalıyken altyazı yalnız TV'de / telefonda görünür; ana penceredeki \"Canlı çeviri\" kartı yine gösterir."));
 
         root.Children.Add(Head("Diğer"));
         var row = new WrapPanel();

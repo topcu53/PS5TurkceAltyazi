@@ -38,7 +38,7 @@ public partial class MainWindow
                 Notify("Kurulum tamam – ▶ Başlat (F6)");
             }
             else if (!_settings.SetupCompleted)
-                Log.Info("Kurulum şimdilik geçildi; Ayarlar → Bağlantı → 'Kurulum Adımlarını Aç' ile devam edebilirsiniz.");
+                Log.Info("Kurulum şimdilik geçildi; Ayarlar → Bağlantı → \"Kurulum adımlarını aç\" ile devam edebilirsiniz.");
             if (wasRunning && UseDirect()) StartCapture();
         };
         SetupPage.Content = panel;

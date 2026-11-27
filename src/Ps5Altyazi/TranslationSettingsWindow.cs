@@ -31,7 +31,7 @@ public sealed class TranslationSettingsWindow : PageWindow
     private readonly CheckBox _myMemoryCheck = new() { Content = "MyMemory yedeğini kullan (anahtarsız, ücretsiz)", Margin = new Thickness(0, 4, 0, 0) };
     private readonly TextBox _myMemoryEmail = new() { Margin = new Thickness(0, 4, 0, 0), Padding = new Thickness(4) };
     private readonly TextBlock _status = new() { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 12, 0, 0), FontSize = 13 };
-    private readonly Button _saveBtn = new() { Content = "Kaydet ve Test Et", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
+    private readonly Button _saveBtn = new() { Content = "Kaydet ve dene", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0), IsDefault = true };
 
     private readonly string? _curDeepL, _curAzure, _curGemini;
 
@@ -45,7 +45,7 @@ public sealed class TranslationSettingsWindow : PageWindow
         _curDeepL = deepLKey;
         _curGemini = geminiKey;
         _curAzure = azureKey;
-        Title = "Çeviri Ayarları";
+        Title = "Çeviri ayarları";
         Width = 600;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;
@@ -113,15 +113,15 @@ public sealed class TranslationSettingsWindow : PageWindow
         _saveBtn.Click += async (_, _) => await SaveAndTestAsync();
         buttons.Children.Add(_saveBtn);
 
-        var clearDeepL = new Button { Content = "DeepL Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
+        var clearDeepL = new Button { Content = "DeepL anahtarını sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
         clearDeepL.Click += (_, _) => { _deepLBox.Clear(); _clearDeepL = true; SetStatus("DeepL anahtarı kaydedince silinecek.", Theme.Warn); };
         buttons.Children.Add(clearDeepL);
 
-        var clearAzure = new Button { Content = "Azure Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
+        var clearAzure = new Button { Content = "Azure anahtarını sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
         clearAzure.Click += (_, _) => { _azureBox.Clear(); _clearAzure = true; SetStatus("Azure anahtarı kaydedince silinecek.", Theme.Warn); };
         buttons.Children.Add(clearAzure);
 
-        var clearGemini = new Button { Content = "Gemini Anahtarını Sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
+        var clearGemini = new Button { Content = "Gemini anahtarını sil", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
         clearGemini.Click += (_, _) => { _geminiBox.Clear(); _clearGemini = true; SetStatus("Gemini anahtarı kaydedince silinecek.", Theme.Warn); };
         buttons.Children.Add(clearGemini);
 
@@ -218,7 +218,7 @@ public sealed class TranslationSettingsWindow : PageWindow
         }
         else report.AppendLine("– MyMemory: kapalı");
 
-        report.Append(anyOk ? "Ayarlar kaydedildi; pencereyi kapatabilirsiniz." : "Hiçbir servis çalışmadı; anahtarları ve interneti kontrol edin.");
+        report.Append(anyOk ? "Ayarlar kaydedildi; bu sayfayı kapatabilirsiniz." : "Hiçbir servis çalışmadı; anahtarları ve interneti kontrol edin.");
         SetStatus(report.ToString(), anyOk ? Theme.Good : Theme.Bad);
         _saveBtn.IsEnabled = true;
     }
@@ -230,7 +230,7 @@ public sealed class TranslationSettingsWindow : PageWindow
         var state = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6) };
         var bar = new ProgressBar { Height = 8, Minimum = 0, Maximum = 100, Visibility = Visibility.Collapsed, Margin = new Thickness(0, 0, 0, 6) };
         var row = new StackPanel { Orientation = Orientation.Horizontal };
-        var dl = new Button { Content = "⬇ Modeli İndir", Padding = new Thickness(14, 5, 14, 5), Margin = new Thickness(0, 0, 8, 0) };
+        var dl = new Button { Content = "⬇ Modeli indir", Padding = new Thickness(14, 5, 14, 5), Margin = new Thickness(0, 0, 8, 0) };
         var test = new Button { Content = "Dene", Padding = new Thickness(14, 5, 14, 5) };
         if (TryFindResource("Primary") is Style ps) dl.Style = ps;
         row.Children.Add(dl);

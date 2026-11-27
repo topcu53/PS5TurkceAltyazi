@@ -127,11 +127,11 @@ public sealed class FrameAnalyzer
 
     public static string Describe(FrameVerdict v) => v switch
     {
-        FrameVerdict.Gecerli => "GEÇERLİ GÖRÜNTÜ",
-        FrameVerdict.Siyah => "SİYAH EKRAN",
-        FrameVerdict.TekRenk => "BOŞ / TEK RENK KARE",
-        FrameVerdict.Donmus => "GÖRÜNTÜ DEĞİŞMİYOR",
-        FrameVerdict.CokKucuk => "PENCERE ÇOK KÜÇÜK",
+        FrameVerdict.Gecerli => "Görüntü geliyor",
+        FrameVerdict.Siyah => "Siyah ekran",
+        FrameVerdict.TekRenk => "Boş / tek renk kare",
+        FrameVerdict.Donmus => "Görüntü sabit",
+        FrameVerdict.CokKucuk => "Pencere çok küçük",
         _ => v.ToString()
     };
 }

@@ -25,7 +25,7 @@ namespace Ps5Altyazi.Tv;
 public sealed class LgWebOsTv
 {
     public const string AppId = "tr.ps5altyazi.tv";
-    public const string AppVersion = "1.0.17";
+    public const string AppVersion = "1.0.18";
     private const string LunaSend = "/usr/bin/luna-send-pub";
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(6) };
 
@@ -65,7 +65,7 @@ public sealed class LgWebOsTv
         catch (HttpRequestException)
         {
             throw new InvalidOperationException(
-                "TV'ye ulaşılamadı. TV'de Developer Mode uygulamasını açıp 'Key Server'ı AÇIN ve uygulamayı ekranda bırakın; " +
+                "TV'ye ulaşılamadı. TV'de Developer Mode uygulamasını açıp \"Key Server\"ı açın ve uygulamayı ekranda bırakın; " +
                 "TV ile bilgisayarın aynı ağda olduğunu ve IP adresini kontrol edin.");
         }
     }
@@ -121,7 +121,7 @@ public sealed class LgWebOsTv
             if (string.IsNullOrEmpty(known)) { SavePinnedHostKey?.Invoke(Ip, fp); e.CanTrust = true; }
             else e.CanTrust = string.Equals(known, fp, StringComparison.Ordinal);
             if (!e.CanTrust)
-                Logging.Log.Warn($"TV'nin SSH anahtarı değişmiş ({Ip}). TV sıfırlandıysa TV Modu'nda 'Bağlan' ile yeniden eşleştirin; " +
+                Logging.Log.Warn($"TV'nin SSH anahtarı değişmiş ({Ip}). TV sıfırlandıysa Ayarlar → TV → TV kurulumu sayfasında \"Bağlan\" ile yeniden eşleştirin; " +
                                  "değilse ağınızda TV gibi davranan başka bir cihaz olabilir – bağlantı reddedildi.");
         };
         return client;
@@ -225,7 +225,7 @@ public sealed class LgWebOsTv
         if (!res.Contains("\"returnValue\":true") && !res.Contains("\"returnValue\": true"))
         {
             if (res.Contains("not found", StringComparison.OrdinalIgnoreCase) || res.Contains("NOT_EXIST", StringComparison.OrdinalIgnoreCase))
-                throw new InvalidOperationException("TV uygulaması kurulu değil. Önce 'TV'ye Kur'a basın.");
+                throw new InvalidOperationException("TV uygulaması kurulu değil. Önce \"TV'ye kur\" düğmesine basın.");
             throw new InvalidOperationException("TV uygulaması başlatılamadı: " + Trim(res));
         }
     });

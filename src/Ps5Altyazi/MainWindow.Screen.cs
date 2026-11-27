@@ -133,7 +133,7 @@ public partial class MainWindow
         _settings.ScreenTranslateEnabled = false; // oyun içi yazı çevirisi şimdilik rafta
         ScreenCheck.IsChecked = _settings.ScreenTranslateEnabled;
         if (_settings.ScreenTranslateEnabled)
-            Log.Info("Oyun içi yazıları sürekli çevirme AÇIK (deneysel). Ekranı bir kez çevirmek için F7.");
+            Log.Info("Oyun içi yazıları sürekli çevirme açık (deneysel). Ekranı bir kez çevirmek için F7.");
         if (!EnglishWords.IsLoaded) Log.Warn("İngilizce kelime listesi yüklenemedi; OCR düzeltmesi yapılmayacak.");
     }
 
@@ -155,7 +155,7 @@ public partial class MainWindow
         if (!on) ClearScreenItems();
         _thumbAtScan = null;
         Notify(on ? "Oyun içi yazılar sürekli çevriliyor (deneysel)" : "Sürekli çeviri kapalı – ekranı çevirmek için F7");
-        Log.Info($"[{source}] Oyun içi yazı çevirisi {(on ? "AÇILDI (tuş ipuçları, görev / ipucu yazıları; menüler hariç)" : "KAPATILDI")}.");
+        Log.Info($"[{source}] Oyun içi yazı çevirisi {(on ? "açıldı (tuş ipuçları, görev / ipucu yazıları; menüler hariç)" : "kapatıldı")}.");
         if (on && _ocr is not WindowsOcrEngine)
             Log.Warn("Oyun içi yazı çevirisi için Windows OCR (İngilizce paket) gerekir.");
         if (on && _capture == null)

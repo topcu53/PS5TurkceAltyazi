@@ -129,7 +129,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         _describeFont = describeFont;
         _s = settings;
         _sub = sub;
-        Title = "Altyazı Görünümü";
+        Title = "Altyazı görünümü";
         Width = 560;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;
@@ -160,7 +160,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         shadow.Checked += (_, _) => { _s.SubtitleShadow = true; Changed?.Invoke(); };
         shadow.Unchecked += (_, _) => { _s.SubtitleShadow = false; Changed?.Invoke(); };
         root.Children.Add(shadow);
-        root.Children.Add(new TextBlock { Text = "Değişiklikler TV'de ve (açıksa) PC'de anında uygulanır. 'Örnek Altyazı Göster' ile deneyin.",
+        root.Children.Add(new TextBlock { Text = "Değişiklikler TV'de ve (açıksa) PC'de anında uygulanır. \"Örnek altyazı göster\" ile deneyin.",
                                           Foreground = Theme.Dim, TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new Thickness(0, 4, 0, 0) });
 
         var topmost = new CheckBox { Content = "Her zaman üstte", IsChecked = _s.SubtitleTopmost, Margin = new Thickness(0, 10, 0, 0) };
@@ -197,7 +197,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         root.Children.Add(_editCheck);
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 14, 0, 0) };
-        var sample = new Button { Content = "Örnek Altyazı Göster", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
+        var sample = new Button { Content = "Örnek altyazı göster", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
         sample.Click += (_, _) =>
         {
             _sampleOn = !_sampleOn;
@@ -206,7 +206,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         };
         buttons.Children.Add(sample);
 
-        var reset = new Button { Content = "Varsayılan Konum", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
+        var reset = new Button { Content = "Varsayılan konum", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
         reset.Click += (_, _) => _sub.ResetPosition();
         buttons.Children.Add(reset);
 
@@ -218,7 +218,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         root.Children.Add(new TextBlock
         {
             Text = "İpucu: Altyazı penceresi normalde fare tıklamalarını geçirir, Remote Play'i engellemez. " +
-                   "Taşımak için 'Konumu düzenle'yi işaretleyin. Altyazı bitince pencere kendiliğinden gizlenir.",
+                   "Taşımak için \"Konumu düzenle\" kutusunu işaretleyin. Altyazı bitince pencere kendiliğinden gizlenir.",
             TextWrapping = TextWrapping.Wrap,
             Foreground = Theme.Dim,
             Margin = new Thickness(0, 12, 0, 0)
@@ -245,7 +245,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
     private FrameworkElement FontSection()
     {
         var panel = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
-        panel.Children.Add(new TextBlock { Text = "YAZI TİPİ", FontWeight = FontWeights.Bold, FontSize = 11, Foreground = Theme.Accent });
+        panel.Children.Add(new TextBlock { Text = "Yazı tipi", FontWeight = FontWeights.Bold, FontSize = 11, Foreground = Theme.Accent });
         panel.Children.Add(new TextBlock
         {
             Text = "Listeden seçin ya da kendi .ttf / .otf dosyanızı ekleyin. Boyut her zaman oyundaki altyazıdan ölçülür.",
@@ -261,7 +261,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         var row = new WrapPanel { Margin = new Thickness(0, 6, 0, 0) };
         var add = new Button { Content = "＋ Yazı tipi ekle (.ttf / .otf)…" };
         add.Click += (_, _) => AddFontFile();
-        _removeBtn = new Button { Content = "🗑 Eklenen fontu kaldır", ToolTip = "Yalnızca sizin eklediğiniz fontlar kaldırılabilir" };
+        _removeBtn = new Button { Content = "🗑 Eklenen yazı tipini kaldır", ToolTip = "Yalnızca sizin eklediğiniz yazı tipleri kaldırılabilir" };
         _removeBtn.Click += (_, _) => RemoveSelectedFont();
         row.Children.Add(add);
         row.Children.Add(_removeBtn);
@@ -335,7 +335,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
             var missing = "çğıİöşüÇĞÖŞÜ".Where(c => !gt.CharacterToGlyphMap.ContainsKey(c)).ToArray();
             return missing.Length == 0
                 ? "\n✔ Türkçe harflerin hepsi var."
-                : $"\n⚠ Bu fontta şu Türkçe harfler yok: {string.Join(" ", missing)} – bunlar benzer bir yedek yazı tipiyle gösterilir.";
+                : $"\n⚠ Bu yazı tipinde şu Türkçe harfler yok: {string.Join(" ", missing)} – bunlar benzer bir yedek yazı tipiyle gösterilir.";
         }
         catch { return ""; }
     }

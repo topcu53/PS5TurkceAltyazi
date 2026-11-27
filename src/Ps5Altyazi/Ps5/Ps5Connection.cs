@@ -224,7 +224,7 @@ public sealed class Ps5Connection : IDisposable
                             streaming = true;
                             result.Streamed = true;
                             lastFrame = Environment.TickCount64;
-                            Set(Ps5State.Streaming, $"BAĞLI (doğrudan) – {_pairing.Name}");
+                            Set(Ps5State.Streaming, $"Bağlı (doğrudan) – {_pairing.Name}");
                         }
                         else if (ev == "pin")
                         {
@@ -233,8 +233,8 @@ public sealed class Ps5Connection : IDisposable
                             else
                             {
                                 result.Fatal = incorrect
-                                    ? "PS5 giriş şifresini kabul etmedi. PS5 Bağlantısı penceresinde doğru 4 haneli şifreyi girin."
-                                    : "PS5 bu hesap için 4 haneli giriş şifresi istiyor. PS5 Bağlantısı penceresine şifreyi girin.";
+                                    ? "PS5 giriş şifresini kabul etmedi. Ayarlar → Bağlantı → PS5 bağlantısı sayfasında doğru 4 haneli şifreyi girin."
+                                    : "PS5 bu hesap için 4 haneli giriş şifresi istiyor. Ayarlar → Bağlantı → PS5 bağlantısı sayfasında şifreyi girin.";
                                 Send(p, "stop");
                             }
                         }
@@ -275,7 +275,7 @@ public sealed class Ps5Connection : IDisposable
         {
             if (all.Contains("80108b09", StringComparison.OrdinalIgnoreCase) || all.Contains("80108b02", StringComparison.OrdinalIgnoreCase)
                 || all.Contains("80108b26", StringComparison.OrdinalIgnoreCase) || quitReason == 13)
-                result.Fatal = "PS5 bu bilgisayarın eşlemesini kabul etmedi. PS5 Bağlantısı penceresinden yeniden eşleyin.";
+                result.Fatal = "PS5 bu bilgisayarın eşlemesini kabul etmedi. Ayarlar → Bağlantı → PS5 bağlantısı sayfasından yeniden eşleyin.";
             else if (quitReason == 5)
                 result.Problem = "PS5'teki Uzaktan Oynatma hizmeti hata verdi (devam ederse PS5'i tamamen kapatıp açın)";
             else if (quitReason == 4 || all.Contains("80108b10", StringComparison.OrdinalIgnoreCase))

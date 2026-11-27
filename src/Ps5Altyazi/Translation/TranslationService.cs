@@ -206,7 +206,7 @@ public sealed class TranslationService : IDisposable
         }
 
         if (_slots.Count == 0)
-            throw new TranslationException("Hiç çeviri servisi ayarlanmadı. 'Çeviri Ayarları…' düğmesini kullanın.", TranslationErrorKind.Auth);
+            throw new TranslationException("Hiç çeviri servisi ayarlanmadı. Ayarlar → Çeviri bölümünü kullanın.", TranslationErrorKind.Auth);
 
         var errors = new List<string>();
         for (int si = 0; si < _slots.Count; si++)

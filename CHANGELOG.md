@@ -1,5 +1,24 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.31 – Tek pencere, düzgün yerleşim, Türkçe yazım
+
+- **Ayar sayfaları artık ayrı pencere değil:** Altyazı görünümü, Çeviri, PS5 bağlantısı, TV kurulumu, Tema, Genel
+  ayarlar, oyun seçimi ve PSN girişi ana pencerenin içinde, tıklanan yerde açılır (Ayarlar'da soldaki menü yerinde
+  kalır). Üstte "← Geri" ve sayfanın adı durur; Esc ya da başka bir sekmeye geçmek de sayfayı kapatır.
+- **Kurulum tek pencerede:** ilk açılışta ana sayfa hiç görünmeden önce kurulum adımları gelir; adımlardaki çeviri
+  anahtarları ve PSN girişi de aynı pencerede açılır. "PS5 kurulmadı, kurulum açılsın mı?" sorusu yerine kurulum
+  doğrudan açılır; "Altyazı+ güncel" bilgisi de pencere yerine bildirim olarak gösterilir.
+- **Pencere küçülüp büyüyünce kaymayan yerleşim:**
+  - PS5 / TV / Okuma / Çeviri kutucukları genişliğe göre yazıyı kaydırır; "↻ Yeniden bağlan" düğmesi kutunun
+    altında tam genişlikte durur (önceden kesiliyordu).
+  - Oyun kutusunda uzun oyun adı "…" ile kısalır, "Değiştir" düğmesi yerinden oynamaz.
+  - Dar pencerede büyük düğmeler iki satıra geçer, sağdaki durum sütunu daralır, üst banttaki durum yazısı kısalır.
+- **Türkçe yazım:** düğme, başlık ve durum yazıları Türkçe büyük / küçük harf kurallarına göre düzenlendi
+  ("Altyazı Görünümünü Düzenle" → "Altyazı görünümünü düzenle", "GÖRÜNTÜ DEĞİŞMİYOR" → "Görüntü sabit" vb.).
+  Artık olmayan düğme adlarına yapılan göndermeler güncellendi ("Elle Seç", "Otomatik Bul", "Çeviri Ayarları…",
+  "TV Modu" → bugünkü adları); "log" yerine "günlük".
+- TV uygulaması 1.0.18 (kurulum ekranındaki yazılar güncellendi).
+
 ## v2.30 – "Yeniden bağlan" düğmeleri
 
 - Ana sayfadaki PS5 ve TV kartlarında, bağlantı yokken ya da koptuğunda "↻ Yeniden bağlan" düğmesi çıkar.

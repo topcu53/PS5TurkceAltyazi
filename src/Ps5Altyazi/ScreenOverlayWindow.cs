@@ -24,7 +24,7 @@ public sealed class ScreenOverlayWindow : Window
 
     public ScreenOverlayWindow()
     {
-        Title = "Altyazı+ – Oyun İçi Yazılar";
+        Title = "Altyazı+ – Oyun içi yazılar";
         WindowStyle = WindowStyle.None;
         AllowsTransparency = true;
         Background = Brushes.Transparent;

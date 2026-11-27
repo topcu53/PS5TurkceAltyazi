@@ -72,7 +72,7 @@ public sealed class SetupWizardPanel : UserControl
         // Sol: adımlar + ilerleme
         var left = new DockPanel();
         var leftTop = new StackPanel();
-        leftTop.Children.Add(new TextBlock { Text = "İLK KURULUM", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Theme.Accent, Margin = new Thickness(0, 0, 0, 4) });
+        leftTop.Children.Add(new TextBlock { Text = "İlk kurulum", FontSize = 11, FontWeight = FontWeights.Bold, Foreground = Theme.Accent, Margin = new Thickness(0, 0, 0, 4) });
         leftTop.Children.Add(new TextBlock { Text = "Her şeyi birlikte hazırlayalım", FontSize = 16, FontWeight = FontWeights.SemiBold, Foreground = Theme.Text, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 22) });
         leftTop.Children.Add(_steps);
         DockPanel.SetDock(leftTop, Dock.Top);
@@ -202,13 +202,13 @@ public sealed class SetupWizardPanel : UserControl
     private UIElement BuildWelcome()
     {
         var p = new StackPanel();
-        p.Children.Add(Para("Altyazı+'a hoş geldin! Birkaç adımda her şeyi hazırlayalım; sonra ana sayfada ▶ Başlat'a basman yeterli olacak.", 15));
+        p.Children.Add(Para("Altyazı+'a hoş geldin! Birkaç adımda her şeyi hazırlayalım; sonra ana sayfada \"▶ Çeviriyi başlat\" düğmesine basman yeterli olacak.", 15));
         p.Children.Add(Head("Nasıl çalışır?"));
         p.Children.Add(Para("• PS5 HDMI kablosuyla TV'ye bağlı kalır; sen oyunu her zamanki gibi TV'de, kendi kolunla oynarsın.\n" +
                             "• Bu bilgisayar PS5'e ağ üzerinden, arka planda bağlanır (PS Remote Play uygulaması gerekmez, ekranda pencere açılmaz).\n" +
                             "• Oyundaki İngilizce altyazıyı okur, Türkçeye çevirir ve TV'deki Altyazı+ uygulamasına (ya da PC ekranına) gönderir."));
         p.Children.Add(Head("Hazırlaman gerekenler"));
-        p.Children.Add(Para("• Ücretsiz İKİNCİ bir PSN hesabı, PS5'e kullanıcı olarak eklenmiş (kendi hesabınla bağlanılırsa kolun oyundan kopar).\n" +
+        p.Children.Add(Para("• Ücretsiz ikinci bir PSN hesabı, PS5'e kullanıcı olarak eklenmiş (kendi hesabınla bağlanılırsa kolun oyundan kopar).\n" +
                             "• PS5, bilgisayar ve TV aynı ev ağında.\n" +
                             "• (İsteğe bağlı) Ücretsiz DeepL ya da Google Gemini anahtarı – daha iyi çeviri için.\n" +
                             "• (İsteğe bağlı) LG / Samsung / Android TV – altyazıyı TV'de görmek için."));
@@ -253,9 +253,9 @@ public sealed class SetupWizardPanel : UserControl
                               warnInsteadOfBad: true));
         p.Children.Add(Head("Şimdi ne yapacağım?"));
         p.Children.Add(Para("1) Oyunu aç ve oyunun ayarlarından İngilizce altyazıyı aç.\n" +
-                            "2) Ana sayfada ▶ Başlat'a (ya da F6'ya) bas: program PS5'e bağlanır, durum yeşile döner.\n" +
-                            "3) Biri konuşurken '✦ Otomatik Bul' ile altyazının yerini bir kez tanıt.\n" +
-                            "Bu kurulumu Ayarlar → Bağlantı → '🧭 Kurulum Adımlarını Aç' ile istediğin zaman yeniden açabilirsin."));
+                            "2) Ana sayfada \"▶ Çeviriyi başlat\" düğmesine (ya da F6'ya) bas: program PS5'e bağlanır, durum yeşile döner.\n" +
+                            "3) Biri konuşurken \"✦ Altyazıyı bul\" ile altyazının yerini bir kez tanıt.\n" +
+                            "Bu kurulumu Ayarlar → Bağlantı → \"🧭 Kurulum adımlarını aç\" ile istediğin zaman yeniden açabilirsin."));
         return Wrap(p);
     }
 

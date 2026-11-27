@@ -14,7 +14,7 @@ using Ps5Altyazi.Settings;
 namespace Ps5Altyazi;
 
 /// <summary>
-/// PS5 bağlantısı kurulum paneli (hem kurulum sihirbazında hem "PS5 Bağlantısı" penceresinde): PS Remote Play uygulaması olmadan PS5'e doğrudan bağlanmak için bir kerelik kurulum
+/// PS5 bağlantısı kurulum paneli (hem kurulum sihirbazında hem "PS5 bağlantısı" penceresinde): PS Remote Play uygulaması olmadan PS5'e doğrudan bağlanmak için bir kerelik kurulum
 /// (ikinci PSN hesabıyla giriş → PS5'i bul → PS5'teki "Cihazı Bağla" koduyla eşleştir → dene).
 /// </summary>
 public sealed class Ps5SetupPanel : UserControl
@@ -48,7 +48,7 @@ public sealed class Ps5SetupPanel : UserControl
             "bağlanır (PS5 dinlenmedeyse uyandırır), ekranda pencere açılmaz. Siz oyunu TV'de, kendi kolunuzla oynarsınız."));
         root.Children.Add(Header("Gerekenler"));
         root.Children.Add(Note(
-            "• Ücretsiz İKİNCİ bir PSN hesabı, PS5'e kullanıcı olarak eklenmiş. (Bağlantı sizin hesabınızla kurulursa PS5 kolunuzu " +
+            "• Ücretsiz ikinci bir PSN hesabı, PS5'e kullanıcı olarak eklenmiş. (Bağlantı sizin hesabınızla kurulursa PS5 kolunuzu " +
             "oyundan koparır; ikinci hesap yalnız Altyazı+ içindir.)\n" +
             "• PS5'te ikinci kullanıcıda: Ayarlar › Sistem › Uzaktan Oynatma › \"Uzaktan Oynatmayı Etkinleştir\" açık.\n" +
             "• Önerilen: Ayarlar › Sistem › Güç Tasarrufu › Dinlenme Modunda Kullanılabilen Özellikler › \"İnternete Bağlı Kal\" ve " +
@@ -81,7 +81,7 @@ public sealed class Ps5SetupPanel : UserControl
         root.Children.Add(r2);
 
         root.Children.Add(Header("3) Eşleştir"));
-        root.Children.Add(Note("PS5'te İKİNCİ kullanıcıya geçin → Ayarlar › Sistem › Uzaktan Oynatma › Cihazı Bağla. Ekrandaki 8 haneli " +
+        root.Children.Add(Note("PS5'te ikinci kullanıcıya geçin → Ayarlar › Sistem › Uzaktan Oynatma › Cihazı Bağla. Ekrandaki 8 haneli " +
                                "kodu yazıp \"Eşleştir\"e basın. Eşleşince PS5'te kendi hesabınıza dönebilirsiniz."));
         var r3 = Row();
         r3.Children.Add(new TextBlock { Text = "8 haneli kod:", VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 6, 0) });
@@ -134,7 +134,7 @@ public sealed class Ps5SetupPanel : UserControl
         var (url, error) = await PsnLoginWindow.RunAsync();
         if (url == null)
         {
-            Write(error != null ? $"✖ Giriş tamamlanmadı ({error}). Tekrar deneyin ya da 'Tarayıcıda aç'." : "Giriş yapılmadı.");
+            Write(error != null ? $"✖ Giriş tamamlanmadı ({error}). Tekrar deneyin ya da \"Tarayıcıda aç\" düğmesini kullanın." : "Giriş yapılmadı.");
             return;
         }
         await FinishLoginAsync(url);
@@ -145,8 +145,8 @@ public sealed class Ps5SetupPanel : UserControl
         try { Process.Start(new ProcessStartInfo(PsnLogin.LoginUrl) { UseShellExecute = true }); }
         catch (Exception ex) { Write("✖ Tarayıcı açılamadı: " + ex.Message); return; }
         _pastePanel.Visibility = Visibility.Visible;
-        Write("Tarayıcıda İKİNCİ hesabınızla giriş yapın. Giriş bitince sayfa boş ya da hata gibi görünebilir; adres çubuğundaki " +
-              "adresin TAMAMINI (remoteplay.dl.playstation.net/... ile başlar) kopyalayıp aşağıya yapıştırın.");
+        Write("Tarayıcıda ikinci hesabınızla giriş yapın. Giriş bitince sayfa boş ya da hata gibi görünebilir; adres çubuğundaki " +
+              "adresin tamamını (remoteplay.dl.playstation.net/... ile başlar) kopyalayıp aşağıya yapıştırın.");
     }
 
     private async Task FinishLoginAsync(string redirectUrl)
@@ -189,7 +189,7 @@ public sealed class Ps5SetupPanel : UserControl
         if (host.Length == 0 && _consoleCombo.SelectedItem is Ps5Console c) { host = c.Host; mac = c.Id; }
         if (host.Length == 0) { Write("✖ Önce 2. adımda PS5'i bulun ya da IP adresini yazın."); return; }
         string pin = new string(_pinBox.Text.Where(char.IsDigit).ToArray());
-        if (pin.Length != 8) { Write("✖ Kod 8 rakam olmalı (PS5'in 'Cihazı Bağla' ekranındaki)."); return; }
+        if (pin.Length != 8) { Write("✖ Kod 8 rakam olmalı (PS5'in \"Cihazı Bağla\" ekranındaki)."); return; }
 
         Write($"PS5 ile eşleştiriliyor ({host})… (30 sn kadar sürebilir)");
         try
@@ -202,7 +202,7 @@ public sealed class Ps5SetupPanel : UserControl
             _directCheck.IsChecked = true;
             _save();
             _pinBox.Clear();
-            Write($"✔ Eşleşti: {p.Name} ({p.Host}). Şimdi 'Bağlantıyı dene'. PS5'te kendi hesabınıza dönebilirsiniz.");
+            Write($"✔ Eşleşti: {p.Name} ({p.Host}). Şimdi \"Bağlantıyı dene\" düğmesine basın. PS5'te kendi hesabınıza dönebilirsiniz.");
             Log.Success($"PS5 eşleşti: {p.Name} ({p.Host}).");
         }
         catch (InvalidOperationException ex)
@@ -233,7 +233,7 @@ public sealed class Ps5SetupPanel : UserControl
         if (done == frame.Task)
         {
             var (w, h) = frame.Task.Result;
-            Write($"✔ Görüntü geliyor ({w}×{h}). Kurulum tamam: pencereyi kapatıp F6 ile çeviriyi başlatın.");
+            Write($"✔ Görüntü geliyor ({w}×{h}). Kurulum tamam: bu sayfayı kapatıp F6 ile çeviriyi başlatın.");
             Log.Success($"PS5 doğrudan bağlantı denemesi başarılı ({w}×{h}).");
         }
         else if (done == gaveUp.Task) Write("✖ " + gaveUp.Task.Result);
@@ -306,12 +306,12 @@ public sealed class Ps5SetupPanel : UserControl
         new() { Text = text, TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(0, 2, 0, 0) };
 }
 
-/// <summary>"🎮 PS5 Bağlantısı" penceresi: kurulum panelini gösterir.</summary>
+/// <summary>"🎮 PS5 bağlantısı" penceresi: kurulum panelini gösterir.</summary>
 public sealed class Ps5ConnectWindow : PageWindow
 {
     public Ps5ConnectWindow(AppSettings settings, Action saveSettings)
     {
-        Title = "PS5 Bağlantısı – PS Remote Play uygulaması olmadan";
+        Title = "PS5 bağlantısı – PS Remote Play uygulaması olmadan";
         Width = 760;
         SizeToContent = SizeToContent.Height;
         ResizeMode = ResizeMode.NoResize;

@@ -39,11 +39,11 @@ public static class ThemePalettes
 
     public static readonly IReadOnlyList<Palette> All = new[]
     {
-        new Palette("mor", "Gece Moru", "Siyaha yakın zemin, yumuşak mor vurgular (önerilen)", Purple,
+        new Palette("mor", "Gece moru", "Siyaha yakın zemin, yumuşak mor vurgular (önerilen)", Purple,
             "#0E0C13", "#09080D", "#ECE8F3", "#A097B3", "#6EE7A8", "#B49CF2", "#F6C177", "#F38BA8", "#2A2535"),
         new Palette("grafit", "Grafit", "Nötr koyu gri, sakin yeşil vurgular", Graphite,
             "#0F1012", "#0A0B0C", "#E6E7EA", "#9A9EA6", "#7DDCB0", "#8FD3BA", "#E9C46A", "#EF8A8A", "#2A2D32"),
-        new Palette("mavi", "Okyanus Mavisi", "Önceki tema: lacivert zemin, mavi vurgular", new Dictionary<string, string>(),
+        new Palette("mavi", "Okyanus mavisi", "Önceki tema: lacivert zemin, mavi vurgular", new Dictionary<string, string>(),
             "#0B0F1A", "#070A12", "#E8EDF7", "#8B97AD", "#4ADE80", "#33C6FF", "#FFB03B", "#FF6B6B", "#222C42"),
     };
 

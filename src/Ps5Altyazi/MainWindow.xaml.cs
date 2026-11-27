@@ -178,9 +178,9 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.30 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.31 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
-        Log.Info($"Log dosyası: {Log.CurrentFile}");
+        Log.Info($"Günlük dosyası: {Log.CurrentFile}");
 
         _settings = AppSettings.Load();
         MigrateSettings();
@@ -193,7 +193,7 @@ public partial class MainWindow : Window
         if (saved != null)
             Log.Success($"Kayıtlı altyazı alanı yüklendi ({_settings.SubtitleRegionSource ?? "?"}, {_settings.SubtitleRegionUpdated:dd.MM.yyyy HH:mm}): {saved}");
         else
-            Log.Info("Kayıtlı altyazı alanı yok. 'Elle Seç' veya 'Otomatik Bul' ile belirleyin.");
+            Log.Info("Kayıtlı altyazı alanı yok. \"▭ Alanı fareyle seç\" ya da \"✦ Altyazıyı bul\" ile belirleyin.");
         _settingsReady = true;
         UpdateRegionText();
 
@@ -238,7 +238,7 @@ public partial class MainWindow : Window
         }
         else if (!_directReady)
         {
-            Log.Info("PS5 bağlantısı henüz kurulmadı. Üstteki '🧭 Kurulum' ile bir kez kurun.");
+            Log.Info("PS5 bağlantısı henüz kurulmadı. Ayarlar → Bağlantı → \"Kurulum adımlarını aç\" ile bir kez kurun.");
             if (!Ps5.Ps5Helper.Available) Log.Warn("PS5 bağlantı yardımcısı (ps5-baglanti.exe) bu sürümde yok.");
         }
         else if (rp != null)
@@ -252,7 +252,7 @@ public partial class MainWindow : Window
         else
         {
             SetText(RemotePlayStatus, "Eski yöntem seçili: PS Remote Play penceresi bekleniyor", Orange);
-            Log.Info("Görüntü kaynağı eski yöntem (PS Remote Play penceresi). Remote Play'siz çalışmak için KAYNAK'ta 'Doğrudan bağlan'ı açın.");
+            Log.Info("Görüntü kaynağı eski yöntem (PS Remote Play penceresi). Remote Play'siz çalışmak için Ayarlar → Genel → \"PS5'e doğrudan bağlan\" seçeneğini açın.");
         }
 
         _timer.Start();
@@ -279,8 +279,8 @@ public partial class MainWindow : Window
         SaveSettings();
         if (ReferenceEquals(sender, CropCheck))
             Log.Info(_cropToGame
-                ? "Oyun alanı kırpma AÇIK: başlık çubuğu ve siyah bantlar atılıyor."
-                : "Oyun alanı kırpma KAPALI: pencerenin tamamı kullanılıyor.");
+                ? "Oyun alanı kırpma açık: başlık çubuğu ve siyah bantlar atılıyor."
+                : "Oyun alanı kırpma kapalı: pencerenin tamamı kullanılıyor.");
         else if (_capture != null)
             Log.Info("Yöntem / FPS değişikliği yakalama yeniden başlatıldığında uygulanır.");
     }
@@ -328,7 +328,7 @@ public partial class MainWindow : Window
         if (rp == null)
         {
             Log.Warn("PS Remote Play penceresi bulunamadı. Uygulamanın açık ve PS5'e bağlı olduğundan emin olun.");
-            SetText(RemotePlayStatus, "BULUNAMADI", Red);
+            SetText(RemotePlayStatus, "Bulunamadı", Red);
             return;
         }
         SelectWindow(rp.Handle);
@@ -344,7 +344,7 @@ public partial class MainWindow : Window
         if (UseDirect()) { StartDirectCapture(); return; }
         if (!_directReady)
         {
-            Log.Warn("PS5 bağlantısı kurulmadı. Üstteki '🧭 Kurulum' ile bir kez kurun.");
+            Log.Warn("PS5 bağlantısı kurulmadı. Ayarlar → Bağlantı → \"Kurulum adımlarını aç\" ile bir kez kurun.");
             OfferPs5Setup();
             if (UseDirect() && _capture == null) StartDirectCapture();
             return;
@@ -393,7 +393,7 @@ public partial class MainWindow : Window
             src.FrameArrived -= OnFrame;
             src.Dispose();
             Log.Error($"Yakalama başlatılamadı ({src.Name}): {ex.GetType().Name}: {ex.Message}");
-            SetText(CaptureStatus, "BAŞLATILAMADI – ayrıntı logda", Red);
+            SetText(CaptureStatus, "Başlatılamadı – ayrıntı günlükte", Red);
             return;
         }
 
@@ -585,7 +585,7 @@ public partial class MainWindow : Window
                 _fpsStart = DateTime.Now;
             }
 
-            SetText(CaptureStatus, "ÇALIŞIYOR – kareler alınıyor", Green);
+            SetText(CaptureStatus, "Çalışıyor – kareler alınıyor", Green);
             if (_lastVerdict != a.Verdict)
             {
                 LogVerdictChange(a);
@@ -722,14 +722,14 @@ public partial class MainWindow : Window
         switch (a.Verdict)
         {
             case FrameVerdict.Gecerli:
-                Log.Info($"Görüntü durumu: GEÇERLİ {stats}");
+                Log.Info($"Görüntü durumu: geçerli {stats}");
                 break;
             case FrameVerdict.Siyah:
-                Log.Warn($"Görüntü durumu: SİYAH EKRAN {stats}. Olası nedenler: Remote Play bağlantısı yok/kopuk, " +
+                Log.Warn($"Görüntü durumu: siyah ekran {stats}. Olası nedenler: Remote Play bağlantısı yok/kopuk, " +
                          "pencere küçültülmüş, PS5 korumalı içerik gösteriyor veya pencere koruması.");
                 break;
             case FrameVerdict.TekRenk:
-                Log.Warn($"Görüntü durumu: BOŞ / TEK RENK KARE {stats}.");
+                Log.Warn($"Görüntü durumu: boş / tek renk kare {stats}.");
                 break;
             case FrameVerdict.Donmus:
                 // Oyunda durmak normaldir; altyazı okumak için sabit görüntü de geçerlidir.
@@ -865,7 +865,7 @@ public partial class MainWindow : Window
     {
         if (_region is not { } h)
         {
-            SetText(RegionText, "Seçilmedi – 'Elle Seç' veya 'Otomatik Bul'", Orange);
+            SetText(RegionText, "Seçilmedi – \"Alanı fareyle seç\" ya da \"Altyazıyı bul\"", Orange);
             return;
         }
         string px = _last != null ? $"\n{h.Rect.ToPixels(_last.Game.Width, _last.Game.Height)} px" : "";
@@ -1327,7 +1327,7 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             Log.Error($"Çeviri önbelleği açılamadı: {ex.Message}");
-            SetText(TranslationStatusText, "Önbellek açılamadı – ayrıntı logda", Red);
+            SetText(TranslationStatusText, "Önbellek açılamadı – ayrıntı günlükte", Red);
             return;
         }
 
@@ -1393,7 +1393,7 @@ public partial class MainWindow : Window
         _translation.SetEngines(engines, _settings.EngineCooldowns);
         if (engines.Count == 0)
         {
-            Log.Warn("Hiç çeviri servisi yok. 'Çeviri Ayarları…' düğmesinden DeepL anahtarınızı girin.");
+            Log.Warn("Hiç çeviri servisi yok. Ayarlar → Çeviri bölümünden DeepL anahtarınızı girin.");
         }
         else
         {
@@ -1461,7 +1461,7 @@ public partial class MainWindow : Window
         if (_translation == null) return;
         if (_translation.Slots.Count == 0)
         {
-            SetText(TranslationStatusText, "Servis yok – 'Çeviri Ayarları…'", Orange);
+            SetText(TranslationStatusText, "Servis yok – Ayarlar → Çeviri", Orange);
             return;
         }
         var active = _translation.ActiveSlot;
@@ -1697,7 +1697,7 @@ public partial class MainWindow : Window
             {
                 _offlineHintShown = true;
                 Log.Warn("İnternet çeviri servisleri şu an kullanılamıyor. Çevirinin hiç durmaması için: Ayarlar → Çeviri → " +
-                         "'5) Bilgisayarda çeviri' → '⬇ Modeli İndir' (bir kez, ~530 MB; ekran kartı gerekmez).");
+                         "\"5) Bilgisayarda çeviri\" → \"⬇ Modeli indir\" (bir kez, ~530 MB; ekran kartı gerekmez).");
                 Notify("Çeviri durdu – Ayarlar → Çeviri → Bilgisayarda çeviri modelini indirin");
             }
         }
@@ -1771,7 +1771,7 @@ public partial class MainWindow : Window
             _userStopped = true;
             StopCapture($"Kullanıcı durdurdu ({source}).");
             Notify("Çeviri durduruldu (F6)");
-            Log.Info($"[{source}] Çeviri sistemi DURDURULDU.");
+            Log.Info($"[{source}] Çeviri sistemi durduruldu.");
             return;
         }
 
@@ -1790,11 +1790,11 @@ public partial class MainWindow : Window
             string warn = _region == null ? " – altyazı alanı seçilmedi!" : _translation?.ActiveSlot == null ? " – çeviri servisi yok!" : "";
             Notify("Çeviri başladı (F6)" + warn);
             if (_settings.TvServerEnabled && _settings.TvAutoLaunch && _settings.TvPlatform == "webos" && _settings.TvKeyProtected != null) _ = AutoLaunchTvAsync();
-            Log.Success($"[{source}] Çeviri sistemi BAŞLATILDI{warn}.");
+            Log.Success($"[{source}] Çeviri sistemi başlatıldı{warn}.");
         }
         else
         {
-            Notify(_directReady ? "Başlatılamadı (F6) – ayrıntı logda" : "PS5 bağlantısı kurulmadı – '🎮 PS5 Bağlantısı'");
+            Notify(_directReady ? "Başlatılamadı (F6) – ayrıntı günlükte" : "PS5 bağlantısı kurulmadı – Ayarlar → Bağlantı");
             Log.Warn($"[{source}] Başlatılamadı.");
         }
     }
@@ -1805,7 +1805,7 @@ public partial class MainWindow : Window
         bool on = SubtitleWindowCheck.IsChecked != true;
         SubtitleWindowCheck.IsChecked = on; // olay işleyicisi ayarı kaydeder ve uygular
         Notify(on ? "Türkçe altyazı açık (F8)" : "Türkçe altyazı gizlendi (F8)");
-        Log.Info($"[F8] Türkçe altyazı {(on ? "AÇILDI" : "GİZLENDİ")}.");
+        Log.Info($"[F8] Türkçe altyazı {(on ? "açıldı" : "gizlendi")}.");
     }
 
     private static string? FindRemotePlayExe()
@@ -2067,7 +2067,7 @@ public partial class MainWindow : Window
             }
             else
                 Log.Warn("LG geliştirici modu oturumu bulunamadı: süre dolmuş ya da LG oturumu kapatmış olabilir. " +
-                         "TV'de Developer Mode uygulamasını açıp kontrol edin; kapandıysa açın, Key Server'ı açın ve TV Modu'nda 'Bağlan'a basın (bir kereliğine).");
+                         "TV'de Developer Mode uygulamasını açıp kontrol edin; kapandıysa açın, Key Server'ı açın ve Ayarlar → TV → TV kurulumu sayfasında \"Bağlan\" düğmesine basın (bir kereliğine).");
         }
         catch (Exception ex)
         {
@@ -2128,7 +2128,7 @@ public partial class MainWindow : Window
                            ex.Message.Contains("Permission denied", StringComparison.OrdinalIgnoreCase);
             Log.Warn(keyGone
                 ? "TV uygulaması açılamadı: TV'nin geliştirici anahtarı değişmiş (Developer Mode kapanıp yeniden açılmış). " +
-                  "Bir kereliğine: TV'de Developer Mode → Key Server'ı açın, TV Modu'nda yeni Passphrase ile 'Bağlan' → 'TV'ye Kur'."
+                  "Bir kereliğine: TV'de Developer Mode → Key Server'ı açın, Ayarlar → TV → TV kurulumu sayfasında yeni Passphrase ile \"Bağlan\" → \"TV'ye kur\"."
                 : $"TV uygulaması otomatik açılamadı: {ex.Message} (TV kapalı veya geliştirici modu süresi dolmuş olabilir.)");
         }
     }
@@ -2258,7 +2258,7 @@ public partial class MainWindow : Window
                 }
                 else
                 {
-                    Log.Info("Kayıtlı bir alan zaten var; değiştirmek için 'Otomatik Bul'a basın.");
+                    Log.Info("Kayıtlı bir alan zaten var; değiştirmek için \"✦ Altyazıyı bul\" düğmesine basın.");
                 }
             }
             else
@@ -2310,7 +2310,7 @@ public partial class MainWindow : Window
             }
             else if (NativeMethods.IsIconic(_target.Handle))
             {
-                SetText(RemotePlayStatus, "SİMGE DURUMUNDA – pencereyi geri açın", Orange);
+                SetText(RemotePlayStatus, "Simge durumunda – pencereyi geri açın", Orange);
                 if (!_minimizedWarned)
                 {
                     Log.Warn("Remote Play penceresi simge durumuna küçültüldü; küçültülmüş pencereden görüntü alınamaz.");
@@ -2321,7 +2321,7 @@ public partial class MainWindow : Window
             {
                 _minimizedWarned = false;
                 SetText(RemotePlayStatus,
-                    _target.IsRemotePlay ? $"BAĞLI – {_target.Title}" : $"Test penceresi: {_target.Title}",
+                    _target.IsRemotePlay ? $"Bağlı – {_target.Title}" : $"Test penceresi: {_target.Title}",
                     _target.IsRemotePlay ? Green : Orange);
             }
         }
@@ -2331,7 +2331,7 @@ public partial class MainWindow : Window
             var rp = WindowFinder.FindRemotePlay();
             if (rp == null)
             {
-                SetText(RemotePlayStatus, "BULUNAMADI – PS Remote Play açık değil", Red);
+                SetText(RemotePlayStatus, "Bulunamadı – PS Remote Play açık değil", Red);
             }
             else
             {
@@ -2351,7 +2351,7 @@ public partial class MainWindow : Window
             DateTime reference = _lastFrameTime == DateTime.MinValue ? _captureStart : _lastFrameTime;
             if (now - reference > TimeSpan.FromSeconds(3))
             {
-                SetText(CaptureStatus, "KARE GELMİYOR", Red);
+                SetText(CaptureStatus, "Kare gelmiyor", Red);
                 if (!_noFrameWarned)
                 {
                     Log.Warn("3 saniyedir yeni kare gelmiyor. Pencere küçültülmüş olabilir, içerik değişmiyor olabilir " +
@@ -2457,27 +2457,27 @@ public partial class MainWindow : Window
         Brush color;
         if (_vTotal == 0)
         {
-            title = "BAŞARISIZ – hiç kare alınamadı";
+            title = "Başarısız – hiç kare alınamadı";
             color = Red;
-            Log.Error("AŞAMA 1 DOĞRULAMA: BAŞARISIZ – 10 sn içinde hiç kare alınamadı.");
+            Log.Error("Doğrulama testi: başarısız – 10 saniye içinde hiç kare alınamadı.");
         }
         else if (validRatio >= 0.8 && motionSeen && _vTotal >= 10)
         {
-            title = "BAŞARILI – gerçek, hareketli görüntü yakalandı";
+            title = "Başarılı – gerçek, hareketli görüntü yakalandı";
             color = Green;
-            Log.Success($"AŞAMA 1 DOĞRULAMA: BAŞARILI – {breakdown}");
+            Log.Success($"Doğrulama testi: başarılı – {breakdown}");
         }
         else if (validRatio >= 0.8)
         {
-            title = "KISMEN – görüntü geçerli ama hareket görülmedi";
+            title = "Kısmen – görüntü geçerli ama hareket görülmedi";
             color = Orange;
-            Log.Warn($"AŞAMA 1 DOĞRULAMA: KISMEN – hareket algılanmadı. {breakdown}");
+            Log.Warn($"Doğrulama testi: kısmen – hareket algılanmadı. {breakdown}");
         }
         else
         {
-            title = "BAŞARISIZ – kareler siyah / boş / sabit";
+            title = "Başarısız – kareler siyah / boş / sabit";
             color = Red;
-            Log.Error($"AŞAMA 1 DOĞRULAMA: BAŞARISIZ – {breakdown}");
+            Log.Error($"Doğrulama testi: başarısız – {breakdown}");
         }
 
         SetText(VerifyText, $"{title}\n{breakdown}" + (png != null ? $"\nKare: {png}" : ""), color);

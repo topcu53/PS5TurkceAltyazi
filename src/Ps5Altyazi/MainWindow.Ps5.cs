@@ -36,7 +36,7 @@ public partial class MainWindow
             SetText(RemotePlayStatus, $"PS5'e doğrudan bağlantı hazır – {p?.Name} ({p?.Host})", Neutral);
         }
         else if (!_directReady)
-            SetText(RemotePlayStatus, "PS5 bağlantısı kurulmadı – '🎮 PS5 Bağlantısı'", Orange);
+            SetText(RemotePlayStatus, "PS5 bağlantısı kurulmadı – Ayarlar → Bağlantı", Orange);
     }
 
     /// <summary>PS5 bağlantısı kurulmamışken başlatılmak istendi: kurulum sihirbazı açılır.</summary>
@@ -66,7 +66,7 @@ public partial class MainWindow
     {
         // PS5 aynı anda tek bağlantı kabul eder: ayarlar ve "Bağlantıyı dene" için çalışan bağlantı kapatılır.
         bool wasRunning = DirectRunning;
-        if (wasRunning) StopCapture("PS5 Bağlantısı penceresi açıldı.");
+        if (wasRunning) StopCapture("PS5 bağlantısı sayfası açıldı.");
         await Pages.ShowAsync(new Ps5ConnectWindow(_settings, SaveSettings));
         UpdateSourceUi();
         if (UseDirect() && (wasRunning || (_capture == null && !_userStopped && _settings.AutoStart)))
@@ -83,7 +83,7 @@ public partial class MainWindow
         byte[]? account = Ps5Store.AccountId(_settings);
         if (pairing == null || account == null)
         {
-            Log.Warn("PS5 bağlantısı kurulmamış. '🎮 PS5 Bağlantısı' ile kurun.");
+            Log.Warn("PS5 bağlantısı kurulmamış. Ayarlar → Bağlantı bölümünden kurun.");
             return;
         }
 
@@ -117,7 +117,7 @@ public partial class MainWindow
             if (!ReferenceEquals(_capture, src)) return;
             Log.Warn("PS5 bağlantısı durdu: " + reason);
             StopCapture(null);
-            SetText(RemotePlayStatus, "Bağlantı durdu – ayrıntı logda", Red);
+            SetText(RemotePlayStatus, "Bağlantı durdu – ayrıntı günlükte", Red);
             Notify("PS5 bağlantısı durdu: " + reason);
         });
 
@@ -128,7 +128,7 @@ public partial class MainWindow
             src.FrameArrived -= OnFrame;
             src.Dispose();
             Log.Error($"PS5'e doğrudan bağlantı başlatılamadı: {ex.Message}");
-            SetText(CaptureStatus, "BAŞLATILAMADI – ayrıntı logda", Red);
+            SetText(CaptureStatus, "Başlatılamadı – ayrıntı günlükte", Red);
             return;
         }
 

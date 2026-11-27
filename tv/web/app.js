@@ -475,7 +475,7 @@
   function hideSetup() { setupMode = false; panel.style.display = 'none'; }
   function drawSetup() {
     var html = '<h1>Altyazı+</h1>' +
-      'PC programında <b>TV Modu → TV\'de Başlat</b>\'a basın.<br>Ya da PC\'nin IP adresini buraya girin:' +
+      'Bilgisayardaki programda <b>Ayarlar → TV → TV kurulumu → "TV\'de başlat"</b> düğmesine basın.<br>Ya da bilgisayarın IP adresini buraya girin:' +
       '<div class="ip" style="margin-top:18px">';
     for (var i = 0; i < 4; i++) html += '<span class="' + (i === ipSel ? 'sel' : '') + '">' + ipParts[i] + '</span>' + (i < 3 ? '.' : '');
     html += '</div><div class="hint">Sol/Sağ: bölüm seç • Yukarı/Aşağı: değiştir • Rakam tuşları: yaz • OK: bağlan<br>' +
@@ -547,7 +547,7 @@
   };
   // Android: TV uygulama içinde HDMI göstermiyor → katman modunu öner
   window.ps5trNoHdmi = function () {
-    notice('Bu TV uygulama içinde HDMI göstermiyor. MAVİ tuş: katman modu (altyazı TV\'nin HDMI ekranının üstünde)', 8000);
+    notice('Bu TV uygulama içinde HDMI göstermiyor. Mavi tuş: katman modu (altyazı TV\'nin HDMI ekranının üstünde)', 8000);
   };
   window.ps5trKey = function (name) {
     if (name === 'menu') { if (setupMode) hideSetup(); else showSetup(); }

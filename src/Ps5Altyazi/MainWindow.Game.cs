@@ -62,7 +62,7 @@ public partial class MainWindow
         else if (_settings.SubtitleRegion != null)
         {
             p.Region = _settings.SubtitleRegion; // ilk kez: şimdiki alanla başlar
-            Log.Info($"\"{name}\" için kayıtlı altyazı alanı yok; şimdiki alan kullanılıyor. Tutmazsa '✦ Altyazıyı Bul'.");
+            Log.Info($"\"{name}\" için kayıtlı altyazı alanı yok; şimdiki alan kullanılıyor. Tutmazsa \"✦ Altyazıyı bul\" düğmesine basın.");
         }
         OnFontSettingChanged(true);
         SaveSettings();

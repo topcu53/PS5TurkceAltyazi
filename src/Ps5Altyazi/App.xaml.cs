@@ -31,7 +31,7 @@ public partial class App : Application
     {
         Log.Error($"Beklenmeyen arayüz hatası: {e.Exception}");
         MessageBox.Show(
-            $"Beklenmeyen bir hata oluştu:\n\n{e.Exception.Message}\n\nAyrıntılar log dosyasında:\n{Log.CurrentFile}",
+            $"Beklenmeyen bir hata oluştu:\n\n{e.Exception.Message}\n\nAyrıntılar günlük dosyasında:\n{Log.CurrentFile}",
             "Altyazı+ – Hata", MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;
     }
