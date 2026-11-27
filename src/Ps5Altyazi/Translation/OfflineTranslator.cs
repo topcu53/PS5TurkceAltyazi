@@ -131,6 +131,38 @@ public sealed class OfflineTranslator : ITranslator, IDisposable
         finally { Busy.Release(); }
     }
 
+    /// <summary>
+    /// Elle hız testi (ayarlar ekranı): işlemci ve ekran kartı ayrı ayrı ölçülür (yükleme, ilk çeviri, ortalama, P50/P95,
+    /// CPU %, RAM). Test sırasında açık model kapatılır, çeviriler birkaç saniye bekler. Otomatik modda kazanan cihaz
+    /// hemen kullanılmaya başlar; diğer modlarda seçili cihaz yeniden açılır.
+    /// </summary>
+    public static async Task<OfflineEngine.Result> BenchmarkAsync()
+    {
+        var cfg = Config;
+        await Busy.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            MarianOnnx? old;
+            lock (Gate) { old = _shared; _shared = null; _loading = null; }
+            old?.Dispose();
+            var r = await Task.Run(() => OfflineEngine.Open(ModelDir, OfflineMode.Auto, cfg.GpuAvailable, cfg.GpuIndex, cfg.Threads,
+                cfg.PhysicalCores, cpuFallback: true, benchmark: true, m => Event?.Invoke(m, false))).ConfigureAwait(false);
+            if (r.Cpu != null) LastCpuBenchmark = r.Cpu;
+            if (r.Gpu != null) LastGpuBenchmark = r.Gpu;
+            bool keep = r.Engine != null && (cfg.Mode == OfflineMode.Auto ||
+                                             (cfg.Mode == OfflineMode.CpuOnly) == (r.Engine.Device == MarianDevice.Cpu));
+            if (keep)
+            {
+                lock (Gate) { _shared = r.Engine; _loading = Task.FromResult(r.Engine!); }
+                Status = r.Message;
+            }
+            else r.Engine?.Dispose(); // seçili cihaz bir sonraki çeviride yeniden açılır
+            Event?.Invoke("💻 Hız testi: " + r.Message, r.IsError);
+            return r;
+        }
+        finally { Busy.Release(); }
+    }
+
     /// <summary>Yalnız testler için: "gpu-run" → ekran kartındaki ilk çeviride bellek hatası taklidi.</summary>
     public static string? FaultInjection { get; set; }
 

@@ -1360,7 +1360,7 @@ public partial class MainWindow : Window
         if (OfflineTranslator.IsInstalled)
         {
             engines.Add(new OfflineTranslator());
-            _ = OfflineTranslator.Preload();
+            ConfigureOffline(); // işlemci / ekran kartı seçimi + arka planda açılış
         }
 
         // Hız / kalite modu: sıra ve yedeğin ne zaman devreye gireceği
@@ -1429,10 +1429,10 @@ public partial class MainWindow : Window
                     await OfflineTranslator.DownloadAsync(prog, CancellationToken.None);
                     OfflineStatus = "💻 Model yükleniyor…";
                     UpdateTranslationStatus();
+                    ApplyTranslators(checkUsage: false); // cihaz seçimi + açılış
                     var load = OfflineTranslator.Preload();
-                    if (load != null) await load;
+                    if (load != null) { try { await load; } catch (Exception lex) { Log.Warn("💻 " + lex.Message); } }
                     OfflineStatus = null;
-                    ApplyTranslators(checkUsage: false);
                     RefreshSettingsTexts();
                     Log.Success("💻 Bilgisayarda çeviri hazır: internet servisleri dursa da çeviri devam edecek.");
                     Notify("Bilgisayarda çeviri hazır – çeviri artık durmaz");
@@ -1504,9 +1504,16 @@ public partial class MainWindow : Window
     private void TranslationSettings_Click(object sender, RoutedEventArgs e)
     {
         var dlg = new TranslationSettingsWindow(_deepLKey, _azureKey, _settings.AzureRegion, _settings.MyMemoryEnabled, _settings.MyMemoryEmail,
-            _geminiKey, _settings.GeminiModel)
+            _geminiKey, _settings.GeminiModel, _settings)
         {
             Owner = this
+        };
+        dlg.OfflineDeviceChanged += () =>
+        {
+            SaveSettings();
+            Log.Info($"Bilgisayarda çeviri cihazı: {(_settings.OfflineDevice switch { "cpu" => "yalnız işlemci", "gpu" => "yalnız ekran kartı", _ => "otomatik" })}" +
+                     $"{(_settings.OfflineThreads > 0 ? $", {_settings.OfflineThreads} iş parçacığı" : "")}{(_settings.OfflineCpuFallback ? "" : ", işlemciye dönüş kapalı")}.");
+            ApplyTranslators(checkUsage: false);
         };
         dlg.OfflineModelReady += () => { ApplyTranslators(checkUsage: false); Log.Success("Bilgisayarda çeviri hazır: internet servisleri dursa da çeviri devam edecek."); };
         dlg.ShowDialog();

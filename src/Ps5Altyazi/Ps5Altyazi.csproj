@@ -32,7 +32,8 @@
     <!-- PSN girişi: Sony'nin kendi giriş sayfası program içinde açılır (şifre programa gelmez) -->
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
     <!-- Çevrimdışı (internetsiz, ekran kartısız) çeviri: Marian ONNX modeli işlemcide (Translation/MarianOnnx.cs) -->
-    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
+    <!-- DirectML paketi işlemci (CPU) yürütücüsünü de içerir: tek paket hem işlemcide hem tüm DirectX 12 ekran kartlarında çalışır -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.20.1" />
   </ItemGroup>
 
   <!-- PS5 bağlantı yardımcısı (ayrı program; tools/ps5-baglanti). CI'da (build.yml, "ps5-baglanti" işi) derlenip

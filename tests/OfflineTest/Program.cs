@@ -44,8 +44,16 @@ Check("Model yok → çökmeden hata", miss.Engine == null && miss.IsError, miss
 
 if (windows)
 {
-    // 6) Ekran kartında (DirectML; CI'da WARP yazılım aygıtı) gerçek çeviri, FP16
-    var g = OfflineEngine.Open(dir, OfflineMode.GpuOnly, gpuAvailable: true, 0, 0, 0, cpuFallback: false, benchmark: true);
+    // 6) Ekran kartında (DirectML) gerçek çeviri, FP16. CI makinesinde gerçek kart yok: DXGI sırasındaki
+    //    aygıtlar denenir; D3D12 açabilen ilk aygıt (CI'da "Microsoft Basic Render Driver" = WARP) kullanılır.
+    int gi = 0;
+    OfflineEngine.Result g = null!;
+    for (int i = 0; i < 6; i++)
+    {
+        g = OfflineEngine.Open(dir, OfflineMode.GpuOnly, gpuAvailable: true, i, 0, 0, cpuFallback: false, benchmark: true);
+        Console.WriteLine($"   DirectML aygıt #{i}: {(g.Engine != null ? "açıldı → " + g.Engine.DeviceName : g.Message[..Math.Min(140, g.Message.Length)])}");
+        if (g.Engine != null) { gi = i; break; }
+    }
     Check("Ekran kartı (DirectML) modu", g.Engine?.Device == MarianDevice.Gpu, g.Message);
     if (g.Engine != null)
     {
@@ -67,13 +75,13 @@ if (windows)
     bad.Engine?.Dispose();
 
     // 8) Otomatik + ekran kartı var → hız testiyle seçim (iki ölçüm de raporlanır)
-    var auto = OfflineEngine.Open(dir, OfflineMode.Auto, gpuAvailable: true, 0, 0, 0, true, true);
+    var auto = OfflineEngine.Open(dir, OfflineMode.Auto, gpuAvailable: true, gi, 0, 0, true, true);
     Check("Otomatik: hız testiyle seçim", auto.Engine != null && auto.Cpu != null && auto.Gpu != null, auto.Message);
     auto.Engine?.Dispose();
 
     // 9) Ekran kartı çalışırken bellek hatası → bu altyazı CPU'da çevrilir, sonrası CPU
     OfflineTranslator.ModelDir = dir;
-    OfflineTranslator.Configure(new OfflineConfig(OfflineMode.GpuOnly, GpuAvailable: true, GpuIndex: 0, CpuFallback: true));
+    OfflineTranslator.Configure(new OfflineConfig(OfflineMode.GpuOnly, GpuAvailable: true, GpuIndex: gi, CpuFallback: true));
     OfflineTranslator.Preload(benchmark: false)!.Wait();
     var before = OfflineTranslator.ActiveDevice;
     OfflineTranslator.FaultInjection = "gpu-run";

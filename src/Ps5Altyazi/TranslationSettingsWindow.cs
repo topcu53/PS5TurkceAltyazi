@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +40,7 @@ public sealed class TranslationSettingsWindow : Window
     private static PasswordBox NewPasswordBox() => new() { Margin = new Thickness(0, 4, 0, 0), Padding = new Thickness(4), FontSize = 14 };
 
     public TranslationSettingsWindow(string? deepLKey, string? azureKey, string? azureRegion, bool myMemoryEnabled, string? myMemoryEmail,
-        string? geminiKey = null, string? geminiModel = null)
+        string? geminiKey = null, string? geminiModel = null, Ps5Altyazi.Settings.AppSettings? offlineSettings = null)
     {
         _curDeepL = deepLKey;
         _curGemini = geminiKey;
@@ -100,9 +101,11 @@ public sealed class TranslationSettingsWindow : Window
         // 5) Bilgisayarda çeviri
         root.Children.Add(Header("5) Bilgisayarda çeviri – internetsiz, kotasız (önerilir)"));
         root.Children.Add(Note("İnternet servislerinin kotası / hız sınırı dolunca ya da geç kalınca çeviri bilgisayarınızda devam eder; " +
-                               "çeviri hiç durmaz. Ekran kartı gerekmez (işlemcide çalışır). Model bir kez indirilir (~530 MB, " +
+                               "çeviri hiç durmaz. Ekran kartı gerekmez (işlemcide çalışır); varsa ekran kartı (NVIDIA / AMD / Intel, DirectX 12) " +
+                               "kullanılır ve daha hızlıdır. Model bir kez indirilir (işlemci ~530 MB, ekran kartı için +~890 MB; " +
                                "Helsinki-NLP opus-mt-tc-big-en-tr)."));
         root.Children.Add(BuildOfflineRow());
+        if (offlineSettings != null) root.Children.Add(BuildDeviceRow(offlineSettings));
 
         root.Children.Add(_status);
 
@@ -127,7 +130,8 @@ public sealed class TranslationSettingsWindow : Window
         buttons.Children.Add(closeBtn);
 
         root.Children.Add(buttons);
-        Content = root;
+        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        MaxHeight = SystemParameters.WorkArea.Height * 0.94;
         Theme.Apply(this);
         Loaded += (_, _) => _deepLBox.Focus();
     }
@@ -260,9 +264,9 @@ public sealed class TranslationSettingsWindow : Window
             {
                 await OfflineTranslator.DownloadAsync(prog, System.Threading.CancellationToken.None);
                 state.Text = "Model yükleniyor…";
+                OfflineModelReady?.Invoke(); // ana pencere cihazı (işlemci / ekran kartı) ayarlayıp modeli açar
                 var load = OfflineTranslator.Preload();
                 if (load != null) await load;
-                OfflineModelReady?.Invoke();
             }
             catch (Exception ex)
             {
@@ -288,6 +292,178 @@ public sealed class TranslationSettingsWindow : Window
             catch (Exception ex) { state.Text = "✖ " + ex.Message; state.Foreground = Theme.Bad; }
             test.IsEnabled = true;
         };
+        return box;
+    }
+
+    /// <summary>İşlemci / ekran kartı ayarı değişti (ana pencere kaydeder ve modeli yeni cihazda açar).</summary>
+    public event Action? OfflineDeviceChanged;
+
+    /// <summary>
+    /// Donanım profili, cihaz seçimi (Otomatik / Yalnız işlemci / Yalnız ekran kartı), ekran kartı seçimi, iş parçacığı,
+    /// CPU'ya dönüş, hız testi ve canlı izleme (işlemci %, RAM; NVIDIA için sıcaklık / kullanım / VRAM).
+    /// </summary>
+    private FrameworkElement BuildDeviceRow(Ps5Altyazi.Settings.AppSettings s)
+    {
+        var box = new StackPanel { Margin = new Thickness(0, 8, 0, 4) };
+        var hwText = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, FontSize = 12, Text = "Donanım algılanıyor…" };
+        box.Children.Add(new TextBlock { Text = "Donanım", FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 4, 0, 2) });
+        box.Children.Add(hwText);
+
+        // Cihaz
+        box.Children.Add(new TextBlock { Text = "Çeviri cihazı", FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 10, 0, 2) });
+        var rAuto = new RadioButton { Content = "Otomatik (önerilen) – hız testiyle en hızlısı seçilir", GroupName = "offdev", Margin = new Thickness(0, 2, 0, 0) };
+        var rCpu = new RadioButton { Content = "Yalnız işlemci (CPU)", GroupName = "offdev", Margin = new Thickness(0, 2, 0, 0) };
+        var rGpu = new RadioButton { Content = "Yalnız ekran kartı (GPU)", GroupName = "offdev", Margin = new Thickness(0, 2, 0, 0) };
+        (s.OfflineDevice switch { "cpu" => rCpu, "gpu" => rGpu, _ => rAuto }).IsChecked = true;
+        box.Children.Add(rAuto); box.Children.Add(rCpu); box.Children.Add(rGpu);
+
+        var grid = new Grid { Margin = new Thickness(0, 8, 0, 0) };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        for (int i = 0; i < 2; i++) grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        var gpuCombo = new ComboBox { Margin = new Thickness(0, 2, 0, 2), MinWidth = 300, HorizontalAlignment = HorizontalAlignment.Left };
+        var thrCombo = new ComboBox { Margin = new Thickness(0, 2, 0, 2), Width = 160, HorizontalAlignment = HorizontalAlignment.Left };
+        void Cell(UIElement e, int r, int c) { Grid.SetRow(e, r); Grid.SetColumn(e, c); grid.Children.Add(e); }
+        Cell(new TextBlock { Text = "Ekran kartı:", VerticalAlignment = VerticalAlignment.Center }, 0, 0); Cell(gpuCombo, 0, 1);
+        Cell(new TextBlock { Text = "İşlemci iş parçacığı:", VerticalAlignment = VerticalAlignment.Center }, 1, 0); Cell(thrCombo, 1, 1);
+        box.Children.Add(grid);
+
+        thrCombo.Items.Add(new ComboBoxItem { Content = "Otomatik", Tag = 0 });
+        for (int t = 1; t <= Environment.ProcessorCount; t++) thrCombo.Items.Add(new ComboBoxItem { Content = t.ToString(), Tag = t });
+        thrCombo.SelectedIndex = Math.Clamp(s.OfflineThreads, 0, Environment.ProcessorCount);
+
+        var fallback = new CheckBox { Content = "Ekran kartı açılamaz ya da hata verirse işlemciye dön (önerilen)", IsChecked = s.OfflineCpuFallback, Margin = new Thickness(0, 8, 0, 0) };
+        box.Children.Add(fallback);
+        box.Children.Add(Note("Ekran kartında model her zaman FP16 (yarım duyarlık) çalışır: daha az bellek, daha hızlı, kalite farkı yok denecek kadar azdır. " +
+                              "İşlemcide INT8 (sıkıştırılmış) model kullanılır."));
+
+        var active = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 8, 0, 0) };
+        var live = new TextBlock { TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, FontSize = 12, Margin = new Thickness(0, 2, 0, 0) };
+        var bench = new TextBlock { TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new Thickness(0, 4, 0, 0) };
+        var benchBtn = new Button { Content = "⚡ Hız testi (işlemci ve ekran kartı)", Padding = new Thickness(14, 5, 14, 5), Margin = new Thickness(0, 8, 0, 0), HorizontalAlignment = HorizontalAlignment.Left };
+        box.Children.Add(active);
+        box.Children.Add(live);
+        box.Children.Add(benchBtn);
+        box.Children.Add(bench);
+
+        bool loading = true;
+        HardwareProfile? hw = MainWindow.Hardware;
+
+        void ShowBench()
+        {
+            var c = OfflineTranslator.LastCpuBenchmark; var g = OfflineTranslator.LastGpuBenchmark;
+            if (c == null && g == null) { bench.Text = ""; return; }
+            var sb = new StringBuilder("Son hız testi:\n");
+            if (c != null) sb.Append("• ").Append(c).Append('\n');
+            if (g != null) sb.Append("• ").Append(g).Append('\n');
+            if (c != null && g != null)
+                sb.Append(g.P50Ms < c.P50Ms * 0.95 ? $"→ Ekran kartı {c.P50Ms / Math.Max(1, g.P50Ms):F1} kat hızlı." : "→ İşlemci bu bilgisayarda yeterince hızlı (ekran kartı belirgin fark yaratmıyor).");
+            bench.Text = sb.ToString().TrimEnd();
+        }
+
+        void ShowActive()
+        {
+            string dev = OfflineTranslator.ActiveDeviceName ?? "henüz açılmadı";
+            active.Text = $"Şu an: {dev}\n{OfflineTranslator.Status}";
+            active.Foreground = OfflineTranslator.Status.StartsWith("✖") ? Theme.Bad : OfflineTranslator.Status.StartsWith("⚠") ? Theme.Warn : Theme.Good;
+        }
+
+        void FillHw()
+        {
+            if (hw == null) return;
+            hwText.Text = hw.Describe();
+            gpuCombo.Items.Clear();
+            foreach (var g in hw.Gpus) gpuCombo.Items.Add(new ComboBoxItem { Content = g.ToString(), Tag = g.Index });
+            if (hw.Gpus.Count == 0)
+            {
+                gpuCombo.Items.Add(new ComboBoxItem { Content = "Ekran kartı yok – işlemci kullanılır", Tag = -1 });
+                gpuCombo.IsEnabled = false; rGpu.IsEnabled = false;
+            }
+            int want = s.OfflineGpuIndex >= 0 ? s.OfflineGpuIndex : hw.BestGpu?.Index ?? -1;
+            gpuCombo.SelectedIndex = 0;
+            for (int i = 0; i < gpuCombo.Items.Count; i++)
+                if (gpuCombo.Items[i] is ComboBoxItem ci && (int)ci.Tag == want) gpuCombo.SelectedIndex = i;
+            if (hw.Gpus.Count > 0 && !OfflineTranslator.GpuFilesInstalled)
+                hwText.Text += "\nEkran kartı modeli henüz inmedi; uygun kart varsa otomatik indirilir (bu sırada çeviri işlemcide sürer).";
+        }
+
+        void Changed()
+        {
+            if (loading) return;
+            s.OfflineDevice = rCpu.IsChecked == true ? "cpu" : rGpu.IsChecked == true ? "gpu" : "auto";
+            if (gpuCombo.SelectedItem is ComboBoxItem gi && (int)gi.Tag >= 0) s.OfflineGpuIndex = (int)gi.Tag;
+            if (thrCombo.SelectedItem is ComboBoxItem ti) s.OfflineThreads = (int)ti.Tag;
+            s.OfflineCpuFallback = fallback.IsChecked == true;
+            OfflineDeviceChanged?.Invoke();
+            active.Text = "Model seçilen cihazda açılıyor…";
+            active.Foreground = Theme.Dim;
+        }
+        rAuto.Checked += (_, _) => Changed(); rCpu.Checked += (_, _) => Changed(); rGpu.Checked += (_, _) => Changed();
+        gpuCombo.SelectionChanged += (_, _) => Changed();
+        thrCombo.SelectionChanged += (_, _) => Changed();
+        fallback.Click += (_, _) => Changed();
+
+        benchBtn.Click += async (_, _) =>
+        {
+            if (!OfflineTranslator.IsInstalled) { bench.Text = "Önce modeli indirin."; return; }
+            benchBtn.IsEnabled = false;
+            bench.Foreground = Theme.Dim;
+            bench.Text = "Ölçülüyor… (işlemci ve varsa ekran kartı ayrı ayrı; bu sırada çeviriler birkaç saniye bekler)";
+            try
+            {
+                var r = await OfflineTranslator.BenchmarkAsync();
+                bench.Foreground = r.IsError ? Theme.Bad : (Brush)Theme.Good;
+                ShowBench();
+                if (r.Gpu == null && hw?.Gpus.Count > 0 && !OfflineTranslator.GpuFilesInstalled) bench.Text += "\n(Ekran kartı modeli inmediği için yalnız işlemci ölçüldü.)";
+                else if (r.Gpu == null && hw?.Gpus.Count > 0) bench.Text += "\n(Ekran kartı açılamadı: " + r.Message + ")";
+            }
+            catch (Exception ex) { bench.Text = "✖ " + ex.Message; bench.Foreground = Theme.Bad; }
+            benchBtn.IsEnabled = true;
+            ShowActive();
+        };
+
+        // Canlı izleme (2 sn): bu programın işlemci kullanımı ve belleği; NVIDIA kartta sıcaklık / kullanım / VRAM
+        var proc = Process.GetCurrentProcess();
+        TimeSpan lastCpu = proc.TotalProcessorTime; var lastAt = DateTime.UtcNow;
+        bool polling = false;
+        var timer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        timer.Tick += async (_, _) =>
+        {
+            if (polling) return;
+            polling = true;
+            try
+            {
+                proc.Refresh();
+                var now = DateTime.UtcNow; var cpu = proc.TotalProcessorTime;
+                double pct = (cpu - lastCpu).TotalMilliseconds / Math.Max(1, (now - lastAt).TotalMilliseconds) / Environment.ProcessorCount * 100;
+                lastCpu = cpu; lastAt = now;
+                string text = $"Canlı: program işlemci %{pct:F0} · RAM {proc.WorkingSet64 / 1048576} MB";
+                if (hw?.Gpus.Any(g => g.IsNvidia) == true)
+                {
+                    var nv = await Task.Run(HardwareProfile.QueryNvidia);
+                    foreach (var n in nv)
+                        text += $"\n{n.Name}: {n.TempC} °C · kullanım %{n.UtilPercent} · VRAM {n.UsedMb} / {n.TotalMb} MB";
+                }
+                else if (hw?.Gpus.Count > 0) text += "\n(Sıcaklık / VRAM canlı bilgisi yalnız NVIDIA kartlarda gösterilir.)";
+                live.Text = text;
+                ShowActive();
+            }
+            catch { }
+            finally { polling = false; }
+        };
+        Loaded += (_, _) => timer.Start();
+        Closed += (_, _) => timer.Stop();
+
+        ShowActive();
+        ShowBench();
+        if (hw != null) { FillHw(); loading = false; }
+        else
+        {
+            _ = Task.Run(HardwareProfile.Detect).ContinueWith(t =>
+            {
+                Dispatcher.Invoke(() => { hw = t.IsCompletedSuccessfully ? t.Result : null; FillHw(); loading = false; });
+            });
+        }
         return box;
     }
 

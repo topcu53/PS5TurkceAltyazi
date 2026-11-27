@@ -105,6 +105,14 @@ public sealed class AppSettings
     public string ThemeName { get; set; } = "mor";
     /// <summary>Çeviri modu: "fast" (Hızlı), "balanced" (Dengeli: DeepL ve Gemini yarışır), "natural" (En doğal: Gemini önde).</summary>
     public string TranslationMode { get; set; } = "balanced";
+    /// <summary>Bilgisayarda çeviri cihazı: "auto" (hız testiyle en hızlısı), "cpu" (yalnız işlemci), "gpu" (yalnız ekran kartı).</summary>
+    public string OfflineDevice { get; set; } = "auto";
+    /// <summary>Kullanılacak ekran kartı (DXGI sırası; birden çok kart varsa).</summary>
+    public int OfflineGpuIndex { get; set; } = -1;
+    /// <summary>İşlemci iş parçacığı sayısı (0 = otomatik: fiziksel çekirdek sayısı, en çok 8).</summary>
+    public int OfflineThreads { get; set; } = 0;
+    /// <summary>Ekran kartı açılamaz / hata verirse işlemciye dön (önerilen: açık).</summary>
+    public bool OfflineCpuFallback { get; set; } = true;
     /// <summary>İkinci PSN hesabının 8 baytlık hesap kimliği (onaltılık, DPAPI ile şifreli). Şifre ya da token saklanmaz.</summary>
     public string? PsnAccountIdProtected { get; set; }
     /// <summary>Eşlenmiş PS5'in bilgileri (JSON: adres, ad, kayıt anahtarları; DPAPI ile şifreli).</summary>
