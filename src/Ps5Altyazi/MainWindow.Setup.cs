@@ -23,7 +23,7 @@ public partial class MainWindow
         bool wasRunning = DirectRunning;
         if (wasRunning) StopCapture("Kurulum açıldı.");
         var panel = new SetupWizardPanel(_settings, SaveSettings, EnsureServer,
-            () => TranslationSettings_Click(this, new RoutedEventArgs()), TranslationSummary, SendTestSubtitle);
+            OpenTranslationSettingsAsync, TranslationSummary, SendTestSubtitle);
         panel.Finished += done =>
         {
             SetupPage.Content = null;

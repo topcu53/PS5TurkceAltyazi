@@ -21,7 +21,7 @@ public sealed record TranslationSettingsResult(
 /// Çeviri servisleri penceresi (kod ile oluşturulur):
 /// 1) DeepL (asıl)  2) Google Gemini (isteğe bağlı yedek)  3) Azure Translator (isteğe bağlı)  4) MyMemory (anahtarsız son yedek).
 /// </summary>
-public sealed class TranslationSettingsWindow : Window
+public sealed class TranslationSettingsWindow : PageWindow
 {
     private readonly PasswordBox _deepLBox = NewPasswordBox();
     private readonly PasswordBox _azureBox = NewPasswordBox();
@@ -126,14 +126,14 @@ public sealed class TranslationSettingsWindow : Window
         buttons.Children.Add(clearGemini);
 
         var closeBtn = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), IsCancel = true };
-        closeBtn.Click += (_, _) => Close();
+        closeBtn.Click += (_, _) => Finish();
         buttons.Children.Add(closeBtn);
 
         root.Children.Add(buttons);
         Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         MaxHeight = SystemParameters.WorkArea.Height * 0.94;
         Theme.Apply(this);
-        Loaded += (_, _) => _deepLBox.Focus();
+        WhenOpened(() => _deepLBox.Focus());
     }
 
     private bool _clearDeepL, _clearAzure, _clearGemini;
@@ -451,8 +451,8 @@ public sealed class TranslationSettingsWindow : Window
             catch { }
             finally { polling = false; }
         };
-        Loaded += (_, _) => timer.Start();
-        Closed += (_, _) => timer.Stop();
+        WhenOpened(timer.Start);
+        WhenClosed(timer.Stop);
 
         ShowActive();
         ShowBench();

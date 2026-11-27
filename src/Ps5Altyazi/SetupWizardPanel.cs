@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -18,7 +19,7 @@ public sealed class SetupWizardPanel : UserControl
     private readonly AppSettings _s;
     private readonly Action _save;
     private readonly Func<string> _translationSummary;
-    private readonly Action _openTranslation;
+    private readonly Func<Task> _openTranslation;
     private readonly Func<SubtitleServer> _ensureServer;
 
     private readonly List<(string Title, string Sub, Func<UIElement> Build)> _pages = new();
@@ -40,7 +41,7 @@ public sealed class SetupWizardPanel : UserControl
     public event Action<bool>? Finished;
 
     public SetupWizardPanel(AppSettings settings, Action save, Func<SubtitleServer> ensureServer,
-                            Action openTranslation, Func<string> translationSummary, Action sendTest)
+                            Func<Task> openTranslation, Func<string> translationSummary, Action sendTest)
     {
         _s = settings;
         _save = save;
@@ -230,7 +231,7 @@ public sealed class SetupWizardPanel : UserControl
         Refresh();
         p.Children.Add(state);
         var btn = new Button { Content = "🌐 Çeviri anahtarlarını gir", Padding = new Thickness(14, 6, 14, 6), HorizontalAlignment = HorizontalAlignment.Left };
-        btn.Click += (_, _) => { _openTranslation(); Refresh(); };
+        btn.Click += async (_, _) => { await _openTranslation(); Refresh(); };
         p.Children.Add(btn);
         p.Children.Add(Para("• DeepL API Free: https://www.deepl.com/pro-api (aylık 500.000 karakter ücretsiz)\n" +
                             "• Google Gemini: https://aistudio.google.com/apikey (kart gerekmez)\n" +

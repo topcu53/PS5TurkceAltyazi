@@ -224,6 +224,9 @@ public partial class MainWindow : Window
         if (!_settings.SetupCompleted)
         {
             Log.Info("İlk açılış: kurulum adımları açılıyor (PSN girişi, PS5 eşleme, çeviri, TV).");
+            // Ana sayfa bir an bile görünmesin: kurulum bitene kadar yalnız adımlar gösterilir
+            HomePage.Visibility = Visibility.Collapsed;
+            NavBar.Visibility = Visibility.Hidden;
             Dispatcher.InvokeAsync(RunSetupWizard, DispatcherPriority.Background);
         }
         else if (UseDirect())
@@ -397,7 +400,7 @@ public partial class MainWindow : Window
         _capture = src;
         _target = w;
         ResetSessionStats();
-        StartStopButton.Content = "■   Çeviriyi Durdur";
+        StartStopButton.Content = "■   Çeviriyi durdur";
         SetText(CaptureStatus, "Başladı, ilk kare bekleniyor…", Orange);
         Log.Info($"Yakalama başladı → {w.Title} [{w.ProcessName}, PID {w.ProcessId}] | yöntem: {src.Name} | hedef FPS: {fps}");
     }
@@ -422,7 +425,7 @@ public partial class MainWindow : Window
         if (_verifying) FinishVerification(aborted: true);
         if (_autoDetectActive) { _autoDetectActive = false; Log.Info("Otomatik altyazı bulma iptal edildi."); }
 
-        StartStopButton.Content = "▶   Çeviriyi Başlat";
+        StartStopButton.Content = "▶   Çeviriyi başlat";
         SetText(CaptureStatus, "Durduruldu", Neutral);
         if (reason != null) Log.Info($"Yakalama durduruldu: {reason}");
         ClearScreenItems();
@@ -765,6 +768,7 @@ public partial class MainWindow : Window
 
     private void Window_KeyDown(object sender, KeyEventArgs e)
     {
+        if (!_selecting && HandlePageKey(e)) return;
         if (e.Key == Key.Escape && _selecting)
         {
             CancelSelection();
@@ -1501,13 +1505,13 @@ public partial class MainWindow : Window
         UpdateTranslationStatus();
     }
 
-    private void TranslationSettings_Click(object sender, RoutedEventArgs e)
+    private void TranslationSettings_Click(object sender, RoutedEventArgs e) => _ = OpenTranslationSettingsAsync();
+
+    /// <summary>Çeviri ayarları sayfası (ana pencerede açılır); kapanınca kaydedilen anahtarları uygular.</summary>
+    internal async Task OpenTranslationSettingsAsync()
     {
         var dlg = new TranslationSettingsWindow(_deepLKey, _azureKey, _settings.AzureRegion, _settings.MyMemoryEnabled, _settings.MyMemoryEmail,
-            _geminiKey, _settings.GeminiModel, _settings)
-        {
-            Owner = this
-        };
+            _geminiKey, _settings.GeminiModel, _settings);
         dlg.OfflineDeviceChanged += () =>
         {
             SaveSettings();
@@ -1516,7 +1520,7 @@ public partial class MainWindow : Window
             ApplyTranslators(checkUsage: false);
         };
         dlg.OfflineModelReady += () => { ApplyTranslators(checkUsage: false); Log.Success("Bilgisayarda çeviri hazır: internet servisleri dursa da çeviri devam edecek."); };
-        dlg.ShowDialog();
+        await Pages.ShowAsync(dlg);
         if (dlg.Result is not { } r) return;
 
         bool deepLChanged = r.DeepLKey != _deepLKey, azureChanged = r.AzureKey != _azureKey, geminiChanged = r.GeminiKey != _geminiKey;
@@ -2028,10 +2032,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private void TvMode_Click(object sender, RoutedEventArgs e)
+    private async void TvMode_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new TvModeWindow(_settings, EnsureServer, SaveSettings, SendTestSubtitle) { Owner = this };
-        dlg.ShowDialog();
+        await Pages.ShowAsync(new TvModeWindow(_settings, EnsureServer, SaveSettings, SendTestSubtitle));
     }
 
     // ───────── LG geliştirici modu: Key Server'a bir daha gerek kalmasın ─────────
@@ -2181,14 +2184,14 @@ public partial class MainWindow : Window
         Log.Info(on ? "Türkçe altyazı gösteriliyor." : "Türkçe altyazı gizlendi.");
     }
 
-    private void SubtitleAppearance_Click(object sender, RoutedEventArgs e)
+    private async void SubtitleAppearance_Click(object sender, RoutedEventArgs e)
     {
         if (_subWin == null) return;
         if (SubtitleWindowCheck.IsChecked != true)
         {
             SubtitleWindowCheck.IsChecked = true; // ayarlar görülebilsin
         }
-        var dlg = new SubtitleSettingsWindow(_settings, _subWin, DescribeGameFont) { Owner = this };
+        var dlg = new SubtitleSettingsWindow(_settings, _subWin, DescribeGameFont);
         dlg.FontChanged += gameChanged => { OnFontSettingChanged(gameChanged); SaveSettings(); };
         // Ayar yaparken örnek PC'de de görünsün (PC altyazısı kapalı olsa bile); kapanınca eski hâline döner.
         _subWin.SetMuted(false);
@@ -2202,7 +2205,7 @@ public partial class MainWindow : Window
             ApplyGameFont(); // boy seçimi / "orijinal boy" değişince PC'de de hemen uygulansın (TV'ye de gönderir)
             SaveSettings();
         };
-        dlg.ShowDialog();
+        await Pages.ShowAsync(dlg);
         _subWin.SetMuted(!PcSubtitleOn);
         Log.Info($"Altyazı görünümü: boy {SizeName(_settings.SubtitleSizeLevel)} ({AppSettings.SizePx(_settings.SubtitleSizeLevel):F0} px @1080p), zemin %{_settings.SubtitleBackgroundOpacity * 100:F0}, " +
                  $"genişlik %{_settings.SubtitleWidthFraction * 100:F0}, her zaman üstte: {(_settings.SubtitleTopmost ? "evet" : "hayır")}.");

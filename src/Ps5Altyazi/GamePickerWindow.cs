@@ -12,7 +12,7 @@ namespace Ps5Altyazi;
 /// Oyun seçimi. Her oyunun kendi altyazı alanı ve yazı tipi ayarı saklanır; oyun seçilince geri gelir.
 /// PS5'e doğrudan bağlıyken PS5'te açık oyun kendiliğinden seçilebilir.
 /// </summary>
-public sealed class GamePickerWindow : Window
+public sealed class GamePickerWindow : PageWindow
 {
     /// <summary>Sık oynanan PS5 oyunları (liste yalnız kolaylık içindir; listede olmayan oyun da yazılabilir).</summary>
     public static readonly string[] KnownGames =
@@ -83,6 +83,7 @@ public sealed class GamePickerWindow : Window
         general.Click += (_, _) => Done("Genel");
         var cancel = new Button { Content = "Vazgeç", Padding = new Thickness(12, 5, 12, 5), Margin = new Thickness(0, 0, 8, 0), IsCancel = true };
         var ok = new Button { Content = "Seç", Padding = new Thickness(18, 5, 18, 5), FontWeight = FontWeights.Bold, IsDefault = true };
+        cancel.Click += (_, _) => Finish();
         ok.Click += (_, _) => Done(_list.SelectedItem as string ?? _search.Text);
         buttons.Children.Add(general);
         buttons.Children.Add(cancel);
@@ -90,7 +91,7 @@ public sealed class GamePickerWindow : Window
         root.Children.Add(buttons);
         Content = root;
         Theme.Apply(this);
-        Loaded += (_, _) => _search.Focus();
+        WhenOpened(() => _search.Focus());
     }
 
     private void Fill(string q)
@@ -105,6 +106,6 @@ public sealed class GamePickerWindow : Window
         name = (name ?? "").Trim();
         if (name.Length == 0 || name.Length > 60) return;
         Chosen = name;
-        DialogResult = true;
+        Finish(true);
     }
 }

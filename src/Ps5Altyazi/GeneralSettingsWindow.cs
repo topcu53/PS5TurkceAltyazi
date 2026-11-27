@@ -7,7 +7,7 @@ using Ps5Altyazi.Settings;
 namespace Ps5Altyazi;
 
 /// <summary>Genel ayarlar: başlangıç, bağlantı, okuma hızı, TV, PC altyazısı, güncelleme.</summary>
-public sealed class GeneralSettingsWindow : Window
+public sealed class GeneralSettingsWindow : PageWindow
 {
     private static readonly int[] FpsValues = { 5, 10, 15, 30, 60 };
 
@@ -54,7 +54,7 @@ public sealed class GeneralSettingsWindow : Window
         root.Children.Add(Head("Diğer"));
         var row = new WrapPanel();
         row.Children.Add(Btn("⟳ Güncellemeleri denetle", checkUpdate));
-        row.Children.Add(Btn("🧭 Kurulumu yeniden aç", () => { RequestSetup = true; Close(); }));
+        row.Children.Add(Btn("🧭 Kurulumu yeniden aç", () => { RequestSetup = true; Finish(); }));
         row.Children.Add(Btn("📁 Günlük klasörü", () =>
         {
             string dir = System.IO.Path.GetDirectoryName(Logging.Log.CurrentFile) ?? "";
@@ -64,7 +64,7 @@ public sealed class GeneralSettingsWindow : Window
         root.Children.Add(Note($"Altyazı+ v{Updater.Current}"));
 
         var ok = new Button { Content = "Tamam", Padding = new Thickness(22, 6, 22, 6), Margin = new Thickness(0, 14, 0, 0), HorizontalAlignment = HorizontalAlignment.Right, IsDefault = true, IsCancel = true };
-        ok.Click += (_, _) => Close();
+        ok.Click += (_, _) => Finish();
         root.Children.Add(ok);
         Content = root;
         Theme.Apply(this);

@@ -12,6 +12,7 @@ public partial class MainWindow
     private void Nav_Checked(object sender, RoutedEventArgs e)
     {
         if (HomePage == null || HistoryPage == null || SettingsPage == null) return; // XAML yüklenirken
+        CloseAllPages();
         HomePage.Visibility = NavHome.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         HistoryPage.Visibility = NavHistory.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
         SettingsPage.Visibility = NavSettings.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
@@ -22,6 +23,7 @@ public partial class MainWindow
     private void SettingsNav_Checked(object sender, RoutedEventArgs e)
     {
         if (PageAdvanced == null) return; // XAML yüklenirken
+        CloseAllPages();
         var map = new (RadioButton? Item, FrameworkElement Page)[]
         {
             (SetConn, PageConn), (SetSub, PageSub), (SetTr, PageTr), (SetTv, PageTv),

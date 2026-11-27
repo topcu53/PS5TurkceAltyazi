@@ -131,7 +131,7 @@ public sealed class Ps5SetupPanel : UserControl
             OpenInBrowser();
             return;
         }
-        var (url, error) = PsnLoginWindow.Run(Window.GetWindow(this));
+        var (url, error) = await PsnLoginWindow.RunAsync();
         if (url == null)
         {
             Write(error != null ? $"✖ Giriş tamamlanmadı ({error}). Tekrar deneyin ya da 'Tarayıcıda aç'." : "Giriş yapılmadı.");
@@ -307,7 +307,7 @@ public sealed class Ps5SetupPanel : UserControl
 }
 
 /// <summary>"🎮 PS5 Bağlantısı" penceresi: kurulum panelini gösterir.</summary>
-public sealed class Ps5ConnectWindow : Window
+public sealed class Ps5ConnectWindow : PageWindow
 {
     public Ps5ConnectWindow(AppSettings settings, Action saveSettings)
     {
@@ -319,7 +319,7 @@ public sealed class Ps5ConnectWindow : Window
         var root = new StackPanel { Margin = new Thickness(16) };
         root.Children.Add(new Ps5SetupPanel(settings, saveSettings));
         var close = new Button { Content = "Kapat", Padding = new Thickness(18, 4, 18, 4), Margin = new Thickness(0, 12, 0, 0), HorizontalAlignment = HorizontalAlignment.Right, IsCancel = true };
-        close.Click += (_, _) => Close();
+        close.Click += (_, _) => Finish();
         root.Children.Add(close);
         Content = root;
         Theme.Apply(this);

@@ -6,7 +6,7 @@ using System.Windows.Media;
 namespace Ps5Altyazi;
 
 /// <summary>Tema seçimi: her temanın renk örneği; seçilen tema program yeniden açılınca uygulanır.</summary>
-public sealed class ThemeWindow : Window
+public sealed class ThemeWindow : PageWindow
 {
     public string? Chosen { get; private set; }
 
@@ -52,7 +52,8 @@ public sealed class ThemeWindow : Window
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 14, 0, 0) };
         var cancel = new Button { Content = "Vazgeç", Padding = new Thickness(16, 6, 16, 6), Margin = new Thickness(0, 0, 8, 0), IsCancel = true };
         var apply = new Button { Content = "Uygula ve yeniden aç", Padding = new Thickness(16, 6, 16, 6), FontWeight = FontWeights.Bold, IsDefault = true };
-        apply.Click += (_, _) => { Chosen = selected; DialogResult = true; };
+        apply.Click += (_, _) => { Chosen = selected; Finish(true); };
+        cancel.Click += (_, _) => Finish();
         buttons.Children.Add(cancel);
         buttons.Children.Add(apply);
         root.Children.Add(buttons);

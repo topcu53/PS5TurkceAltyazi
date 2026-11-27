@@ -349,7 +349,7 @@ public sealed class TvSetupPanel : UserControl
 }
 
 /// <summary>"📺 TV Modu" penceresi: TV kurulum panelini gösterir.</summary>
-public sealed class TvModeWindow : Window
+public sealed class TvModeWindow : PageWindow
 {
     public TvModeWindow(AppSettings settings, Func<SubtitleServer> ensureServer, Action saveSettings, Action? sendTest = null)
     {
@@ -361,7 +361,7 @@ public sealed class TvModeWindow : Window
         var root = new StackPanel { Margin = new Thickness(16) };
         root.Children.Add(new TvSetupPanel(settings, ensureServer, saveSettings, sendTest));
         var close = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), HorizontalAlignment = HorizontalAlignment.Right, Margin = new Thickness(0, 10, 0, 0), IsCancel = true };
-        close.Click += (_, _) => Close();
+        close.Click += (_, _) => Finish();
         root.Children.Add(close);
         Content = root;
         Theme.Apply(this);

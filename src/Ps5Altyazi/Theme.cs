@@ -55,6 +55,7 @@ public static class Theme
         });
 
         var content = w.Content as UIElement;
+        if (w is PageWindow pw) pw.PageContent = content; // ana pencerede açılırken başlık çubuğu olmadan kullanılır
         w.Content = null;
         // Küçük ekranda pencere ekrandan taşmasın: en fazla çalışma alanı kadar, sığmayan kısım kaydırılır
         var wa = SystemParameters.WorkArea;

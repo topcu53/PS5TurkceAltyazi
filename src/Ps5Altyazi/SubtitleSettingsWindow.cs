@@ -13,7 +13,7 @@ namespace Ps5Altyazi;
 /// Altyazı görünümü: yazı boyutu, zemin saydamlığı, genişlik, her zaman üstte, konum düzenleme.
 /// Değişiklikler anında uygulanır (Changed olayı) ve ayarlara yazılır.
 /// </summary>
-public sealed class SubtitleSettingsWindow : Window
+public sealed class SubtitleSettingsWindow : PageWindow
 {
     private readonly AppSettings _s;
     private readonly SubtitleWindow _sub;
@@ -211,7 +211,7 @@ public sealed class SubtitleSettingsWindow : Window
         buttons.Children.Add(reset);
 
         var close = new Button { Content = "Kapat", Padding = new Thickness(12, 4, 12, 4), IsCancel = true };
-        close.Click += (_, _) => Close();
+        close.Click += (_, _) => Finish();
         buttons.Children.Add(close);
         root.Children.Add(buttons);
 
@@ -226,11 +226,11 @@ public sealed class SubtitleSettingsWindow : Window
 
         Content = root;
         Theme.Apply(this);
-        Closed += (_, _) =>
+        WhenClosed(() =>
         {
             _sub.SetEditMode(false);
             if (_sampleOn) { if (SampleRequested != null) SampleRequested(""); else _sub.ShowSubtitle(""); }
-        };
+        });
     }
 
     // ───────── Yazı tipi (oyun başına) ─────────
@@ -411,7 +411,7 @@ public sealed class SubtitleSettingsWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show(this, ex.Message, "Yazı tipi eklenemedi", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(Application.Current.MainWindow, ex.Message, "Yazı tipi eklenemedi", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 

@@ -10,15 +10,15 @@ namespace Ps5Altyazi;
 /// <summary>Ayarlar ve Tema pencereleri.</summary>
 public partial class MainWindow
 {
-    private void GeneralSettings_Click(object sender, RoutedEventArgs e)
+    private async void GeneralSettings_Click(object sender, RoutedEventArgs e)
     {
         bool direct0 = _settings.DirectConnect, tv0 = _settings.TvServerEnabled, sub0 = _settings.SubtitleWindowEnabled;
         var w = new GeneralSettingsWindow(_settings, Ps5Store.IsReady(_settings), async () =>
         {
             await CheckUpdateAsync();
-            if (_update == null) MessageBox.Show(this, $"Altyazı+ güncel (v{Updater.Current}).", "Güncelleme", MessageBoxButton.OK, MessageBoxImage.Information);
-        }) { Owner = this };
-        w.ShowDialog();
+            if (_update == null) { Notify($"Altyazı+ güncel (v{Updater.Current})"); Log.Info($"Altyazı+ güncel (v{Updater.Current})."); }
+        });
+        await Pages.ShowAsync(w);
 
         int fi = Array.IndexOf(new[] { 5, 10, 15, 30, 60 }, _settings.Fps);
         if (fi >= 0 && FpsCombo.SelectedIndex != fi) FpsCombo.SelectedIndex = fi;
@@ -38,10 +38,10 @@ public partial class MainWindow
         if (w.RequestSetup) RunSetupWizard();
     }
 
-    private void ThemeSettings_Click(object sender, RoutedEventArgs e)
+    private async void ThemeSettings_Click(object sender, RoutedEventArgs e)
     {
-        var w = new ThemeWindow(_settings.ThemeName) { Owner = this };
-        if (w.ShowDialog() != true || w.Chosen == null || w.Chosen == _settings.ThemeName) return;
+        var w = new ThemeWindow(_settings.ThemeName);
+        if (await Pages.ShowAsync(w) != true || w.Chosen == null || w.Chosen == _settings.ThemeName) return;
         _settings.ThemeName = w.Chosen;
         SaveSettings();
         Log.Info($"Tema: {ThemePalettes.Get(w.Chosen).Name}. Program yeniden açılıyor…");

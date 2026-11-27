@@ -42,10 +42,9 @@ public partial class MainWindow
     /// <summary>PS5 bağlantısı kurulmamışken başlatılmak istendi: kurulum sihirbazı açılır.</summary>
     private void OfferPs5Setup()
     {
-        var answer = MessageBox.Show(this,
-            "PS5 bağlantısı henüz kurulmadı.\n\nKurulum adımları (PSN girişi, PS5 eşleme, TV) şimdi açılsın mı?",
-            "Altyazı+ – Kurulum", MessageBoxButton.YesNo, MessageBoxImage.Information);
-        if (answer == MessageBoxResult.Yes) RunSetupWizard();
+        // Ayrı soru penceresi yok: kurulum adımları doğrudan ana pencerede açılır
+        Notify("Önce kurulum: PS5 bağlantısı henüz kurulmadı");
+        RunSetupWizard();
     }
 
     private void DirectCheck_Changed(object sender, RoutedEventArgs e)
@@ -63,12 +62,12 @@ public partial class MainWindow
         if (wasRunning) StartCapture();
     }
 
-    private void Ps5Connect_Click(object sender, RoutedEventArgs e)
+    private async void Ps5Connect_Click(object sender, RoutedEventArgs e)
     {
         // PS5 aynı anda tek bağlantı kabul eder: ayarlar ve "Bağlantıyı dene" için çalışan bağlantı kapatılır.
         bool wasRunning = DirectRunning;
         if (wasRunning) StopCapture("PS5 Bağlantısı penceresi açıldı.");
-        new Ps5ConnectWindow(_settings, SaveSettings) { Owner = this }.ShowDialog();
+        await Pages.ShowAsync(new Ps5ConnectWindow(_settings, SaveSettings));
         UpdateSourceUi();
         if (UseDirect() && (wasRunning || (_capture == null && !_userStopped && _settings.AutoStart)))
         {
@@ -139,7 +138,7 @@ public partial class MainWindow
         _ps5Level = 1;
         _ps5Text = "bağlanıyor…";
         ResetSessionStats();
-        StartStopButton.Content = "■   Çeviriyi Durdur";
+        StartStopButton.Content = "■   Çeviriyi durdur";
         SetText(CaptureStatus, "PS5'e bağlanılıyor…", Orange);
         SetText(RemotePlayStatus, $"PS5'e bağlanılıyor – {pairing.Name} ({pairing.Host})", Orange);
         Log.Info($"Yakalama başladı → PS5'e doğrudan bağlantı: {pairing.Name} ({pairing.Host}). Ekranda pencere açılmaz; " +

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Web.WebView2.Core;
@@ -12,7 +13,7 @@ namespace Ps5Altyazi;
 /// Sony'nin PSN giriş sayfasını program içinde (Microsoft Edge WebView2) gösterir. Giriş bitince Sony'nin gönderdiği
 /// yönlendirme adresi yakalanır ve pencere kapanır. Şifre yalnız Sony'nin sayfasına yazılır.
 /// </summary>
-public sealed class PsnLoginWindow : Window
+public sealed class PsnLoginWindow : PageWindow
 {
     private readonly WebView2 _web = new();
     private string? _result;
@@ -28,12 +29,15 @@ public sealed class PsnLoginWindow : Window
     }
 
     /// <summary>Girişi açar. Dönüş: yönlendirme adresi (başarılı) ya da null ve hata metni.</summary>
-    public static (string? RedirectUrl, string? Error) Run(Window owner)
+    public static async Task<(string? RedirectUrl, string? Error)> RunAsync()
     {
-        var w = new PsnLoginWindow { Owner = owner };
-        w.ShowDialog();
+        var w = new PsnLoginWindow();
+        await Pages.ShowAsync(w);
         return (w._result, w._result == null ? w._error : null);
     }
+
+    /// <summary>Tarayıcı sayfası kendi yüksekliğini kullanır (kaydırma çubuğu içine konmaz).</summary>
+    internal override bool InlineScroll => false;
 
     private PsnLoginWindow()
     {
@@ -48,7 +52,7 @@ public sealed class PsnLoginWindow : Window
         grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         var hint = new TextBlock
         {
-            Text = "Bu sayfa Sony'nin kendi giriş sayfasıdır; şifreniz Altyazı+'a gelmez. Giriş bitince pencere kendiliğinden kapanır.",
+            Text = "Bu sayfa Sony'nin kendi giriş sayfasıdır; şifreniz Altyazı+'a gelmez. Giriş bitince bu sayfa kendiliğinden kapanır.",
             TextWrapping = TextWrapping.Wrap, Foreground = Theme.Dim, Margin = new Thickness(12, 8, 12, 8)
         };
         grid.Children.Add(hint);
@@ -57,7 +61,7 @@ public sealed class PsnLoginWindow : Window
         Content = grid;
         Theme.Apply(this, canResize: true);
 
-        Loaded += async (_, _) =>
+        WhenOpened(async () =>
         {
             try
             {
@@ -71,7 +75,7 @@ public sealed class PsnLoginWindow : Window
                     if (!PsnLogin.IsRedirect(e.Uri)) return;
                     e.Cancel = true;
                     _result = e.Uri;
-                    Close();
+                    Finish(true);
                 };
                 _web.CoreWebView2.NavigationCompleted += (_, e) =>
                 {
@@ -83,9 +87,9 @@ public sealed class PsnLoginWindow : Window
             catch (Exception ex)
             {
                 _error = "Tarayıcı başlatılamadı: " + ex.Message;
-                Close();
+                Finish();
             }
-        };
-        Closed += (_, _) => { try { _web.Dispose(); } catch { } };
+        });
+        WhenClosed(() => { try { _web.Dispose(); } catch { } });
     }
 }

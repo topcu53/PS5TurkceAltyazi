@@ -36,8 +36,8 @@ public partial class MainWindow
     {
         string? running = _ps5RunningGame;
         if (running == null && DirectRunning) running = await ReadRunningGameAsync();
-        var w = new GamePickerWindow(_settings, running) { Owner = this };
-        bool ok = w.ShowDialog() == true;
+        var w = new GamePickerWindow(_settings, running);
+        bool ok = await Pages.ShowAsync(w) == true;
         SaveSettings();
         if (ok && w.Chosen != null) SwitchActiveGame(w.Chosen, "elle seçildi");
         UpdateGameTile();
