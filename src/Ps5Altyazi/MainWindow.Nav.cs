@@ -56,7 +56,7 @@ public partial class MainWindow
         {
             "fast" => "DeepL önce sorulur (genelde 200–400 ms). Geç kalırsa Gemini devreye girer.",
             "natural" => "Gemini önceki satırları da okuyarak en doğal Türkçeyi yazar; biraz daha yavaş olabilir. Geç kalırsa DeepL devreye girer.",
-            "pc" => (OfflineTranslator.IsInstalled ? "✔ Model hazır. " : _offlineDownloading ? "Model indiriliyor… " : "Model henüz yok, otomatik indirilecek. ") +
+            "pc" => (Translation.OfflineTranslator.IsInstalled ? "✔ Model hazır. " : _offlineDownloading ? "Model indiriliyor… " : "Model henüz yok, otomatik indirilecek. ") +
                     "Çeviri bu bilgisayarın işlemcisinde yapılır: internet, kota, ekran kartı gerekmez, hiç durmaz (cümle başına ~0,2–0,5 sn). " +
                     "Kalitesi DeepL'den biraz düşük; 1,5 sn'de bitmezse internet servisi de devreye girer.",
             _ => "DeepL ve Gemini aynı anda sorulur, hangisi önce gelirse o gösterilir: en düşük gecikme. (Gemini'nin ücretsiz kotası daha çabuk dolabilir.)",
