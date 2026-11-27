@@ -1,5 +1,25 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.28 – Bilgisayarda çeviri: işlemci + ekran kartı (tüm kartlar)
+
+- Bilgisayarda çeviri artık **ekran kartında da** çalışıyor: NVIDIA, AMD ve Intel; DirectX 12 destekli tüm kartlar
+  (DirectML). Ekran kartında FP16 model kullanılır; işlemcide INT8 model. Python / CUDA kurulumu gerekmez.
+- **Donanım profili** (Ayarlar → Çeviri → 5): işlemci modeli, fiziksel çekirdek / mantıksal işlemci, RAM, ekran kartları
+  (VRAM, dahili / ayrık), NVIDIA için sürücü sürümü.
+- **Çeviri cihazı:** Otomatik (önerilen) / Yalnız işlemci / Yalnız ekran kartı; birden çok kart varsa kart seçimi;
+  işlemci iş parçacığı sayısı (otomatik = fiziksel çekirdek, en çok 8); "ekran kartı hata verirse işlemciye dön".
+- **Otomatik mod** iki cihazı ölçer (yükleme, ilk çeviri, ortalama, P50 / P95, CPU %, RAM) ve gerçek gecikmesi en düşük
+  olanı seçer. Ekran kartı açılamazsa ya da çalışırken hata verirse (bellek yetersiz vb.) o altyazı hemen işlemcide
+  çevrilir, çeviri kesilmez; program hiçbir durumda çökmez.
+- **⚡ Hız testi** düğmesi ve **canlı izleme**: programın işlemci % / RAM kullanımı; NVIDIA kartlarda sıcaklık,
+  kullanım ve VRAM.
+- Uygun ayrık ekran kartı (≥ 2 GB VRAM) varsa ekran kartı modeli (~890 MB) bir kez, arka planda kendiliğinden iner;
+  bu sırada çeviri işlemcide sürer. Ekran kartı yoksa hiçbir şey değişmez, işlemci kullanılır.
+- Kabul testleri (Windows + Linux): işlemci modu, elle iş parçacığı, ekran kartı yokken Otomatik → işlemci, Yalnız
+  ekran kartı + kart yok → açık hata, model yok → çökmeden hata, ekran kartı yükleme hatası → işlemciye dönüş,
+  ekran kartı kod yolu (FP16) çıktısı INT8 ile karşılaştırma (7/8 birebir aynı). Gerçek bir ekran kartında DirectML
+  testi henüz yapılmadı (test makinelerinde DirectX 12 aygıtı yok).
+
 ## v2.27 – Bilgisayarda çeviri kendiliğinden kurulur
 
 - Bilgisayarda (işlemcide, internetsiz) çeviri modeli artık **kendiliğinden** indiriliyor: program açılınca model yoksa
