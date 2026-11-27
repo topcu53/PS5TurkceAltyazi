@@ -1,5 +1,19 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.24 – Üst üste iki altyazı, temiz metin, yabancı dil rengi
+
+- **Üst üste iki altyazı artık birlikte okunuyor:** iki kişi aynı anda konuşup satırlar birbirine değince algılayıcı
+  bunu tek ve "fazla yüksek" bir parça sanıp tamamen atıyordu; yalnızca tek satırlık altyazı okunuyordu. Artık blok
+  satır satır bölünüyor ve her satır okunuyor.
+- **Garip işaretler temizlendi:** •, „, €, ¯, «» gibi simgeler, tek başına duran noktalama, konuşma tireleri ("-Fuck off!"),
+  cümle sonundaki fazlalıklar ("die!l", "you?.'"), kelime içine düşmüş nokta/virgül ve eşi olmayan tırnaklar hem
+  İngilizceden hem Türkçe çeviriden siliniyor.
+- **Başka dilde konuşulan satırlar:** "In Spanish: …" gibi etiketli satırlar "(İspanyolca) …" olarak çevriliyor ve TV'de
+  **sarı** renkte gösteriliyor (İspanyolca, Fransızca, Portekizce, Rusça, Çince, Arapça, Kreol… 30'a yakın dil).
+- **Altyazı oyunun önüne çıkmıyor:** Türkçe kutu orijinalin alt kenarına hizalanıyor, uzarsa aşağıda kalıyor ve hiçbir
+  zaman ekranın üst %35'ine çıkmıyor; "üstte" seçeneğinde yer yoksa orijinalin üzerine (opak zeminle) iniyor.
+- TV uygulaması 1.0.15.
+
 ## v2.23 – Okunan her altyazı çevrilir
 
 - **Okunup çevrilmeyen altyazılar düzeltildi:** OCR aynı altyazıyı art arda biraz farklı okuyunca (GTA'da aynı anda konuşan

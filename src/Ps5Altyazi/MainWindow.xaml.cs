@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.23 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.24 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1499,6 +1499,29 @@ public partial class MainWindow : Window
         return new TranslationOutcome(text, cache, res.Any(r => r.Fuzzy), res.Max(r => r.Milliseconds), engine);
     }
 
+    /// <summary>
+    /// "In Spanish: Listen." gibi etiketli altyazılar: etiket çevrilmez, yerine "(İspanyolca)" yazılır ve o kısım TV'de
+    /// farklı renkte gösterilir (önüne <see cref="SubtitleText.ForeignMark"/> konur). Çıktı her durumda temizlenir.
+    /// </summary>
+    private async Task<TranslationOutcome> TranslateWithLanguageLabelAsync(string english, string? context, CancellationToken ct)
+    {
+        var lab = SubtitleText.SplitLanguageLabel(english);
+        if (lab is not { } l)
+        {
+            var o0 = await TranslateBySentenceAsync(english, context, ct);
+            return o0 with { Text = SubtitleText.CleanTurkish(o0.Text) };
+        }
+        var before = l.Before.Count(char.IsLetter) >= 2 ? TranslateBySentenceAsync(l.Before, context, ct) : null;
+        var after = l.After.Count(char.IsLetter) >= 2 ? TranslateBySentenceAsync(l.After, context, ct) : null;
+        var b = before != null ? await before : null;
+        var a = after != null ? await after : null;
+        string text = (b != null ? SubtitleText.CleanTurkish(b.Text) + " " : "") + SubtitleText.ForeignMark + "(" + l.LangTr + ") " +
+                      (a != null ? SubtitleText.CleanTurkish(a.Text) : "");
+        var any = a ?? b;
+        return new TranslationOutcome(text.Trim(), (a?.FromCache ?? true) && (b?.FromCache ?? true),
+            (a?.Fuzzy ?? false) || (b?.Fuzzy ?? false), Math.Max(a?.Milliseconds ?? 0, b?.Milliseconds ?? 0), any?.Engine ?? "—");
+    }
+
     private void CancelTranslation()
     {
         _trSeq = ++_trReq; // yoldaki çeviri sonuçları artık geçersiz
@@ -1536,7 +1559,7 @@ public partial class MainWindow : Window
 
         try
         {
-            var o = await TranslateBySentenceAsync(english, context, cts.Token);
+            var o = await TranslateWithLanguageLabelAsync(english, context, cts.Token);
             // Yalnızca hâlâ geçerli (aynı altyazıya ait) ve daha yeni bir sonuç gösterilmemişse uygula
             if (seq < _trSeq || seq < _trShown || cts.IsCancellationRequested)
             {
@@ -1548,9 +1571,9 @@ public partial class MainWindow : Window
             double total = (DateTime.Now - changeStart).TotalMilliseconds;
             _trCount++;
             _trTotalLatencySum += total;
-            SetText(TurkishText, o.Text, Neutral);
+            SetText(TurkishText, o.Text.Replace(SubtitleText.ForeignMark.ToString(), ""), Neutral);
             ShowTurkish(o.Text);
-            AddHistory(english, o.Text, o.Engine);
+            AddHistory(english, o.Text.Replace(SubtitleText.ForeignMark.ToString(), ""), o.Engine);
             _turkishVisible = true;
             _turkishShownAt = DateTime.Now;
             if (_currentText == null) ScheduleHide(DateTime.Now + LingerAfterEnglish); // İngilizcesi çoktan bitti
@@ -1831,7 +1854,7 @@ public partial class MainWindow : Window
     /// <summary>Türkçe altyazıyı PC penceresine ve bağlı TV/telefon ekranlarına gönderir ("" = temizle).</summary>
     private void ShowTurkish(string text)
     {
-        _subWin?.ShowSubtitle(text);
+        _subWin?.ShowSubtitle(text?.Replace(SubtitleText.ForeignMark.ToString(), ""));
         _shownTurkish = text ?? "";
         if (_server == null) return;
         if (string.IsNullOrEmpty(text)) _server.Clear();

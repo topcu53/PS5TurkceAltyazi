@@ -148,7 +148,18 @@
     base = Math.round(Math.max(26, Math.min(80, base)) * state.fontScale);
 
     sub.className = showText ? '' : 'notice';
-    sub.textContent = text;
+    // Başka dilde konuşulan kısım ("(İspanyolca) …") ayırıcı işaretten sonra gelir: belirgin sarı renkte gösterilir
+    var mark = showText ? text.indexOf('\u2063') : -1;
+    if (mark >= 0) {
+      sub.textContent = '';
+      var pre = text.substring(0, mark), post = text.substring(mark + 1);
+      if (pre) sub.appendChild(document.createTextNode(pre));
+      var fs = document.createElement('span');
+      fs.className = 'foreign';
+      fs.style.color = '#FFC94D';
+      fs.textContent = post;
+      sub.appendChild(fs);
+    } else sub.textContent = text;
     // Oyunun yazı tipi, kalınlığı ve rengi (yalnızca altyazıda; bildirimler varsayılan yazıyla)
     sub.style.fontFamily = showText && gf ? "'" + gf.css + "', 'LG Smart UI', 'Samsung One', Roboto, Arial, sans-serif" : '';
     sub.style.fontWeight = showText && gf ? (gf.bold ? 'bold' : 'normal') : '';
@@ -197,13 +208,22 @@
     }
     if (c) {
       // Kutu yazı kadar (büyütülmez); yeri seçilen yerleşime göre
+      // Oyunun önüne geçmesin: altyazı ekranın alt kısmında kalır. Kutu orijinalin ALTINA hizalanır, yazı uzarsa
+      // yukarı doğru değil mümkün olduğunca aşağıda büyür; hiçbir durumda ekranın üst %35'ine çıkmaz.
       var h = sub.offsetHeight, top;
-      if (place === 'above') top = c.y * 1080 - 10 - h;
-      else if (place === 'below') {
-        top = (c.y + c.h) * 1080 + 10;
-        if (top + h > 1072) top = c.y * 1080 - 10 - h; // altta yer yoksa üste
-      } else top = (c.y + c.h / 2) * 1080 - h / 2;       // orijinalin tam ortasına
-      sub.style.top = Math.max(0, Math.min(1072 - h, top)) + 'px';
+      var origBottom = (c.y + c.h) * 1080;
+      var minTop = 1080 * 0.65;
+      if (place === 'above') {
+        top = c.y * 1080 - 10 - h;
+        if (top < minTop) top = origBottom - h;          // üstte yer yoksa orijinalin üzerine (zemin opak)
+      } else if (place === 'below') {
+        top = origBottom + 10;
+        if (top + h > 1072) top = origBottom - h;        // altta yer yoksa orijinalin üzerine
+      } else top = origBottom - h + 4;                   // örtme: alt kenarlar hizalı
+      top = Math.max(minTop, Math.min(1072 - h, top));
+      if (top + h > 1072) top = Math.max(0, 1072 - h);
+      sub.style.top = top + 'px';
+      if (place !== 'cover' && top + h > c.y * 1080 && top < origBottom) sub.style.background = '#000';
     }
   }
 

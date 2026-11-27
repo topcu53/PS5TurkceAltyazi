@@ -26,7 +26,81 @@ public static class SubtitleText
         // Sık OCR karışıklıkları
         s = s.Replace('|', 'I').Replace('’', '\'').Replace('‘', '\'').Replace('“', '"').Replace('”', '"');
         s = Regex.Replace(s, @"\s+([.,!?;:])", "$1");
-        return s;
+        return Clean(s);
+    }
+
+    // Altyazıda hiç bulunmayan, OCR'ın kenar çizgisinden / simgeden uydurduğu işaretler
+    private const string JunkChars = "•·€¯«»¤°©®™¦§¶†‡※■□▪▫◦●○◆◇★☆✓✔✗✘¬±×÷^`~_={}<>\\$#%&*+@¨´¸¹²³¼½¾";
+    private static readonly Regex PunctOnlyToken = new(@"(?<=^|\s)(?!\.\.\.|…|-)[^\p{L}\p{N}\s]{1,4}(?=\s|$)", RegexOptions.Compiled);
+    private static readonly Regex LeadingDash = new(@"(^|(?<=[.!?…]\s))[-–—~]+\s*(?=\S)", RegexOptions.Compiled);
+    private static readonly Regex StrayAfterEnd = new(@"(?:([!?…])[lI1|'.,;:]+|(?<!\.)(\.)[lI1|',;:]+)$", RegexOptions.Compiled);
+    private static readonly Regex InnerJunkPunct = new(@"(?<=\p{L})[.,;:]{1,2}(?=\p{L}{2})", RegexOptions.Compiled);
+
+    /// <summary>
+    /// Metindeki anlamsız işaretleri temizler: •, „, €, ¯ gibi simgeler; tek başına duran noktalama ("you ' know");
+    /// konuşma tireleri ("-Fuck off!"); cümle sonundaki fazlalık ("die!l", "you?.'"); kelime içine düşmüş nokta/virgül
+    /// ("corner„stores", "w.aytoday"); eşi olmayan tırnak. Türkçe çeviri çıktısına da uygulanır.
+    /// </summary>
+    public static string Clean(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return s;
+        s = s.Replace('„', ',').Replace('‚', ',').Replace('¡', ' ').Replace('¿', ' ');
+        var sb = new StringBuilder(s.Length);
+        foreach (char c in s)
+        {
+            if (JunkChars.IndexOf(c) >= 0) { sb.Append(' '); continue; }
+            if (char.IsControl(c)) continue;
+            sb.Append(c);
+        }
+        s = Spaces.Replace(sb.ToString(), " ").Trim();
+        s = InnerJunkPunct.Replace(s, " ");
+        s = PunctOnlyToken.Replace(s, "");
+        s = LeadingDash.Replace(s, "");
+        s = StrayAfterEnd.Replace(s, "$1$2");
+        s = Regex.Replace(s, @"([!?])[,;:]", "$1");
+        if (s.Count(c => c == '"') % 2 == 1) s = s.Replace("\"", "");
+        s = Regex.Replace(s, @"\s+([.,!?;:])", "$1");
+        s = Regex.Replace(s, @"([,;:])(?=\p{L})", "$1 ");
+        s = Regex.Replace(s, @"[,;:]+([.!?])", "$1");
+        return Spaces.Replace(s, " ").Trim().Trim(',', ';', ':').Trim();
+    }
+
+    private static readonly Regex LangLabel = new(
+        @"(?:^|(?<=[.!?…]\s)|(?<=\s-\s?))[\[(]?\s*(?:[Il1]n|Speaking)\s+(Spanish|French|Portuguese|Italian|German|Russian|Chinese|Mandarin|Cantonese|Japanese|Korean|Arabic|Haitian Creole|Creole|Vietnamese|Tagalog|Hindi|Polish|Ukrainian|Hebrew|Greek|Dutch|Swedish|Turkish|Persian|Farsi|Armenian|Romanian|Albanian)\s*[:;\])]\s*",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    private static readonly Dictionary<string, string> LangTr = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Spanish"] = "İspanyolca", ["French"] = "Fransızca", ["Portuguese"] = "Portekizce", ["Italian"] = "İtalyanca",
+        ["German"] = "Almanca", ["Russian"] = "Rusça", ["Chinese"] = "Çince", ["Mandarin"] = "Çince", ["Cantonese"] = "Kantonca",
+        ["Japanese"] = "Japonca", ["Korean"] = "Korece", ["Arabic"] = "Arapça", ["Haitian Creole"] = "Haiti Kreolü",
+        ["Creole"] = "Kreol", ["Vietnamese"] = "Vietnamca", ["Tagalog"] = "Tagalogca", ["Hindi"] = "Hintçe", ["Polish"] = "Lehçe",
+        ["Ukrainian"] = "Ukraynaca", ["Hebrew"] = "İbranice", ["Greek"] = "Yunanca", ["Dutch"] = "Felemenkçe", ["Swedish"] = "İsveççe",
+        ["Turkish"] = "Türkçe", ["Persian"] = "Farsça", ["Farsi"] = "Farsça", ["Armenian"] = "Ermenice", ["Romanian"] = "Rumence",
+        ["Albanian"] = "Arnavutça",
+    };
+
+    /// <summary>Çeviri çıktısı için temizlik (Türkçede kelime sonunda kesme işareti kalmaz: "Lanet olsun'").</summary>
+    public static string CleanTurkish(string s)
+    {
+        s = Clean(s);
+        return Regex.Replace(s, @"(?<=\p{L})'(?=\s|$|[.,!?])", "");
+    }
+
+    /// <summary>Yabancı dil işaretinden (Türkçe metinde) sonraki kısım TV'de farklı renkte gösterilir.</summary>
+    public const char ForeignMark = '\u2063';
+
+    /// <summary>
+    /// "In Spanish: Listen." gibi başka dilde konuşulduğunu belirten etiketi bulur. Dönüş: etiketten önceki kısım,
+    /// dilin Türkçe adı ve sonraki kısım; etiket yoksa null.
+    /// </summary>
+    public static (string Before, string LangTr, string After)? SplitLanguageLabel(string s)
+    {
+        var m = LangLabel.Match(s);
+        if (!m.Success) return null;
+        string lang = Regex.Replace(m.Groups[1].Value, @"\s+", " ");
+        string tr = LangTr.TryGetValue(lang, out var t) ? t : lang;
+        return (s[..m.Index].Trim().TrimEnd('-').Trim(), tr, s[(m.Index + m.Length)..].Trim());
     }
 
     private const string AllowedAccents = "éèêëáàâäíìîïóòôöúùûüñçÉÈÁÀÍÓÚÜÑÇ";

@@ -157,10 +157,83 @@ public static class SubtitleDetector
                       && fill >= 0.12 && fill <= 0.85
                       && (centerX is not { } cx0 || Math.Abs(lineCenter - cx0) <= centerTol * W);
             if (ok) lines.Add(new TextLine(PixelRect.FromLTRB(left, top, right, bottom), cnt, fill));
+            else if (hh > 0.07 * H && hh <= 0.24 * H && cnt >= 40)
+            {
+                // Üst üste duran iki (ya da üç) altyazı satırı (aynı anda konuşan iki kişi) birbirine değince tek
+                // ve çok yüksek bir parça oluyordu → tamamen eleniyordu, yalnız tek satırlık altyazılar okunuyordu.
+                // Satır satır böl: yatay izdüşümde boş / seyrek satırlardan ayır.
+                SplitBlock(t, bt, l, rt);
+            }
 
             void Visit(int j)
             {
                 if (dil[j] && !seen[j]) { seen[j] = true; queue[tail++] = j; }
+            }
+        }
+
+        void SplitBlock(int t0, int b0, int l0, int r0)
+        {
+            int rows = b0 - t0 + 1;
+            var act = new int[rows];
+            int max = 0;
+            for (int gy = t0; gy <= b0; gy++)
+            {
+                int c = 0;
+                for (int gx = l0; gx <= r0; gx++) if (cells[gy * gw + gx] > 0) c++;
+                act[gy - t0] = c;
+                if (c > max) max = c;
+            }
+            if (max == 0) return;
+            int thr = Math.Max(1, (int)(max * 0.12));
+            int expH = Math.Max(3, (int)Math.Round(0.045 * H / cs)); // tek satırın beklenen yüksekliği (hücre)
+            int y = 0;
+            while (y < rows)
+            {
+                while (y < rows && act[y] < thr) y++;
+                if (y >= rows) break;
+                int s0 = y;
+                while (y < rows && act[y] >= thr) y++;
+                int s1 = y - 1;
+                // Boşluksuz bitişik satırlar: beklenen satır yüksekliğine göre en seyrek satırlardan böl
+                int segStart = s0;
+                while (s1 - segStart + 1 > (int)(expH * 1.6))
+                {
+                    int best = -1, bestV = int.MaxValue;
+                    for (int k = segStart + (int)(expH * 0.6); k <= Math.Min(s1 - 2, segStart + (int)(expH * 1.4)); k++)
+                        if (act[k] < bestV) { bestV = act[k]; best = k; }
+                    if (best < 0) break;
+                    AddPart(segStart, best - 1);
+                    segStart = best + 1;
+                }
+                AddPart(segStart, s1);
+            }
+
+            void AddPart(int r0s, int r1s)
+            {
+                if (r1s < r0s) return;
+                int pl = int.MaxValue, pr = -1, cnt2 = 0, act2 = 0;
+                for (int gy = t0 + r0s; gy <= t0 + r1s; gy++)
+                    for (int gx = l0; gx <= r0; gx++)
+                    {
+                        int v = cells[gy * gw + gx];
+                        if (v == 0) continue;
+                        cnt2 += v; act2++;
+                        if (gx < pl) pl = gx;
+                        if (gx > pr) pr = gx;
+                    }
+                if (pr < 0) return;
+                int top2 = search.Y + (t0 + r0s) * cs, bottom2 = search.Y + (t0 + r1s + 1) * cs;
+                int left2 = search.X + pl * cs, right2 = search.X + (pr + 1) * cs;
+                int h2 = bottom2 - top2, w2 = right2 - left2;
+                double fill2 = (double)act2 / ((r1s - r0s + 1) * (pr - pl + 1));
+                double center2 = (left2 + right2) / 2.0;
+                bool ok2 = cnt2 >= 20
+                           && h2 >= 0.012 * H && h2 <= 0.07 * H
+                           && w2 >= minWidthFrac * W
+                           && w2 >= minAspect * h2
+                           && fill2 >= 0.10 && fill2 <= 0.9
+                           && (centerX is not { } cx1 || Math.Abs(center2 - cx1) <= centerTol * W);
+                if (ok2) lines.Add(new TextLine(PixelRect.FromLTRB(left2, top2, right2, bottom2), cnt2, fill2));
             }
         }
 
