@@ -56,6 +56,9 @@
     fontScale: parseFloat(load('fontScale', '1')) || 1,
     style: { font: 46, bg: 0.6, bottom: 8.3, width: 88, cover: false, match: false },
     lineH: 0,        // İngilizce altyazının tek satır yüksekliği (0..1) – Türkçe aynı boyda olsun
+    // Sabit konum: orijinal altyazının ALT kenarı (0..1). Her yeni altyazıda değişmez; yalnızca oyun altyazıyı
+    // gerçekten başka yere taşırsa (art arda 4 kez farklı yerde görülürse) güncellenir → Türkçe yukarı aşağı oynamaz.
+    anchorBottom: null, anchorCand: null, anchorVotes: 0,
     cover: null,
     mask: null,      // İngilizce altyazıyı örten kutu (0..1)
     lastMask: null,  // Türkçe, İngilizce bittikten sonra da aynı yerde kalsın
@@ -125,6 +128,17 @@
     staleTimer = state.text ? setTimeout(function () { state.text = ''; render(); }, 15000) : null;
   }
 
+  function noteAnchor(m) {
+    if (!m || !(m.h > 0)) return;
+    var b = m.y + m.h;
+    if (b < 0.55 || b > 1) return; // ekranın üst yarısındaki yazılar altyazı yeri sayılmaz
+    if (state.anchorBottom === null) { state.anchorBottom = b; return; }
+    if (Math.abs(b - state.anchorBottom) <= 0.035) { state.anchorCand = null; state.anchorVotes = 0; return; }
+    if (state.anchorCand !== null && Math.abs(b - state.anchorCand) <= 0.035) state.anchorVotes++;
+    else { state.anchorCand = b; state.anchorVotes = 1; }
+    if (state.anchorVotes >= 4) { state.anchorBottom = state.anchorCand; state.anchorCand = null; state.anchorVotes = 0; }
+  }
+
   function render() {
     var s = state.style;
     var gf = s.gf || null;
@@ -137,7 +151,8 @@
     // Yerleşim: cover = orijinalin yerine (orijinal siyahla örtülür), above = orijinalin üstünde, below = altında,
     // bottom = ekranın altında sabit
     var place = s.place || 'cover';
-    var anchor = showText && place !== 'bottom' ? (state.mask || state.lastMask) : null;
+    var anchor = showText && place !== 'bottom'
+      ? (state.mask || state.lastMask || (state.anchorBottom !== null ? { x: 0.2, y: state.anchorBottom - 0.05, w: 0.6, h: 0.05 } : null)) : null;
     // Boy: PC'de seçilen seviye (1080p'de px; sayfa 1920x1080 olduğu için TV çözünürlüğüne göre kendiliğinden ölçeklenir).
     // Oyunlar için önerilen en küçük altyazı 46 px @1080p. "Orijinal boy" yalnızca açıkça istenirse ve ölçüm
     // akla yatkınsa (ekran yüksekliğinin %2,4–%6,8'i) kullanılır – yanlış ölçüm yazıyı devleştirmesin.
@@ -183,13 +198,12 @@
     var lineW = Math.min(1920 * 0.88, base * 23 + 64);
     var c = anchor;
     if (c) {
-      var cx = (c.x + c.w / 2) * 1920;
-      // Kutunun yarısı ekran dışına taşmasın
-      cx = Math.max(lineW / 2 + 16, Math.min(1920 - lineW / 2 - 16, cx));
+      // Yatayda hep ekranın ortası (altyazılar ortalıdır; algılanan kutunun ortasına göre kaymasın)
+      var cx = 960;
       sub.style.left = cx + 'px';
       sub.style.bottom = 'auto';
       sub.style.top = '0px';
-      sub.style.maxWidth = Math.min(1920 * 0.9, Math.max(c.w * 1920 + 40, lineW)) + 'px';
+      sub.style.maxWidth = Math.min(1920 * 0.9, lineW) + 'px'; // sabit genişlik: satır kırılımı oynamasın
     } else {
       sub.style.left = '50%';
       sub.style.top = 'auto';
@@ -210,11 +224,15 @@
       // Kutu yazı kadar (büyütülmez); yeri seçilen yerleşime göre
       // Oyunun önüne geçmesin: altyazı ekranın alt kısmında kalır. Kutu orijinalin ALTINA hizalanır, yazı uzarsa
       // yukarı doğru değil mümkün olduğunca aşağıda büyür; hiçbir durumda ekranın üst %35'ine çıkmaz.
+      // SABİT konum: o anki algılanan kutuya göre değil, kararlı alt kenara (anchorBottom) göre. Türkçe kutunun alt
+      // kenarı hep aynı yerde durur; yazı 2 satıra çıkarsa yalnız yukarı doğru büyür.
       var h = sub.offsetHeight, top;
-      var origBottom = (c.y + c.h) * 1080;
+      var origBottom = (state.anchorBottom !== null ? state.anchorBottom : (c.y + c.h)) * 1080;
+      var origLine = Math.max(0.03, Math.min(0.06, state.lineH || 0.035)) * 1080 * 1.25;
       var minTop = 1080 * 0.65;
       if (place === 'above') {
-        top = c.y * 1080 - 10 - h;
+        var bottomEdge = origBottom - 2 * origLine - 10; // orijinalin 2 satırlık yerinin hemen üstü (sabit)
+        top = bottomEdge - h;
         if (top < minTop) top = origBottom - h;          // üstte yer yoksa orijinalin üzerine (zemin opak)
       } else if (place === 'below') {
         top = origBottom + 10;
@@ -394,9 +412,9 @@
 
   function handle(m) {
     switch (m.t) {
-      case 'sub': state.text = m.text || ''; if (m.cover) state.cover = m.cover; if (m.lh) state.lineH = m.lh; armStale(); render(); break;
+      case 'sub': state.text = m.text || ''; if (m.cover) { state.cover = m.cover; noteAnchor(m.cover); } if (m.lh) state.lineH = m.lh; armStale(); render(); break;
       case 'clear': state.text = ''; state.lastMask = state.mask; armStale(); render(); break;
-      case 'mask': state.mask = { x: m.x, y: m.y, w: m.w, h: m.h }; state.lastMask = state.mask; if (m.lh) state.lineH = m.lh; drawMask(); render(); break;
+      case 'mask': state.mask = { x: m.x, y: m.y, w: m.w, h: m.h }; state.lastMask = state.mask; if (m.lh) state.lineH = m.lh; noteAnchor(state.mask); drawMask(); render(); break;
       case 'unmask': state.mask = null; drawMask(); if (!state.text) state.lastMask = null; render(); break;
       case 'notice': notice(m.text || '', m.ms || 2000); break;
       case 'mute': state.muted = !!m.on; render(); if (state.pieces) renderPieces(); else renderScreen(); break;

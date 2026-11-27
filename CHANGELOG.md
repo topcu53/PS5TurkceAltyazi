@@ -1,5 +1,13 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.26 – Altyazı yerinde sabit duruyor
+
+- Türkçe altyazı artık yukarı aşağı oynamıyor: konumu o anki algılanan İngilizce kutusuna göre değil, oyunun altyazı
+  yerinin **sabit alt kenarına** göre belirleniyor. Kutunun alt kenarı hep aynı yerde; yazı 2 satıra çıkarsa yalnızca
+  yukarı doğru büyüyor. Oyun altyazıyı gerçekten başka yere taşırsa (art arda 4 kez) konum bir kez güncelleniyor.
+- Yatayda hep ekranın ortası, genişlik sabit (satır kırılımı her altyazıda değişip kutuyu oynatmıyor).
+- TV uygulaması 1.0.16.
+
 ## v2.25 – Kesintisiz çeviri: bilgisayarda (internetsiz) çeviri
 
 - **Çeviri durmasının asıl sebebi düzeltildi:** DeepL'in aylık kotası dolmamıştı (%18); servislere aynı anda çok fazla

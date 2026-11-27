@@ -14,7 +14,7 @@
     <AssemblyName>AltyaziPlus</AssemblyName>
     <RootNamespace>Ps5Altyazi</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>2.25.0</Version>
+    <Version>2.26.0</Version>
     <Product>Altyazı+</Product>
     <Authors>Burak Topcu</Authors>
     <Company>Burak Topcu</Company>
@@ -43,7 +43,7 @@
 
   <ItemGroup>
     <!-- TV uygulamaları programın içine gömülür; kullanıcı ayrı dosya indirmez -->
-    <EmbeddedResource Include="..\..\tv\tr.ps5altyazi.tv_1.0.15_all.ipk" LogicalName="tvapp.webos.ipk" />
+    <EmbeddedResource Include="..\..\tv\tr.ps5altyazi.tv_1.0.16_all.ipk" LogicalName="tvapp.webos.ipk" />
     <EmbeddedResource Include="Resources\en_words.txt.gz" LogicalName="en_words.txt.gz" />
     <!-- Tema şablonu: açılışta seçilen temanın renkleriyle yüklenir (ThemePalettes.cs); derlenmiş sayfa değil -->
     <Page Remove="Resources\Theme.template.xaml" />
