@@ -26,8 +26,40 @@ public static class SubtitleText
         // Sık OCR karışıklıkları
         s = s.Replace('|', 'I').Replace('’', '\'').Replace('‘', '\'').Replace('“', '"').Replace('”', '"');
         s = Regex.Replace(s, @"\s+([.,!?;:])", "$1");
-        return Clean(s);
+        return FixDigitLetters(Clean(s));
     }
+
+    private static readonly Regex MixedToken = new(@"\b(?=[\p{L}0-9']*\p{L})(?=[\p{L}0-9']*[0-9])[\p{L}0-9']{3,}\b", RegexOptions.Compiled);
+    private static readonly Regex NumberLike = new(@"^\d+(st|nd|rd|th|s|k|m|mm|am|pm|x|g|kg|km|mph|th)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    /// <summary>
+    /// Harf yerine rakam okunmuş kelimeler: "100k" → "look", "6ut" → "but"/"out", "c0me" → "come". Yalnızca düzeltilmiş
+    /// hali sözlükte varsa değiştirilir ("2nd", "9mm", "80s" gibi gerçek sayılara dokunulmaz).
+    /// </summary>
+    private static string FixDigitLetters(string s)
+    {
+        if (!EnglishWords.IsLoaded) return s;
+        return MixedToken.Replace(s, m =>
+        {
+            string w = m.Value;
+            if (NumberLike.IsMatch(w)) return w;
+            foreach (var map in DigitMaps)
+            {
+                var sb = new StringBuilder(w.Length);
+                foreach (char c in w) sb.Append(map.TryGetValue(c, out char rch) ? rch : c);
+                string cand = sb.ToString();
+                if (EnglishWords.Contains(cand.Trim('\'')))
+                    return char.IsUpper(w.FirstOrDefault(char.IsLetter)) && !char.IsUpper(cand[0]) ? char.ToUpper(cand[0]) + cand[1..] : cand;
+            }
+            return w;
+        });
+    }
+
+    private static readonly Dictionary<char, char>[] DigitMaps =
+    {
+        new() { ['0'] = 'o', ['1'] = 'l', ['5'] = 's', ['3'] = 'e', ['4'] = 'a', ['7'] = 't', ['8'] = 'b', ['6'] = 'o' },
+        new() { ['0'] = 'o', ['1'] = 'i', ['5'] = 's', ['3'] = 'e', ['4'] = 'a', ['7'] = 't', ['8'] = 'b', ['6'] = 'b' },
+    };
 
     // Altyazıda hiç bulunmayan, OCR'ın kenar çizgisinden / simgeden uydurduğu işaretler
     private const string JunkChars = "•·€¯«»¤°©®™¦§¶†‡※■□▪▫◦●○◆◇★☆✓✔✗✘¬±×÷^`~_={}<>\\$#%&*+@¨´¸¹²³¼½¾";
@@ -84,6 +116,8 @@ public static class SubtitleText
     public static string CleanTurkish(string s)
     {
         s = Clean(s);
+        // İngilizcedeki kekelemeden kalan tek harf + tire ("f- Ayakkabılarımı") Türkçede anlamsız
+        s = Regex.Replace(s, @"(^|(?<=[.!?…]\s))\p{L}{1,2}-\s+", "");
         return Regex.Replace(s, @"(?<=\p{L})'(?=\s|$|[.,!?])", "");
     }
 

@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.24 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.25 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1356,10 +1356,17 @@ public partial class MainWindow : Window
         if (!string.IsNullOrWhiteSpace(_geminiKey)) engines.Add(new GeminiTranslator(_geminiKey, _settings.GeminiModel));
         if (!string.IsNullOrWhiteSpace(_azureKey)) engines.Add(new AzureTranslator(_azureKey, _settings.AzureRegion));
         if (_settings.MyMemoryEnabled) engines.Add(new MyMemoryTranslator(_settings.MyMemoryEmail));
+        // Son halka: bilgisayardaki model – kota / hız sınırı yok, çeviri hiç durmaz
+        if (OfflineTranslator.IsInstalled)
+        {
+            engines.Add(new OfflineTranslator());
+            _ = OfflineTranslator.Preload();
+        }
 
         // Hız / kalite modu: sıra ve yedeğin ne zaman devreye gireceği
         //  fast     : DeepL önde; 400 ms'de yanıt yoksa Gemini de başlar
-        //  balanced : DeepL ve Gemini AYNI ANDA yarışır, önce gelen gösterilir (en düşük gecikme)
+        //  balanced : DeepL önde; 600 ms'de yanıt yoksa sıradaki de başlar (eskiden her altyazıda ikisi birden
+        //             gönderiliyordu → Gemini'nin dakikalık sınırı sürekli doluyordu)
         //  natural  : Gemini (bağlamlı, en doğal Türkçe) önde; 1 sn'de yanıt yoksa DeepL de başlar
         string mode = _settings.TranslationMode;
         if (mode == "natural")
@@ -1371,7 +1378,7 @@ public partial class MainWindow : Window
         {
             "fast" => TimeSpan.FromMilliseconds(400),
             "natural" => TimeSpan.FromMilliseconds(1000),
-            _ => TimeSpan.Zero,
+            _ => TimeSpan.FromMilliseconds(600),
         };
         _translation.SetEngines(engines, _settings.EngineCooldowns);
         if (engines.Count == 0)
@@ -1380,7 +1387,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            Log.Info($"Çeviri zinciri: {_translation.DescribeChain()} • mod: {(mode == "fast" ? "Hızlı" : mode == "natural" ? "En doğal" : "Dengeli (yarış)")}");
+            Log.Info($"Çeviri zinciri: {_translation.DescribeChain()} • mod: {(mode == "fast" ? "Hızlı" : mode == "natural" ? "En doğal" : "Dengeli")}");
             if (deepL == null) Log.Warn("DeepL anahtarı girilmedi; çeviri yedek servislerle yapılacak (kalite düşük olabilir).");
         }
         UpdateTranslationStatus();
@@ -1442,6 +1449,7 @@ public partial class MainWindow : Window
         {
             Owner = this
         };
+        dlg.OfflineModelReady += () => { ApplyTranslators(checkUsage: false); Log.Success("Bilgisayarda çeviri hazır: internet servisleri dursa da çeviri devam edecek."); };
         dlg.ShowDialog();
         if (dlg.Result is not { } r) return;
 
@@ -1481,6 +1489,17 @@ public partial class MainWindow : Window
     }
 
     private long _trReq, _trShown;
+    private bool _offlineHintShown;
+
+    private async Task ClearStaleAfterAsync(long seq)
+    {
+        await Task.Delay(800);
+        if (_trSeq == seq && _trShown < seq && _turkishVisible)
+        {
+            ShowTurkish("");
+            _turkishVisible = false;
+        }
+    }
     private string? _trEnglish;
 
     /// <summary>
@@ -1556,6 +1575,9 @@ public partial class MainWindow : Window
         SetText(TurkishText, "…", Gray);
         // Eski çeviri yalnızca bambaşka bir altyazı geldiyse silinir (titrek okumada ekran boşalıp dolmasın)
         if (!replacesPrevious && !variant && !_turkishVisible) ShowTurkish("");
+        // Bambaşka bir altyazı geldi ama ekranda öncekinin Türkçesi duruyor: yenisi 0,8 sn içinde gelmezse eskisi
+        // kaldırılır (videodaki gibi yeni İngilizcenin üstünde eski Türkçe kalmasın)
+        if (!variant && _turkishVisible) _ = ClearStaleAfterAsync(seq);
 
         try
         {
@@ -1596,7 +1618,18 @@ public partial class MainWindow : Window
             _trErrors++;
             Log.Error($"Çeviri hatası: {ex.Message}");
             SetText(TranslationStatusText, ex.Message, Red);
-            if (seq == _trSeq) SetText(TurkishText, "(çeviri hatası)", Red);
+            if (seq == _trSeq)
+            {
+                SetText(TurkishText, "(çeviri hatası)", Red);
+                if (_turkishVisible && _trShown < seq) { ShowTurkish(""); _turkishVisible = false; } // eski Türkçe kalmasın
+            }
+            if (!OfflineTranslator.IsInstalled && !_offlineHintShown)
+            {
+                _offlineHintShown = true;
+                Log.Warn("İnternet çeviri servisleri şu an kullanılamıyor. Çevirinin hiç durmaması için: Ayarlar → Çeviri → " +
+                         "'5) Bilgisayarda çeviri' → '⬇ Modeli İndir' (bir kez, ~530 MB; ekran kartı gerekmez).");
+                Notify("Çeviri durdu – Ayarlar → Çeviri → Bilgisayarda çeviri modelini indirin");
+            }
         }
         catch (HttpRequestException ex)
         {

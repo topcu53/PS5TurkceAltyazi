@@ -97,6 +97,13 @@ public sealed class TranslationSettingsWindow : Window
         _myMemoryEmail.Text = myMemoryEmail ?? "";
         root.Children.Add(_myMemoryEmail);
 
+        // 5) Bilgisayarda çeviri
+        root.Children.Add(Header("5) Bilgisayarda çeviri – internetsiz, kotasız (önerilir)"));
+        root.Children.Add(Note("İnternet servislerinin kotası / hız sınırı dolunca ya da geç kalınca çeviri bilgisayarınızda devam eder; " +
+                               "çeviri hiç durmaz. Ekran kartı gerekmez (işlemcide çalışır). Model bir kez indirilir (~530 MB, " +
+                               "Helsinki-NLP opus-mt-tc-big-en-tr)."));
+        root.Children.Add(BuildOfflineRow());
+
         root.Children.Add(_status);
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 14, 0, 0) };
@@ -211,6 +218,81 @@ public sealed class TranslationSettingsWindow : Window
         SetStatus(report.ToString(), anyOk ? Theme.Good : Theme.Bad);
         _saveBtn.IsEnabled = true;
     }
+
+    /// <summary>Çevrimdışı model satırı: durum + indir düğmesi + ilerleme + dene.</summary>
+    private FrameworkElement BuildOfflineRow()
+    {
+        var box = new StackPanel { Margin = new Thickness(0, 4, 0, 4) };
+        var state = new TextBlock { TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6) };
+        var bar = new ProgressBar { Height = 8, Minimum = 0, Maximum = 100, Visibility = Visibility.Collapsed, Margin = new Thickness(0, 0, 0, 6) };
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        var dl = new Button { Content = "⬇ Modeli İndir", Padding = new Thickness(14, 5, 14, 5), Margin = new Thickness(0, 0, 8, 0) };
+        var test = new Button { Content = "Dene", Padding = new Thickness(14, 5, 14, 5) };
+        if (TryFindResource("Primary") is Style ps) dl.Style = ps;
+        row.Children.Add(dl);
+        row.Children.Add(test);
+        box.Children.Add(state);
+        box.Children.Add(bar);
+        box.Children.Add(row);
+
+        void Refresh()
+        {
+            bool ok = OfflineTranslator.IsInstalled;
+            state.Text = ok ? "✔ Model kurulu – çeviri zincirinin sonunda her zaman hazır bekliyor." : "Model indirilmedi.";
+            state.Foreground = ok ? Theme.Good : Theme.Warn;
+            dl.Visibility = ok ? Visibility.Collapsed : Visibility.Visible;
+            test.IsEnabled = ok;
+        }
+        Refresh();
+
+        dl.Click += async (_, _) =>
+        {
+            dl.IsEnabled = false;
+            bar.Visibility = Visibility.Visible;
+            var prog = new Progress<(long Done, long Total)>(p =>
+            {
+                double pct = p.Total > 0 ? 100.0 * p.Done / p.Total : 0;
+                bar.Value = pct;
+                state.Text = $"İndiriliyor… %{pct:F0}  ({p.Done / 1048576.0:F0} / {p.Total / 1048576.0:F0} MB)";
+                state.Foreground = Theme.Dim;
+            });
+            try
+            {
+                await OfflineTranslator.DownloadAsync(prog, System.Threading.CancellationToken.None);
+                state.Text = "Model yükleniyor…";
+                var load = OfflineTranslator.Preload();
+                if (load != null) await load;
+                OfflineModelReady?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                state.Text = "İndirilemedi: " + ex.Message + " (yeniden deneyebilirsiniz; kalan yerden devam eder)";
+                state.Foreground = Theme.Bad;
+                dl.IsEnabled = true;
+                return;
+            }
+            finally { bar.Visibility = Visibility.Collapsed; }
+            Refresh();
+        };
+
+        test.Click += async (_, _) =>
+        {
+            test.IsEnabled = false;
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                string t = await new OfflineTranslator().TranslateAsync("Hey, let me call him real quick.", null, System.Threading.CancellationToken.None);
+                state.Text = $"✔ \"{t}\"  ({sw.ElapsedMilliseconds} ms)";
+                state.Foreground = Theme.Good;
+            }
+            catch (Exception ex) { state.Text = "✖ " + ex.Message; state.Foreground = Theme.Bad; }
+            test.IsEnabled = true;
+        };
+        return box;
+    }
+
+    /// <summary>Çevrimdışı model indirilip yüklendi (ana pencere çeviri zincirini yeniler).</summary>
+    public event Action? OfflineModelReady;
 
     private static TextBlock Header(string text) =>
         new() { Text = text, FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 0) };

@@ -21,6 +21,10 @@ public sealed class EngineSlot
     public double MsSum { get; set; }
 
     public bool IsUsable(DateTime now) => DisabledReason == null && (CooldownUntil == null || CooldownUntil <= now);
+
+    /// <summary>Aynı anda en fazla 2 istek: art arda gelen altyazılar servisi boğup "çok sık istek (429)" almasın.</summary>
+    public SemaphoreSlim Gate { get; } = new(2, 2);
+    public DateTime LastStart { get; set; }
 }
 
 /// <summary>
@@ -126,7 +130,73 @@ public sealed class TranslationService : IDisposable
         return await TranslateCoreAsync(text, context, ct).ConfigureAwait(false);
     }
 
+    // Aynı metin için yolda olan istek: ikinci kez gönderilmez, aynı sonucu bekler (titrek OCR okumaları).
+    // Bekleyen herkes vazgeçerse (altyazı değişti) istek de iptal edilir – sırada eskimiş istek birikmesin.
+    private sealed class Inflight
+    {
+        public required Task<TranslationOutcome> Task;
+        public required CancellationTokenSource Cts;
+        public int Waiters;
+    }
+    private readonly Dictionary<string, Inflight> _inflight = new(StringComparer.Ordinal);
+
     private async Task<TranslationOutcome> TranslateCoreAsync(string text, string? context, CancellationToken ct)
+    {
+        Inflight f;
+        lock (_inflight)
+        {
+            if (!_inflight.TryGetValue(text, out f!))
+            {
+                var cts = new CancellationTokenSource();
+                f = new Inflight { Task = TranslateUncachedAsync(text, context, cts.Token), Cts = cts };
+                _inflight[text] = f;
+                var captured = f;
+                f.Task.ContinueWith(_ =>
+                {
+                    lock (_inflight) { if (_inflight.TryGetValue(text, out var cur) && ReferenceEquals(cur, captured)) _inflight.Remove(text); }
+                    captured.Cts.Dispose();
+                }, TaskScheduler.Default);
+            }
+            f.Waiters++;
+        }
+        try
+        {
+            return await f.Task.WaitAsync(ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            lock (_inflight)
+            {
+                if (--f.Waiters == 0 && !f.Task.IsCompleted)
+                {
+                    try { f.Cts.Cancel(); } catch (ObjectDisposedException) { }
+                    if (_inflight.TryGetValue(text, out var cur) && ReferenceEquals(cur, f)) _inflight.Remove(text);
+                }
+            }
+        }
+    }
+
+    /// <summary>Servise göre süre sınırı: bilgisayardaki model işlemcide biraz daha uzun sürebilir.</summary>
+    private static TimeSpan TimeoutFor(EngineSlot s) => s.Translator is OfflineTranslator ? TimeSpan.FromSeconds(10) : AttemptTimeout;
+
+    /// <summary>Servisi sınırla çağırır: aynı anda en fazla 2 istek ve iki istek arasında en az 120 ms.</summary>
+    private static async Task<string> CallLimitedAsync(EngineSlot slot, string text, string? context, CancellationToken ct)
+    {
+        await slot.Gate.WaitAsync(ct).ConfigureAwait(false);
+        try
+        {
+            if (slot.Translator is not OfflineTranslator)
+            {
+                var wait = slot.LastStart + TimeSpan.FromMilliseconds(120) - DateTime.Now;
+                if (wait > TimeSpan.Zero) await Task.Delay(wait, ct).ConfigureAwait(false);
+                slot.LastStart = DateTime.Now;
+            }
+            return await slot.Translator.TranslateAsync(text, context, ct).ConfigureAwait(false);
+        }
+        finally { slot.Gate.Release(); }
+    }
+
+    private async Task<TranslationOutcome> TranslateUncachedAsync(string text, string? context, CancellationToken ct)
     {
         var sw = Stopwatch.StartNew();
         if (_cache.TryGet(text, out string cached, out bool fuzzy))
@@ -155,10 +225,10 @@ public sealed class TranslationService : IDisposable
 
             var attemptSw = Stopwatch.StartNew();
             using var attemptCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            attemptCts.CancelAfter(AttemptTimeout);
+            attemptCts.CancelAfter(TimeoutFor(slot));
             try
             {
-                var primary = slot.Translator.TranslateAsync(text, context, attemptCts.Token);
+                var primary = CallLimitedAsync(slot, text, context, attemptCts.Token);
 
                 // Yedekli deneme: birinci servis HedgeDelay içinde yanıt vermezse sıradaki servis de başlatılır
                 var backup = _slots.Skip(si + 1).FirstOrDefault(s2 => s2.IsUsable(now));
@@ -169,9 +239,9 @@ public sealed class TranslationService : IDisposable
                     if (first != primary)
                     {
                         using var backupCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-                        backupCts.CancelAfter(AttemptTimeout);
+                        backupCts.CancelAfter(TimeoutFor(backup));
                         var bsw = Stopwatch.StartNew();
-                        var second = backup.Translator.TranslateAsync(text, context, backupCts.Token);
+                        var second = CallLimitedAsync(backup, text, context, backupCts.Token);
                         var done = await Task.WhenAny(primary, second);
                         if (done == second && second.Status == TaskStatus.RanToCompletion && !string.IsNullOrWhiteSpace(second.Result))
                         {
@@ -219,6 +289,18 @@ public sealed class TranslationService : IDisposable
                 errors.Add(ex.Message);
                 slot.DisabledReason = ex.Message;
                 EngineEvent?.Invoke($"{ex.Message} {slot.Translator.Name} anahtar düzeltilene kadar atlanacak.", true);
+            }
+            catch (TranslationException ex) when (ex.StatusCode == 429)
+            {
+                // Hız sınırı (kota değil): servis kısa bir süre (10 sn) dinlendirilir, bu altyazı sıradakiyle çevrilir
+                errors.Add(ex.Message);
+                if (slot.CooldownUntil == null || slot.CooldownUntil < DateTime.Now)
+                {
+                    slot.CooldownUntil = DateTime.Now.AddSeconds(10);
+                    var next = _slots.FirstOrDefault(s2 => s2.IsUsable(DateTime.Now));
+                    EngineEvent?.Invoke($"{ex.Message} {slot.Translator.Name} 10 sn dinlendiriliyor" +
+                                        (next != null ? $"; bu arada {next.Translator.Name}." : "."), true);
+                }
             }
             catch (TranslationException ex)
             {
@@ -327,6 +409,7 @@ public sealed class TranslationService : IDisposable
 
     private void Fail(EngineSlot slot, string message)
     {
+        if (slot.Translator is OfflineTranslator) { EngineEvent?.Invoke(message, true); return; } // son çare: hiç dinlendirilmez
         slot.ConsecutiveFailures++;
         if (slot.ConsecutiveFailures >= 3)
         {

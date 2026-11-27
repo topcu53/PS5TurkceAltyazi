@@ -1,5 +1,22 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.25 – Kesintisiz çeviri: bilgisayarda (internetsiz) çeviri
+
+- **Çeviri durmasının asıl sebebi düzeltildi:** DeepL'in aylık kotası dolmamıştı (%18); servislere aynı anda çok fazla
+  istek gidiyordu ("çok sık istek – 429"), DeepL 1 dk, Gemini 2 dk, MyMemory 1 saat devre dışı kalıyordu.
+  - Aynı metin için ikinci istek gönderilmiyor (titrek OCR okumaları tek istekte birleşiyor).
+  - Servis başına aynı anda en fazla 2 istek, iki istek arasında en az 120 ms.
+  - "Çok sık istek" artık kota sayılmıyor: servis yalnızca 10 sn dinlendiriliyor.
+  - "Dengeli" mod artık her altyazıyı DeepL ve Gemini'ye birlikte göndermiyor; Gemini yalnız DeepL 600 ms'de
+    yanıt vermezse devreye giriyor (Gemini'nin dakikalık sınırı dolmuyor).
+- **Bilgisayarda çeviri (yeni):** Ayarlar → Çeviri → "5) Bilgisayarda çeviri" → "⬇ Modeli İndir" (bir kez, ~530 MB).
+  Helsinki-NLP opus-mt-tc-big-en-tr modeli işlemcide çalışır: ekran kartı, internet, kota yok; cümle başına ~0,15–0,35 sn.
+  Çeviri zincirinin sonunda her zaman hazır bekler → internet servisleri dursa da çeviri devam eder.
+- **Eski Türkçe yeni altyazının üstünde kalmıyor:** bambaşka bir altyazı gelip çevirisi 0,8 sn içinde gelmezse ya da
+  çevrilemezse önceki Türkçe kaldırılıyor.
+- OCR düzeltmeleri: harf yerine rakam okunmuş kelimeler düzeltiliyor ("100k" → "look", "c0me" → "come");
+  Türkçede kekelemeden kalan "f- " gibi parçalar siliniyor.
+
 ## v2.24 – Üst üste iki altyazı, temiz metin, yabancı dil rengi
 
 - **Üst üste iki altyazı artık birlikte okunuyor:** iki kişi aynı anda konuşup satırlar birbirine değince algılayıcı
