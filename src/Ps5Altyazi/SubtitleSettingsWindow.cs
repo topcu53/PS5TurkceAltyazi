@@ -91,7 +91,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
     private FrameworkElement SizeRow()
     {
         var box = new StackPanel { Margin = new Thickness(0, 0, 0, 12) };
-        box.Children.Add(new TextBlock { Text = "Yazı boyu", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 0, 0, 6) });
+        box.Children.Add(new TextBlock { Text = "Boy", Foreground = Theme.Dim, FontSize = 12, Margin = new Thickness(0, 0, 0, 6) });
         var row = new UniformGrid { Columns = Sizes.Length };
         for (int i = 0; i < Sizes.Length; i++)
         {
@@ -137,6 +137,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
 
         var root = new StackPanel { Margin = new Thickness(16) };
 
+        root.Children.Add(new TextBlock { Text = "Yazı boyu ve zemin", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 0, 0, 4) });
         root.Children.Add(SizeRow());
         root.Children.Add(SliderRow("Arka plan saydamlığı (koyuluk)", 0, 100, _s.SubtitleBackgroundOpacity * 100, v => $"%{v:F0}",
             v => _s.SubtitleBackgroundOpacity = v / 100));
@@ -163,6 +164,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
         root.Children.Add(new TextBlock { Text = "Değişiklikler TV'de ve (açıksa) PC'de anında uygulanır. \"Örnek altyazı göster\" ile deneyin.",
                                           Foreground = Theme.Dim, TextWrapping = TextWrapping.Wrap, FontSize = 12, Margin = new Thickness(0, 4, 0, 0) });
 
+        root.Children.Add(new TextBlock { Text = "Bilgisayar ekranı", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 4) });
         var topmost = new CheckBox { Content = "Her zaman üstte", IsChecked = _s.SubtitleTopmost, Margin = new Thickness(0, 10, 0, 0) };
         topmost.Checked += (_, _) => { _s.SubtitleTopmost = true; Changed?.Invoke(); };
         topmost.Unchecked += (_, _) => { _s.SubtitleTopmost = false; Changed?.Invoke(); };
@@ -190,11 +192,12 @@ public sealed class SubtitleSettingsWindow : PageWindow
         match.Unchecked += (_, _) => { _s.SubtitleMatchOriginalSize = false; Changed?.Invoke(); };
         root.Children.Add(match);
 
-        root.Children.Add(FontSection());
-
         _editCheck.Checked += (_, _) => _sub.SetEditMode(true);
         _editCheck.Unchecked += (_, _) => _sub.SetEditMode(false);
         root.Children.Add(_editCheck);
+
+        root.Children.Add(new TextBlock { Text = "Yazı tipi", FontWeight = FontWeights.Bold, FontSize = 14, Margin = new Thickness(0, 14, 0, 4) });
+        root.Children.Add(FontSection());
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 14, 0, 0) };
         var sample = new Button { Content = "Örnek altyazı göster", Padding = new Thickness(12, 4, 12, 4), Margin = new Thickness(0, 0, 8, 0) };
@@ -244,8 +247,7 @@ public sealed class SubtitleSettingsWindow : PageWindow
 
     private FrameworkElement FontSection()
     {
-        var panel = new StackPanel { Margin = new Thickness(0, 16, 0, 0) };
-        panel.Children.Add(new TextBlock { Text = "Yazı tipi", FontWeight = FontWeights.Bold, FontSize = 11, Foreground = Theme.Accent });
+        var panel = new StackPanel { Margin = new Thickness(0) };
         panel.Children.Add(new TextBlock
         {
             Text = "Listeden seçin ya da kendi .ttf / .otf dosyanızı ekleyin. Boyut her zaman oyundaki altyazıdan ölçülür.",

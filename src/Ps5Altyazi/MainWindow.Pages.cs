@@ -60,46 +60,57 @@ public partial class MainWindow
 
     private FrameworkElement BuildPageView(PageWindow page, UIElement content)
     {
+        bool full = _pageHost?.Parent is not Grid g || !ReferenceEquals(g, SettingsPage);
         var dock = new DockPanel { LastChildFill = true };
 
-        // Başlık: ← Geri · sayfa adı
-        var head = new DockPanel { Margin = new Thickness(0, 0, 0, 12) };
+        // ── Başlık: yuvarlak "←" düğmesi · büyük başlık · altında soluk açıklama (Ayarlar sayfalarıyla aynı düzen)
+        string title = page.Title ?? "", sub = "";
+        int dash = title.IndexOf(" – ", StringComparison.Ordinal);
+        if (dash > 0) { sub = title[(dash + 3)..]; title = title[..dash]; }
+        var head = new Grid { Margin = new Thickness(0, 0, 0, 16) };
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         var back = new Button
         {
-            Content = "←  Geri", Padding = new Thickness(14, 6, 14, 6), Margin = new Thickness(0, 0, 14, 0),
-            VerticalAlignment = VerticalAlignment.Center, ToolTip = "Önceki sayfaya dön (Esc)",
+            Content = "←", FontSize = 18, Width = 42, Height = 42, Padding = new Thickness(0), Margin = new Thickness(0, 0, 14, 0),
+            VerticalAlignment = VerticalAlignment.Center, ToolTip = "Geri (Esc)",
         };
         back.Click += (_, _) => ClosePage(page, null);
-        DockPanel.SetDock(back, Dock.Left);
         head.Children.Add(back);
-        head.Children.Add(new TextBlock
-        {
-            Text = page.Title, FontSize = 24, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-        });
+        var titles = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        titles.Children.Add(new TextBlock { Text = MainWindow.Cap(title), FontSize = 24, FontWeight = FontWeights.Bold, TextTrimming = TextTrimming.CharacterEllipsis });
+        if (sub.Length > 0)
+            titles.Children.Add(new TextBlock { Text = MainWindow.Cap(sub), Foreground = (System.Windows.Media.Brush)FindResource("TextDim"), Margin = new Thickness(0, 2, 0, 0), TextTrimming = TextTrimming.CharacterEllipsis });
+        Grid.SetColumn(titles, 1);
+        head.Children.Add(titles);
         DockPanel.SetDock(head, Dock.Top);
         dock.Children.Add(head);
 
-        // İçerik: pencere için tasarlandığı genişlikte (çok geniş ekranda satırlar uzayıp dağılmasın), solda
-        double designed = double.IsNaN(page.Width) || page.Width <= 0 ? 900 : page.Width + 60;
+        // ── İçerik: bölümler ayrı kartlara ayrılır (temaya uygun), sayfa kendi "Kapat / Tamam" düğmesi gizlenir
         if (content is FrameworkElement fe)
         {
             fe.HorizontalAlignment = HorizontalAlignment.Stretch;
             fe.VerticalAlignment = page.InlineScroll ? VerticalAlignment.Top : VerticalAlignment.Stretch;
         }
-        var card = new Border
+        FrameworkElement body;
+        if (!page.InlineScroll)
         {
-            Style = (Style)FindResource("Panel"),
-            MaxWidth = Math.Max(640, designed),
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = page.InlineScroll ? VerticalAlignment.Top : VerticalAlignment.Stretch,
-            Child = content,
-        };
-        if (!page.InlineScroll) { card.MaxWidth = double.PositiveInfinity; card.HorizontalAlignment = HorizontalAlignment.Stretch; }
-
-        UIElement body = page.InlineScroll && content is not ScrollViewer
-            ? new ScrollViewer { Content = card, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled }
-            : card;
+            body = new Border { Style = (Style)FindResource("Panel"), Padding = new Thickness(6), Child = content };
+        }
+        else
+        {
+            var inner = content is ScrollViewer sv0 ? sv0.Content as UIElement : content;
+            if (content is ScrollViewer sv1) sv1.Content = null;
+            var styled = PageStyler.Restyle(inner!, this);
+            styled.MaxWidth = full ? 940 : double.PositiveInfinity;
+            styled.HorizontalAlignment = HorizontalAlignment.Stretch;
+            body = new ScrollViewer
+            {
+                Content = styled, VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled, Padding = new Thickness(0, 0, 6, 0),
+            };
+        }
+        if (full) head.MaxWidth = 940; // kurulumda / ana ekranda ortada, okunur genişlikte
         dock.Children.Add(body);
         return dock;
     }

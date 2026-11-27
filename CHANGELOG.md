@@ -1,5 +1,18 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.33 – Ayar sayfaları yeni tasarımda
+
+- Ana pencerede açılan ayar sayfaları (Altyazı görünümü, Çeviri, PS5 bağlantısı, TV kurulumu, Tema, Genel, oyun
+  seçimi) artık Ayarlar ekranıyla aynı tasarımda:
+  - Üstte yuvarlak "←" düğmesi, büyük başlık ve altında soluk açıklama satırı.
+  - Her bölüm (ör. "1) DeepL API", "Çevirinin yeri (TV)", "2) PS5'i bul") temanın renginde, köşeleri yuvarlak
+    ayrı bir kartta; giriş açıklaması kartların üstünde.
+  - En alttaki düğmeler sağa yaslı bir eylem satırında; ana düğme ("Kaydet ve dene", "Uygula ve yeniden aç", "Seç")
+    vurgu renginde. Sayfalardaki "Kapat / Tamam" düğmeleri kaldırıldı ("←" ya da Esc ile dönülür).
+  - Kurulumda ve ana ekranda açılan sayfalar ortada, okunur genişlikte (en çok 940 px) durur.
+- Altyazı görünümü sayfası bölümlere ayrıldı: Yazı boyu ve zemin · Çevirinin yeri (TV) · Renkler ve zemin ·
+  Bilgisayar ekranı · Yazı tipi.
+
 ## v2.32 – Durum yazıları büyük harfle
 
 - Ana sayfadaki ve durum satırlarındaki bütün yazılar büyük harfle başlıyor: "bağlı" → "Bağlı", "bağlı değil" →
