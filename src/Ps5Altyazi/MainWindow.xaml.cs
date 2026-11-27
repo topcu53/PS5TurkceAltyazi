@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.31 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.32 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Günlük dosyası: {Log.CurrentFile}");
 
@@ -2555,9 +2555,10 @@ public partial class MainWindow : Window
         });
     }
 
-    private static void SetText(TextBlock tb, string text, Brush color)
+    private void SetText(TextBlock tb, string text, Brush color)
     {
-        tb.Text = text;
+        // Okunan İngilizce ve çevrilen Türkçe olduğu gibi gösterilir; durum yazıları büyük harfle başlar
+        tb.Text = ReferenceEquals(tb, EnglishText) || ReferenceEquals(tb, TurkishText) ? text : Cap(text);
         tb.Foreground = color;
     }
 }

@@ -12,7 +12,31 @@ public partial class MainWindow
 {
     /// <summary>PS5 bağlantı durumu: 0 bağlı değil (kırmızı), 1 bağlanıyor (turuncu), 2 bağlı (yeşil).</summary>
     private int _ps5Level;
-    private string _ps5Text = "bağlı değil";
+    private string _ps5Text = "Bağlı değil";
+
+    private static readonly System.Globalization.CultureInfo Tr = new("tr-TR");
+
+    /// <summary>
+    /// Durum yazıları büyük harfle başlar; " – ", " • ", " · " ile ayrılan her parça ayrı bir bilgi olduğu için
+    /// onların ilk harfi de büyük yazılır ("Çalışıyor – Kareler alınıyor"). Türkçe kurala göre i → İ.
+    /// </summary>
+    internal static string Cap(string? text)
+    {
+        if (string.IsNullOrEmpty(text)) return text ?? "";
+        var sb = new System.Text.StringBuilder(text);
+        bool next = true;
+        for (int i = 0; i < sb.Length; i++)
+        {
+            char c = sb[i];
+            if (next && char.IsLetter(c)) { sb[i] = char.ToUpper(c, Tr); next = false; continue; }
+            if (next && char.IsDigit(c)) next = false;
+            if (i >= 2 && sb[i - 1] == ' ' && (sb[i - 2] == '–' || sb[i - 2] == '•' || sb[i - 2] == '·') && i >= 3 && sb[i - 3] == ' ')
+            {
+                if (char.IsLetter(c)) sb[i] = char.ToUpper(c, Tr);
+            }
+        }
+        return sb.ToString();
+    }
 
     private const string TestText = "Bu bir test altyazısıdır. Altyazı+ çalışıyor! ✔";
 
@@ -102,21 +126,21 @@ public partial class MainWindow
         string ps5Text;
         if (DirectRunning) { ps5 = _ps5Level; ps5Text = _ps5Text; }
         else if (_capture != null) { ps5 = 2; ps5Text = "Remote Play penceresinden"; }
-        else if (!_directReady) { ps5 = 0; ps5Text = "kurulmadı – 🧭 Kurulum"; }
-        else { ps5 = 0; ps5Text = "bağlı değil – ▶ Başlat"; }
+        else if (!_directReady) { ps5 = 0; ps5Text = "Kurulmadı – Kurulum adımlarını açın"; }
+        else { ps5 = 0; ps5Text = "Bağlı değil – F6 ile başlatın"; }
         Ps5Dot.Foreground = Level(ps5);
-        Ps5PillText.Text = ps5Text;
+        Ps5PillText.Text = Cap(ps5Text);
         Ps5PillText.ToolTip = Ps5PillText.Text;
 
         int tv;
         string tvText;
         int clients = _server is { IsRunning: true } srv ? srv.ClientCount : 0;
         bool tvSetUp = _settings.TvPlatform == "webos" ? _settings.TvKeyProtected != null : _settings.TvServerEnabled;
-        if (clients > 0) { tv = 2; tvText = $"bağlı ({clients} ekran)"; }
+        if (clients > 0) { tv = 2; tvText = $"Bağlı ({clients} ekran)"; }
         else if (_server is { IsRunning: true } && tvSetUp) { tv = 1; tvText = "TV uygulaması bekleniyor…"; }
-        else { tv = 0; tvText = tvSetUp ? "bağlı değil" : "kurulmadı"; }
+        else { tv = 0; tvText = tvSetUp ? "Bağlı değil" : "Kurulmadı"; }
         TvDot.Foreground = Level(tv);
-        TvPillText.Text = tvText;
+        TvPillText.Text = Cap(tvText);
         TranslatorTileText.Text = TranslationShort();
         TvPillText.ToolTip = TvPillText.Text;
 
@@ -181,10 +205,10 @@ public partial class MainWindow
         _ps5Level = state == Ps5State.Streaming ? 2 : 1;
         _ps5Text = state switch
         {
-            Ps5State.Streaming => "bağlı",
+            Ps5State.Streaming => "Bağlı",
             Ps5State.Waking => "uyandırılıyor…",
-            Ps5State.Retrying => "bağlantı bekleniyor…",
-            _ => "bağlanıyor…",
+            Ps5State.Retrying => "Bağlantı bekleniyor…",
+            _ => "Bağlanıyor…",
         };
     }
 }

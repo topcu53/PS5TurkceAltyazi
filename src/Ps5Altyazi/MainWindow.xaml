@@ -191,7 +191,7 @@
                                         <TextBlock Text="PS5" Foreground="{StaticResource TextDim}" FontSize="12"/>
                                         <TextBlock x:Name="Ps5Dot" Text=" ●" Foreground="#FF5C5C" FontSize="11" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <TextBlock x:Name="Ps5PillText" Text="bağlı değil" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="Ps5PillText" Text="Bağlı değil" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button x:Name="Ps5ReconnectButton" Grid.Row="1" Grid.ColumnSpan="2" Content="↻ Yeniden bağlan" Visibility="Collapsed"
                                         Click="Ps5Reconnect_Click" FontSize="12" Padding="8,5" Margin="0,10,0,0"
@@ -217,7 +217,7 @@
                                         <TextBlock Text="TV" Foreground="{StaticResource TextDim}" FontSize="12"/>
                                         <TextBlock x:Name="TvDot" Text=" ●" Foreground="#FF5C5C" FontSize="11" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                    <TextBlock x:Name="TvPillText" Text="bağlı değil" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                    <TextBlock x:Name="TvPillText" Text="Bağlı değil" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap"/>
                                 </StackPanel>
                                 <Button x:Name="TvReconnectButton" Grid.Row="1" Grid.ColumnSpan="2" Content="↻ Yeniden bağlan" Visibility="Collapsed"
                                         Click="TvReconnect_Click" FontSize="12" Padding="8,5" Margin="0,10,0,0"

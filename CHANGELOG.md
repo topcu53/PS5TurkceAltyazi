@@ -1,5 +1,15 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.32 – Durum yazıları büyük harfle
+
+- Ana sayfadaki ve durum satırlarındaki bütün yazılar büyük harfle başlıyor: "bağlı" → "Bağlı", "bağlı değil" →
+  "Bağlı değil", "bağlanıyor…" → "Bağlanıyor…", "kurulmadı" → "Kurulmadı".
+- " – ", " • " ile ayrılan her parça ayrı bilgi olduğu için o da büyük harfle başlıyor ("Çalışıyor – Kareler
+  alınıyor", "Windows OCR (en-US) • Son 1 ms • Ort. 5 ms"). Türkçe kurala göre i → İ. Okunan İngilizce ve çevrilen
+  Türkçe altyazı olduğu gibi kalır.
+- PS5 kutusundaki eski yönlendirmeler güncellendi: "Kurulmadı – Kurulum adımlarını açın", "Bağlı değil – F6 ile
+  başlatın".
+
 ## v2.31 – Tek pencere, düzgün yerleşim, Türkçe yazım
 
 - **Ayar sayfaları artık ayrı pencere değil:** Altyazı görünümü, Çeviri, PS5 bağlantısı, TV kurulumu, Tema, Genel

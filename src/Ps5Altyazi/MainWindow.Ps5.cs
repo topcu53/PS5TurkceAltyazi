@@ -136,7 +136,7 @@ public partial class MainWindow
         _target = null;
         _directStreaming = false;
         _ps5Level = 1;
-        _ps5Text = "bağlanıyor…";
+        _ps5Text = "Bağlanıyor…";
         ResetSessionStats();
         StartStopButton.Content = "■   Çeviriyi durdur";
         SetText(CaptureStatus, "PS5'e bağlanılıyor…", Orange);
