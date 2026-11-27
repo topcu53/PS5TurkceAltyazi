@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- CI testi: çevrimdışı çeviri motorunu (MarianOnnx) gerçek modelle Linux'ta çalıştırır. Programın parçası değildir. -->
+  <!-- CI testi: çevrimdışı çeviri motorunu gerçek modelle çalıştırır (Linux: CPU, Windows: CPU + DirectML).
+       Programın parçası değildir. -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,6 +9,14 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../src/Ps5Altyazi/Translation/MarianOnnx.cs" Link="MarianOnnx.cs" />
+    <Compile Include="../../src/Ps5Altyazi/Translation/OfflineEngine.cs" Link="OfflineEngine.cs" />
+    <Compile Include="../../src/Ps5Altyazi/Translation/OfflineTranslator.cs" Link="OfflineTranslator.cs" />
+    <Compile Include="../../src/Ps5Altyazi/Translation/DeepLTranslator.cs" Link="DeepLTranslator.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.DirectML" Version="1.20.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.20.1" />
   </ItemGroup>
 </Project>

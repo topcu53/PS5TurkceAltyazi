@@ -5,31 +5,43 @@ on:
   push:
     paths:
       - 'src/Ps5Altyazi/Translation/MarianOnnx.cs'
+      - 'src/Ps5Altyazi/Translation/OfflineEngine.cs'
+      - 'src/Ps5Altyazi/Translation/OfflineTranslator.cs'
       - 'tests/OfflineTest/**'
       - '.github/workflows/offline-test.yml'
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Modeli indir (opus-mt-tc-big-en-tr, ONNX int8)
+      - name: Modeli indir (CPU INT8 + ekran kartı FP16)
         run: |
           set -e
           M=model; mkdir -p $M/onnx
           B=https://huggingface.co/onnx-community/opus-mt-tc-big-en-tr/resolve/main
-          for f in config.json generation_config.json tokenizer.json vocab.json source.spm target.spm tokenizer_config.json special_tokens_map.json onnx/encoder_model_quantized.onnx onnx/decoder_model_merged_quantized.onnx; do
-            curl -sSfL -o $M/$f $B/$f
-          done
-          ls -la $M $M/onnx
-          python3 -c "import json;t=json.load(open('$M/tokenizer.json'));print('tokenizer:',t['model']['type'],len(t['model']['vocab']));print('normalizer:',json.dumps(t.get('normalizer'))[:300]);print('pre:',json.dumps(t.get('pre_tokenizer'))[:300])"
-          cat $M/config.json $M/generation_config.json
-      - name: C# çeviri testi
-        run: dotnet run -c Release --project tests/OfflineTest -- $PWD/model
+          FILES="config.json generation_config.json tokenizer.json vocab.json onnx/encoder_model_quantized.onnx onnx/decoder_model_merged_quantized.onnx"
+          if [ "$RUNNER_OS" = "Windows" ]; then FILES="$FILES onnx/encoder_model_fp16.onnx onnx/decoder_model_fp16.onnx onnx/decoder_with_past_model_fp16.onnx"; fi
+          for f in $FILES; do curl -sSfL -o $M/$f $B/$f; done
+          ls -la $M/onnx
+      - name: Donanım
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then powershell -c "Get-CimInstance Win32_Processor | Select Name,NumberOfCores,NumberOfLogicalProcessors | Format-List; Get-CimInstance Win32_VideoController | Select Name,AdapterRAM,DriverVersion | Format-List"; else lscpu | head -15; fi
+      - name: Kabul testleri
+        run: dotnet run -c Release --project tests/OfflineTest -- "$PWD/model"
       - name: Parçalayıcıyı resmi parçalayıcıyla karşılaştır
+        if: runner.os == 'Linux'
         run: |
           pip install -q transformers sentencepiece
+          for f in source.spm target.spm tokenizer_config.json special_tokens_map.json; do curl -sSfL -o model/$f https://huggingface.co/onnx-community/opus-mt-tc-big-en-tr/resolve/main/$f; done
           python3 tests/OfflineTest/ref_ids.py model model/samples.txt model/cs_ids.txt

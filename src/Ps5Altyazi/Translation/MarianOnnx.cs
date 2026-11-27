@@ -9,38 +9,74 @@ using Microsoft.ML.OnnxRuntime.Tensors;
 
 namespace Ps5Altyazi.Translation;
 
+/// <summary>Çevirinin çalışacağı donanım.</summary>
+public enum MarianDevice
+{
+    /// <summary>İşlemci (Intel / AMD): int8 model, her bilgisayarda çalışır.</summary>
+    Cpu,
+    /// <summary>Ekran kartı (DirectML: NVIDIA, AMD, Intel – DirectX 12): fp16 model.</summary>
+    Gpu,
+}
+
 /// <summary>
-/// İnternetsiz, ekran kartı gerektirmeyen İngilizce→Türkçe çeviri: Helsinki-NLP "opus-mt-tc-big-en-tr" (Marian)
-/// modelinin ONNX (int8) sürümü, ONNX Runtime ile işlemcide çalışır. Kodlayıcı bir kez, kod çözücü (geçmiş
-/// önbellekli, "merged") her yeni kelime parçası için çalıştırılır; açgözlü (greedy) arama.
-/// Bu dosya Windows'a bağlı değildir (CI'da Linux'ta gerçek modelle test edilir: tests/OfflineTest).
+/// İnternetsiz İngilizce→Türkçe çeviri: Helsinki-NLP "opus-mt-tc-big-en-tr" (Marian) modelinin ONNX sürümü.
+/// <list type="bullet">
+/// <item>CPU profili: int8 model (encoder ~136 MB + merged decoder ~396 MB), ONNX Runtime CPU.</item>
+/// <item>GPU profili: fp16 model (encoder ~270 MB + decoder ~321 MB + with-past decoder ~296 MB), DirectML ile
+/// her DirectX 12 ekran kartında (NVIDIA / AMD / Intel). Ağırlıklar ve KV önbelleği ekran kartında tutulur;
+/// her adımda yalnızca son kelime parçasının olasılıkları ve küçük önbellek tensörleri taşınır.</item>
+/// </list>
+/// Kodlayıcı bir kez, kod çözücü her yeni parça için çalışır (açgözlü arama, geçmiş önbellekli).
+/// Bu dosya Windows'a bağlı değildir (CI'da gerçek modelle test edilir: tests/OfflineTest).
 /// </summary>
 public sealed class MarianOnnx : IDisposable
 {
+    // CPU profili
     public const string EncoderFile = "encoder_model_quantized.onnx";
     public const string DecoderFile = "decoder_model_merged_quantized.onnx";
-    public static readonly string[] Files =
-        { "config.json", "generation_config.json", "tokenizer.json", "vocab.json", "onnx/" + EncoderFile, "onnx/" + DecoderFile };
+    // GPU profili
+    public const string GpuEncoderFile = "encoder_model_fp16.onnx";
+    public const string GpuDecoderFile = "decoder_model_fp16.onnx";
+    public const string GpuDecoderPastFile = "decoder_with_past_model_fp16.onnx";
 
-    private readonly InferenceSession _enc, _dec;
+    public static readonly string[] CommonFiles = { "config.json", "generation_config.json", "tokenizer.json", "vocab.json" };
+    public static readonly string[] CpuFiles = { "onnx/" + EncoderFile, "onnx/" + DecoderFile };
+    public static readonly string[] GpuFiles = { "onnx/" + GpuEncoderFile, "onnx/" + GpuDecoderFile, "onnx/" + GpuDecoderPastFile };
+    /// <summary>CPU profili için gereken dosyalar (eski sürümlerle uyum).</summary>
+    public static string[] Files => CommonFiles.Concat(CpuFiles).ToArray();
+
+    public static string[] FilesFor(MarianDevice d) => CommonFiles.Concat(d == MarianDevice.Gpu ? GpuFiles : CpuFiles).ToArray();
+
+    public MarianDevice Device { get; }
+    public string DeviceName { get; }
+    public int Threads { get; }
+    public TimeSpan LoadTime { get; }
+
+    private readonly InferenceSession _enc, _decFirst;
+    private readonly InferenceSession? _decPast; // GPU: ayrı "with past" kod çözücü; CPU: merged (null)
+    private readonly bool _fp16;
     private readonly Dictionary<string, int> _vocab;
     private readonly string[] _idToPiece;
     private readonly Dictionary<string, double> _scores = new(StringComparer.Ordinal);
     private readonly int _maxPieceLen;
-    private readonly int _eos, _pad, _unk, _start, _layers, _heads, _headDim;
+    private readonly int _eos, _pad, _unk, _start, _heads, _headDim;
     private readonly HashSet<int> _special = new();
-    private readonly List<string> _pastNames;
     private readonly object _lock = new();
 
-    public MarianOnnx(string dir, int threads = 0)
+    /// <param name="dir">Model klasörü.</param>
+    /// <param name="device">Cpu ya da Gpu (DirectML).</param>
+    /// <param name="gpuIndex">DirectML aygıt sırası (DXGI ekran kartı sırası).</param>
+    /// <param name="threads">CPU iş parçacığı; 0 = otomatik (fiziksel çekirdek sayısı kadar, en çok 8).</param>
+    public MarianOnnx(string dir, MarianDevice device = MarianDevice.Cpu, int gpuIndex = 0, int threads = 0, int physicalCores = 0)
     {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        Device = device;
         using (var cfg = JsonDocument.Parse(File.ReadAllText(Path.Combine(dir, "config.json"))))
         {
             var r = cfg.RootElement;
             _eos = r.GetProperty("eos_token_id").GetInt32();
             _pad = r.GetProperty("pad_token_id").GetInt32();
             _start = r.TryGetProperty("decoder_start_token_id", out var ds) ? ds.GetInt32() : _pad;
-            _layers = r.TryGetProperty("decoder_layers", out var dl) ? dl.GetInt32() : 6;
             _heads = r.TryGetProperty("decoder_attention_heads", out var dh) ? dh.GetInt32() : 16;
             int dModel = r.TryGetProperty("d_model", out var dm) ? dm.GetInt32() : 1024;
             _headDim = dModel / _heads;
@@ -76,16 +112,48 @@ public sealed class MarianOnnx : IDisposable
             }
         }
 
-        var so = new SessionOptions
+        int cores = physicalCores > 0 ? physicalCores : Math.Max(1, Environment.ProcessorCount / 2);
+        Threads = threads > 0 ? Math.Clamp(threads, 1, Environment.ProcessorCount) : Math.Clamp(cores, 1, 8);
+        string onnx = Path.Combine(dir, "onnx");
+        if (device == MarianDevice.Gpu)
         {
-            GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
-            IntraOpNumThreads = threads > 0 ? threads : Math.Clamp(Environment.ProcessorCount / 2, 1, 8),
-            InterOpNumThreads = 1,
-        };
-        _enc = new InferenceSession(Path.Combine(dir, "onnx", EncoderFile), so);
-        _dec = new InferenceSession(Path.Combine(dir, "onnx", DecoderFile), so);
-        _pastNames = _dec.InputMetadata.Keys.Where(k => k.StartsWith("past_key_values.", StringComparison.Ordinal)).ToList();
+            SessionOptions Gpu()
+            {
+                var o = new SessionOptions
+                {
+                    GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                    // DirectML gereği: bellek deseni kapalı, sıralı yürütme
+                    EnableMemoryPattern = false,
+                    ExecutionMode = ExecutionMode.ORT_SEQUENTIAL,
+                    IntraOpNumThreads = Math.Min(Threads, 4),
+                };
+                o.AppendExecutionProvider_DML(gpuIndex);
+                return o;
+            }
+            _enc = new InferenceSession(Path.Combine(onnx, GpuEncoderFile), Gpu());
+            _decFirst = new InferenceSession(Path.Combine(onnx, GpuDecoderFile), Gpu());
+            _decPast = new InferenceSession(Path.Combine(onnx, GpuDecoderPastFile), Gpu());
+            DeviceName = $"Ekran kartı #{gpuIndex} (DirectML, FP16)";
+        }
+        else
+        {
+            var so = new SessionOptions
+            {
+                GraphOptimizationLevel = GraphOptimizationLevel.ORT_ENABLE_ALL,
+                IntraOpNumThreads = Threads,
+                InterOpNumThreads = 1,
+            };
+            _enc = new InferenceSession(Path.Combine(onnx, EncoderFile), so);
+            _decFirst = new InferenceSession(Path.Combine(onnx, DecoderFile), so);
+            DeviceName = $"İşlemci ({Threads} iş parçacığı, INT8)";
+        }
+        _fp16 = _enc.OutputMetadata.Values.First().ElementDataType == TensorElementType.Float16;
+        LoadTime = sw.Elapsed;
     }
+
+    /// <summary>Gereken dosyalar klasörde var mı?</summary>
+    public static bool HasFiles(string dir, MarianDevice d) =>
+        FilesFor(d).All(f => File.Exists(Path.Combine(dir, f.Replace('/', Path.DirectorySeparatorChar))));
 
     // ───────── Parçalayıcı ─────────
 
@@ -140,10 +208,12 @@ public sealed class MarianOnnx : IDisposable
     public string Translate(string text, int maxNewTokens = 0)
     {
         if (string.IsNullOrWhiteSpace(text)) return "";
-        lock (_lock) return TranslateCore(text, maxNewTokens);
+        lock (_lock) return _fp16 ? TranslateCore<Float16>(text, maxNewTokens) : TranslateCore<float>(text, maxNewTokens);
     }
 
-    private string TranslateCore(string text, int maxNewTokens)
+    private static DenseTensor<T> Copy<T>(Tensor<T> t) => new(t.ToArray(), t.Dimensions.ToArray());
+
+    private string TranslateCore<T>(string text, int maxNewTokens) where T : unmanaged
     {
         var src = Encode(text);
         if (src.Count > 256) src = src.Take(255).Append(_eos).ToList();
@@ -151,58 +221,42 @@ public sealed class MarianOnnx : IDisposable
         var ids = new DenseTensor<long>(src.Select(x => (long)x).ToArray(), new[] { 1, n });
         var mask = new DenseTensor<long>(Enumerable.Repeat(1L, n).ToArray(), new[] { 1, n });
 
-        DenseTensor<float> encOut;
+        DenseTensor<T> encOut;
         using (var r = _enc.Run(new[] { NamedOnnxValue.CreateFromTensor("input_ids", ids), NamedOnnxValue.CreateFromTensor("attention_mask", mask) }))
-        {
-            var t = r.First().AsTensor<float>();
-            encOut = new DenseTensor<float>(t.ToArray(), t.Dimensions.ToArray());
-        }
+            encOut = Copy(r.First().AsTensor<T>());
 
         int limit = maxNewTokens > 0 ? maxNewTokens : Math.Min(256, n * 2 + 16);
-        var past = new Dictionary<string, DenseTensor<float>>();
-        var empty = new DenseTensor<float>(Array.Empty<float>(), new[] { 1, _heads, 0, _headDim });
-        foreach (var name in _pastNames) past[name] = empty;
+        var past = new Dictionary<string, DenseTensor<T>>(StringComparer.Ordinal);
+        var empty = new DenseTensor<T>(Array.Empty<T>(), new[] { 1, _heads, 0, _headDim });
 
         var output = new List<int>();
         int last = _start;
         for (int step = 0; step < limit; step++)
         {
-            var inputs = new List<NamedOnnxValue>
-            {
-                NamedOnnxValue.CreateFromTensor("encoder_attention_mask", mask),
-                NamedOnnxValue.CreateFromTensor("input_ids", new DenseTensor<long>(new long[] { last }, new[] { 1, 1 })),
-                NamedOnnxValue.CreateFromTensor("encoder_hidden_states", encOut),
-                NamedOnnxValue.CreateFromTensor("use_cache_branch", new DenseTensor<bool>(new[] { step > 0 }, new[] { 1 })),
-            };
-            foreach (var name in _pastNames) inputs.Add(NamedOnnxValue.CreateFromTensor(name, past[name]));
+            // CPU: tek "merged" kod çözücü (use_cache_branch ile). GPU: ilk adım ayrı, sonrası "with past" kod çözücü.
+            var sess = step > 0 && _decPast != null ? _decPast : _decFirst;
+            var meta = sess.InputMetadata;
+            var inputs = new List<NamedOnnxValue>();
+            if (meta.ContainsKey("encoder_attention_mask")) inputs.Add(NamedOnnxValue.CreateFromTensor("encoder_attention_mask", mask));
+            inputs.Add(NamedOnnxValue.CreateFromTensor("input_ids", new DenseTensor<long>(new long[] { last }, new[] { 1, 1 })));
+            if (meta.ContainsKey("encoder_hidden_states")) inputs.Add(NamedOnnxValue.CreateFromTensor("encoder_hidden_states", encOut));
+            if (meta.ContainsKey("use_cache_branch"))
+                inputs.Add(NamedOnnxValue.CreateFromTensor("use_cache_branch", new DenseTensor<bool>(new[] { step > 0 }, new[] { 1 })));
+            foreach (var name in meta.Keys)
+                if (name.StartsWith("past_key_values.", StringComparison.Ordinal))
+                    inputs.Add(NamedOnnxValue.CreateFromTensor(name, past.TryGetValue(name, out var pv) ? pv : empty));
 
-            using var res = _dec.Run(inputs);
+            using var res = sess.Run(inputs);
             int next = -1;
             foreach (var o in res)
             {
-                if (o.Name == "logits")
-                {
-                    var lg = o.AsTensor<float>();
-                    int vocab = lg.Dimensions[2], s = lg.Dimensions[1];
-                    float bestV = float.NegativeInfinity;
-                    var arr = lg as DenseTensor<float>;
-                    var span = arr != null ? arr.Buffer.Span : lg.ToArray().AsSpan();
-                    int off = (s - 1) * vocab;
-                    for (int v = 0; v < vocab; v++)
-                    {
-                        if (v == _pad) continue; // Marian: <pad> asla üretilmez (bad_words_ids)
-                        float x = span[off + v];
-                        if (x > bestV) { bestV = x; next = v; }
-                    }
-                }
+                if (o.Name == "logits") next = ArgMax(o);
                 else if (o.Name.StartsWith("present.", StringComparison.Ordinal))
                 {
                     string pastName = "past_key_values." + o.Name["present.".Length..];
-                    if (!past.ContainsKey(pastName)) continue;
                     // Kodlayıcı (çapraz dikkat) önbelleği ilk adımda hesaplanır, sonra hep aynı kalır
                     if (step > 0 && pastName.Contains(".encoder.", StringComparison.Ordinal)) continue;
-                    var t = o.AsTensor<float>();
-                    past[pastName] = new DenseTensor<float>(t.ToArray(), t.Dimensions.ToArray());
+                    past[pastName] = Copy(o.AsTensor<T>());
                 }
             }
             if (next < 0 || next == _eos) break;
@@ -219,9 +273,43 @@ public sealed class MarianOnnx : IDisposable
         return Decode(output);
     }
 
+    /// <summary>Son konumdaki en olası parça (&lt;pad&gt; hariç: Marian onu asla üretmez).</summary>
+    private int ArgMax(DisposableNamedOnnxValue o)
+    {
+        int best = -1;
+        float bestV = float.NegativeInfinity;
+        if (o.Value is Tensor<Float16> h)
+        {
+            int vocab = h.Dimensions[2], s = h.Dimensions[1];
+            var span = h is DenseTensor<Float16> d ? d.Buffer.Span : h.ToArray().AsSpan();
+            int off = (s - 1) * vocab;
+            for (int v = 0; v < vocab; v++)
+            {
+                if (v == _pad) continue;
+                float x = (float)span[off + v];
+                if (x > bestV) { bestV = x; best = v; }
+            }
+        }
+        else
+        {
+            var lg = o.AsTensor<float>();
+            int vocab = lg.Dimensions[2], s = lg.Dimensions[1];
+            var span = lg is DenseTensor<float> d ? d.Buffer.Span : lg.ToArray().AsSpan();
+            int off = (s - 1) * vocab;
+            for (int v = 0; v < vocab; v++)
+            {
+                if (v == _pad) continue;
+                float x = span[off + v];
+                if (x > bestV) { bestV = x; best = v; }
+            }
+        }
+        return best;
+    }
+
     public void Dispose()
     {
         _enc.Dispose();
-        _dec.Dispose();
+        _decFirst.Dispose();
+        _decPast?.Dispose();
     }
 }
