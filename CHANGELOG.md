@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.29 – Saydam zemin gerçekten saydam
+
+- Altyazı zemini %0 seçildiğinde TV'de ve bilgisayarda artık hiçbir yerde siyah kutu çizilmiyor. Önceden "orijinalin
+  yerine" yerleşiminde İngilizce altyazıyı örtmek için zemin seçimden bağımsız olarak tam siyah yapılıyor, ayrıca
+  İngilizcenin üstüne siyah örtü konuyordu.
+- Saydam zeminde orijinal örtülemeyeceği için Türkçe, iki yazı üst üste binmesin diye İngilizcenin hemen üstünde,
+  gölgeli yazıyla gösterilir. Zemin %5 ve üzeri seçilirse eski davranış (İngilizceyi örtme) sürer.
+- TV uygulaması 1.0.17 (program açılınca TV'deki uygulama kendiliğinden güncellenir).
+
 ## v2.28 – Bilgisayarda çeviri: işlemci + ekran kartı (tüm kartlar)
 
 - Bilgisayarda çeviri artık **ekran kartında da** çalışıyor: NVIDIA, AMD ve Intel; DirectX 12 destekli tüm kartlar

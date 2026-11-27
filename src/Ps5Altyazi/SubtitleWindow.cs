@@ -123,6 +123,7 @@ public sealed class SubtitleWindow : Window
         byte a = (byte)Math.Round(_bgOpacity * 255);
         _userBackground = new SolidColorBrush(Color.FromArgb(a, _bgColor.R, _bgColor.G, _bgColor.B));
         if (!_coverActive) _box.Background = _userBackground;
+        if (_coverMode && _coverActive != (_bgOpacity >= 0.05)) ApplyLayout();
     }
 
     /// <summary>Yazı rengi (null = oyunun rengi / beyaz), zemin rengi, yazı gölgesi, köşe yuvarlaklığı.</summary>
@@ -211,7 +212,8 @@ public sealed class SubtitleWindow : Window
     private void ApplyLayout()
     {
         if (!_placed) return;
-        if (_coverMode && _coverPx is { } px)
+        // Zemin saydamlığı ~0 seçildiyse örtme yapılmaz (opak kutu çizilmez): kullanıcı siyah zemin istemiyor
+        if (_coverMode && _coverPx is { } px && _bgOpacity >= 0.05)
         {
             double sx = 1, sy = 1;
             try { var dpi = VisualTreeHelper.GetDpi(this); sx = dpi.DpiScaleX; sy = dpi.DpiScaleY; } catch { }

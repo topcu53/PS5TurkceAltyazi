@@ -151,6 +151,10 @@
     // Yerleşim: cover = orijinalin yerine (orijinal siyahla örtülür), above = orijinalin üstünde, below = altında,
     // bottom = ekranın altında sabit
     var place = s.place || 'cover';
+    // Zemin saydamlığı 0 (ya da ~0) seçildiyse hiçbir yerde siyah kutu çizilmez: orijinal örtülemeyeceği için Türkçe,
+    // İngilizcenin üst üste binmemesi için onun hemen üstüne konur (yazı gölgesiyle okunur)
+    var clearBg = !(s.bg >= 0.05);
+    if (clearBg && place === 'cover') place = 'above';
     var anchor = showText && place !== 'bottom'
       ? (state.mask || state.lastMask || (state.anchorBottom !== null ? { x: 0.2, y: state.anchorBottom - 0.05, w: 0.6, h: 0.05 } : null)) : null;
     // Boy: PC'de seçilen seviye (1080p'de px; sayfa 1920x1080 olduğu için TV çözünürlüğüne göre kendiliğinden ölçeklenir).
@@ -183,7 +187,7 @@
     // Zemin rengi (kullanıcı seçimi); örtme modunda tam opak: İngilizce alttan görünmesin
     var bgc = s.bgc && /^#[0-9A-Fa-f]{6}$/.test(s.bgc) ? s.bgc : '#000000';
     var br = parseInt(bgc.substr(1, 2), 16), bgg = parseInt(bgc.substr(3, 2), 16), bb = parseInt(bgc.substr(5, 2), 16);
-    sub.style.background = anchor && place === 'cover' ? '#000' : 'rgba(' + br + ',' + bgg + ',' + bb + ',' + s.bg + ')';
+    sub.style.background = clearBg ? 'transparent' : anchor && place === 'cover' ? '#000' : 'rgba(' + br + ',' + bgg + ',' + bb + ',' + s.bg + ')';
     sub.style.textShadow = showText && s.shadow !== false ? '0 2px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)' : '';
     sub.style.fontSize = showText ? base + 'px' : '';
     sub.style.lineHeight = '1.22';
@@ -241,7 +245,7 @@
       top = Math.max(minTop, Math.min(1072 - h, top));
       if (top + h > 1072) top = Math.max(0, 1072 - h);
       sub.style.top = top + 'px';
-      if (place !== 'cover' && top + h > c.y * 1080 && top < origBottom) sub.style.background = '#000';
+      if (!clearBg && place !== 'cover' && top + h > c.y * 1080 && top < origBottom) sub.style.background = '#000';
     }
   }
 
@@ -344,7 +348,7 @@
   function drawMask() {
     var c = state.mask;
     // Orijinal yalnız "yerine" yerleşiminde örtülür; üstünde/altında seçiliyse orijinal görünür kalır
-    if (!c || (state.style.place || 'cover') !== 'cover' || state.muted) { maskEl.style.display = 'none'; return; }
+    if (!c || (state.style.place || 'cover') !== 'cover' || state.muted || !(state.style.bg >= 0.05)) { maskEl.style.display = 'none'; return; }
     var pad = 4;
     maskEl.style.left = (c.x * 1920 - pad) + 'px';
     maskEl.style.top = (c.y * 1080 - pad) + 'px';
