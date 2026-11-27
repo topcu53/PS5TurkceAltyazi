@@ -421,6 +421,7 @@
                                         <RadioButton x:Name="ModeFast" Style="{StaticResource NavTab}" GroupName="trmode" Content="Hızlı" Checked="TrMode_Checked"/>
                                         <RadioButton x:Name="ModeBalanced" Style="{StaticResource NavTab}" GroupName="trmode" Content="Dengeli" Checked="TrMode_Checked"/>
                                         <RadioButton x:Name="ModeNatural" Style="{StaticResource NavTab}" GroupName="trmode" Content="En doğal" Checked="TrMode_Checked"/>
+                                        <RadioButton x:Name="ModeOffline" Style="{StaticResource NavTab}" GroupName="trmode" Content="💻 Bilgisayar" Checked="TrMode_Checked"/>
                                     </StackPanel>
                                 </Border>
                                 <TextBlock x:Name="TrModeHint" Foreground="{StaticResource TextDim}" TextWrapping="Wrap" FontSize="12" Margin="0,2,0,16" Text=""/>

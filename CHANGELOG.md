@@ -1,5 +1,14 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.27 – Bilgisayarda çeviri kendiliğinden kurulur
+
+- Bilgisayarda (işlemcide, internetsiz) çeviri modeli artık **kendiliğinden** indiriliyor: program açılınca model yoksa
+  arka planda indirilir (~530 MB, bir kez), bitince çeviri zincirine eklenir. Düğmeye basmak gerekmez; ilerleme çeviri
+  durum satırında ve günlükte görünür. Yarıda kalırsa kaldığı yerden devam eder, hata olursa 2 dk sonra yeniden dener.
+- Yeni çeviri modu **"💻 Bilgisayar"** (Ayarlar → Çeviri): çeviri önce bu bilgisayarda yapılır; internet, kota, ekran
+  kartı gerekmez, hiç durmaz. 1,5 sn'de bitmezse internet servisi de devreye girer.
+- Diğer modlarda da internet servisleri durunca (kota / hız sınırı / zaman aşımı) çeviri bilgisayarda devam eder.
+
 ## v2.26 – Altyazı yerinde sabit duruyor
 
 - Türkçe altyazı artık yukarı aşağı oynamıyor: konumu o anki algılanan İngilizce kutusuna göre değil, oyunun altyazı

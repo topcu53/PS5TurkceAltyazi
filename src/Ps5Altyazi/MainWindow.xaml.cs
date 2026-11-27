@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.26 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.27 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Log dosyası: {Log.CurrentFile}");
 
@@ -1369,6 +1369,11 @@ public partial class MainWindow : Window
         //             gönderiliyordu → Gemini'nin dakikalık sınırı sürekli doluyordu)
         //  natural  : Gemini (bağlamlı, en doğal Türkçe) önde; 1 sn'de yanıt yoksa DeepL de başlar
         string mode = _settings.TranslationMode;
+        if (mode == "pc")
+        {
+            var off = engines.FirstOrDefault(e => e is OfflineTranslator);
+            if (off != null) { engines.Remove(off); engines.Insert(0, off); }
+        }
         if (mode == "natural")
         {
             var g = engines.FirstOrDefault(e => e is GeminiTranslator);
@@ -1378,6 +1383,7 @@ public partial class MainWindow : Window
         {
             "fast" => TimeSpan.FromMilliseconds(400),
             "natural" => TimeSpan.FromMilliseconds(1000),
+            "pc" => TimeSpan.FromMilliseconds(1500),
             _ => TimeSpan.FromMilliseconds(600),
         };
         _translation.SetEngines(engines, _settings.EngineCooldowns);
@@ -1387,12 +1393,64 @@ public partial class MainWindow : Window
         }
         else
         {
-            Log.Info($"Çeviri zinciri: {_translation.DescribeChain()} • mod: {(mode == "fast" ? "Hızlı" : mode == "natural" ? "En doğal" : "Dengeli")}");
+            Log.Info($"Çeviri zinciri: {_translation.DescribeChain()} • mod: {(mode switch { "fast" => "Hızlı", "natural" => "En doğal", "pc" => "Bilgisayar", _ => "Dengeli" })}");
             if (deepL == null) Log.Warn("DeepL anahtarı girilmedi; çeviri yedek servislerle yapılacak (kalite düşük olabilir).");
         }
         UpdateTranslationStatus();
         if (checkUsage && deepL != null) _ = CheckDeepLUsageAsync(deepL);
+        if (!OfflineTranslator.IsInstalled) _ = EnsureOfflineModelAsync();
     }
+
+    private bool _offlineDownloading;
+
+    /// <summary>
+    /// Bilgisayarda çeviri modelini (bir kez, ~530 MB) arka planda kendiliğinden indirir; bitince çeviri zincirine
+    /// eklenir. Böylece internet servisleri kota / hız sınırına takılsa da çeviri hiç durmaz. Yarıda kalırsa kalan
+    /// dosyalardan devam eder; hata olursa 2 dk sonra yeniden dener (en çok 5 kez).
+    /// </summary>
+    private async Task EnsureOfflineModelAsync()
+    {
+        if (_offlineDownloading || OfflineTranslator.IsInstalled) return;
+        _offlineDownloading = true;
+        try
+        {
+            for (int attempt = 1; attempt <= 5 && !OfflineTranslator.IsInstalled; attempt++)
+            {
+                int lastTen = -1;
+                var prog = new Progress<(long Done, long Total)>(p =>
+                {
+                    int pct = p.Total > 0 ? (int)(100 * p.Done / p.Total) : 0;
+                    OfflineStatus = $"💻 Bilgisayar çeviri modeli indiriliyor %{pct} ({p.Done / 1048576} / {p.Total / 1048576} MB)";
+                    if (pct / 10 != lastTen) { lastTen = pct / 10; Log.Info(OfflineStatus); UpdateTranslationStatus(); }
+                });
+                try
+                {
+                    Log.Info("Bilgisayarda çeviri modeli indiriliyor (bir kez, ~530 MB). Bu sırada çeviri internet servisleriyle sürer.");
+                    await OfflineTranslator.DownloadAsync(prog, CancellationToken.None);
+                    OfflineStatus = "💻 Model yükleniyor…";
+                    UpdateTranslationStatus();
+                    var load = OfflineTranslator.Preload();
+                    if (load != null) await load;
+                    OfflineStatus = null;
+                    ApplyTranslators(checkUsage: false);
+                    RefreshSettingsTexts();
+                    Log.Success("💻 Bilgisayarda çeviri hazır: internet servisleri dursa da çeviri devam edecek.");
+                    Notify("Bilgisayarda çeviri hazır – çeviri artık durmaz");
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    OfflineStatus = null;
+                    Log.Warn($"Bilgisayar çeviri modeli indirilemedi ({ex.Message}). {(attempt < 5 ? "2 dk sonra kaldığı yerden yeniden denenecek." : "Ayarlar → Çeviri'den elle deneyebilirsiniz.")}");
+                    UpdateTranslationStatus();
+                    if (attempt < 5) await Task.Delay(TimeSpan.FromMinutes(2));
+                }
+            }
+        }
+        finally { _offlineDownloading = false; }
+    }
+
+    private string? OfflineStatus { get; set; }
 
     private void UpdateTranslationStatus()
     {
@@ -1405,8 +1463,9 @@ public partial class MainWindow : Window
         var active = _translation.ActiveSlot;
         bool primary = active != null && ReferenceEquals(active, _translation.Slots[0]);
         SetText(TranslationStatusText,
-            active == null ? $"Kullanılabilir servis yok: {_translation.DescribeChain()}"
-                           : $"Aktif: {active.Translator.Name}{(primary ? "" : " (yedek)")} • önbellek {_translation.CacheCount}\n{_translation.DescribeChain()}",
+            (active == null ? $"Kullanılabilir servis yok: {_translation.DescribeChain()}"
+                            : $"Aktif: {active.Translator.Name}{(primary ? "" : " (yedek)")} • önbellek {_translation.CacheCount}\n{_translation.DescribeChain()}")
+            + (OfflineStatus != null ? "\n" + OfflineStatus : ""),
             active == null ? Red : primary ? Green : Orange);
     }
 
