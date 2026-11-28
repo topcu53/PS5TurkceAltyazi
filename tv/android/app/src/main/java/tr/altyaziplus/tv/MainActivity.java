@@ -80,6 +80,8 @@ public class MainActivity extends Activity {
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         setContentView(root);
+        // Uygulama açıkken TV ekran koruyucuya / uykuya geçmesin (oyun oynarken kumandaya dokunulmuyor)
+        getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         web.loadUrl("file:///android_asset/index.html");
         web.requestFocus();
     }

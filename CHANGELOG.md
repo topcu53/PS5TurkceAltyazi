@@ -1,5 +1,17 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.35 – TV uykuya geçmesin, yeni TV uygulaması simgesi
+
+- **TV uyku / ekran koruyucu:** oyun oynarken kumandaya dokunulmadığı için TV bir süre sonra ekran koruyucuya geçip
+  kapanıyordu. TV uygulaması bilgisayara bağlıyken bunu engelliyor:
+  - LG: ekran koruyucu açılmadan önce TV'nin güç servisinin sorduğu soruya "hayır" yanıtı verilir.
+  - Samsung: bağlıyken ekran koruyucu kapatılır, bağlantı kopunca yeniden açılır.
+  - Android TV: uygulama (ve katman) açıkken ekran açık tutulur.
+  - Bilgisayar bağlantısı yokken TV kendi ayarına göre davranır (OLED ekranda iz kalmasın).
+- **Yeni simge:** TV'deki uygulama simgesi yenilendi (mavi zemin, altyazılı ekran, Türk bayrağı rozeti); Android TV
+  afişi de aynı tasarımda.
+- TV uygulaması 1.0.20.
+
 ## v2.34 – Altyazı yerinde durur, İngilizceyle üst üste binmez, boşta kalmaz
 
 Videodaki (GTA VI ara sahnesi) sorunlar:

@@ -35,6 +35,51 @@
     document.body.style.background = 'transparent';
   }
   if (PLATFORM === 'overlay') { panel.style.display = 'none'; }
+  // ───── TV uyku moduna / ekran koruyucuya geçmesin ─────
+  // Kumandaya uzun süre dokunulmayınca TV ekran koruyucuyu açıyor (LG'de havai fişek), sonra kapanıyordu.
+  // Yalnız bilgisayara bağlıyken engellenir: bağlantı yokken (oyun bitti, PC kapalı) TV kendi ayarına göre davranır,
+  // OLED ekranda iz kalmasın.
+  var awakeBridges = [];
+  function keepAwake() {
+    if (PLATFORM === 'webos' && typeof PalmServiceBridge !== 'undefined') {
+      // LG: ekran koruyucu açılmadan önce tvpower servisi uygulamalara sorar; "hayır" (ack:false) yanıtı onu erteler.
+      try {
+        var reg = new PalmServiceBridge();
+        reg.onservicecallback = function (msg) {
+          var r; try { r = JSON.parse(msg); } catch (e) { return; }
+          if (!r || r.timestamp === undefined || !state.connected) return;
+          var resp = new PalmServiceBridge();
+          resp.onservicecallback = function () { awakeBridges.splice(awakeBridges.indexOf(resp), 1); };
+          awakeBridges.push(resp);
+          resp.call('luna://com.webos.service.tvpower/power/responseScreenSaverRequest',
+            JSON.stringify({ clientName: 'altyaziplus', ack: false, timestamp: r.timestamp }));
+        };
+        reg.call('luna://com.webos.service.tvpower/power/registerScreenSaverRequest',
+          JSON.stringify({ subscribe: true, clientName: 'altyaziplus' }));
+        awakeBridges.push(reg);
+      } catch (e) { }
+    }
+    if (PLATFORM === 'tizen') {
+      // Samsung: ekran koruyucuyu bağlıyken kapat, bağlantı yokken aç
+      var setSaver = function (off) {
+        try {
+          webapis.appcommon.setScreenSaver(off ? webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_OFF
+            : webapis.appcommon.AppCommonScreenSaverState.SCREEN_SAVER_ON, function () { }, function () { });
+        } catch (e) { }
+      };
+      var last = null;
+      var apply = function () { if (last !== state.connected) { last = state.connected; setSaver(!!state.connected); } };
+      if (typeof webapis === 'undefined') {
+        var sc = document.createElement('script');
+        sc.src = '$WEBAPIS/webapis/webapis.js';
+        sc.onload = apply;
+        document.head.appendChild(sc);
+      }
+      setInterval(apply, 5000);
+    }
+    // Android: ekranı açık tutma işi uygulamanın kendisinde (FLAG_KEEP_SCREEN_ON)
+  }
+
   if (PLATFORM === 'tizen') {
     try {
       var keys = ['ColorF0Red', 'ChannelUp', 'ChannelDown', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -576,6 +621,7 @@
 
   // ───── Başlangıç ─────
   setHdmi(state.hdmi);
+  keepAwake();
   keepDevMode(false);
   var params = null;
   try { params = window.PalmSystem && window.PalmSystem.launchParams ? JSON.parse(window.PalmSystem.launchParams) : null; } catch (e) { }
