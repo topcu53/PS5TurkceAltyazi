@@ -58,7 +58,7 @@
     lineH: 0,        // İngilizce altyazının tek satır yüksekliği (0..1) – Türkçe aynı boyda olsun
     // Sabit konum: orijinal altyazının ALT kenarı (0..1). Her yeni altyazıda değişmez; yalnızca oyun altyazıyı
     // gerçekten başka yere taşırsa (art arda 4 kez farklı yerde görülürse) güncellenir → Türkçe yukarı aşağı oynamaz.
-    anchorBottom: null, anchorCand: null, anchorVotes: 0,
+    anchorBottom: null, anchorCand: null, anchorVotes: 0, lineStable: null, lineCand: null, lineVotes: 0,
     cover: null,
     mask: null,      // İngilizce altyazıyı örten kutu (0..1)
     lastMask: null,  // Türkçe, İngilizce bittikten sonra da aynı yerde kalsın
@@ -137,6 +137,18 @@
     if (state.anchorCand !== null && Math.abs(b - state.anchorCand) <= 0.035) state.anchorVotes++;
     else { state.anchorCand = b; state.anchorVotes = 1; }
     if (state.anchorVotes >= 4) { state.anchorBottom = state.anchorCand; state.anchorCand = null; state.anchorVotes = 0; }
+  }
+
+  // İngilizce satır yüksekliği de kararlı tutulur: her okumada biraz farklı ölçülür (0,031 / 0,036 …) ve Türkçenin yeri
+  // buna bağlı olduğu için altyazı her yeni satırda birkaç piksel zıplıyordu. Yalnız %20'den büyük ve 4 kez üst üste
+  // görülen değişiklik kabul edilir.
+  function noteLine(lh) {
+    if (!(lh >= 0.015 && lh <= 0.08)) return;
+    if (state.lineStable === null) { state.lineStable = lh; return; }
+    if (Math.abs(lh - state.lineStable) <= state.lineStable * 0.2) { state.lineCand = null; state.lineVotes = 0; return; }
+    if (state.lineCand !== null && Math.abs(lh - state.lineCand) <= state.lineCand * 0.2) state.lineVotes++;
+    else { state.lineCand = lh; state.lineVotes = 1; }
+    if (state.lineVotes >= 4) { state.lineStable = state.lineCand; state.lineCand = null; state.lineVotes = 0; }
   }
 
   function render() {
@@ -232,12 +244,18 @@
       // kenarı hep aynı yerde durur; yazı 2 satıra çıkarsa yalnız yukarı doğru büyür.
       var h = sub.offsetHeight, top;
       var origBottom = (state.anchorBottom !== null ? state.anchorBottom : (c.y + c.h)) * 1080;
-      var origLine = Math.max(0.03, Math.min(0.06, state.lineH || 0.035)) * 1080 * 1.25;
+      var origLine = Math.max(0.025, Math.min(0.06, state.lineStable || state.lineH || 0.035)) * 1080 * 1.25;
       var minTop = 1080 * 0.65;
       if (place === 'above') {
-        var bottomEdge = origBottom - 2 * origLine - 10; // orijinalin 2 satırlık yerinin hemen üstü (sabit)
+        // Orijinalin 2 satırlık yerinin hemen üstü: İngilizce 1 ya da 2 satır olsa da Türkçe aynı yerde durur.
+        // (Alt kenar kutu payıyla ölçülüyor: 2 satır ≈ 2 × 1,2 satır + 2 × 0,35 pay ≈ 3,1 satır yüksekliği.)
+        var lineHpx = origLine / 1.25;
+        var bottomEdge = origBottom - 3.2 * lineHpx - 8;
+        // İngilizce bu sefer 3 satır vb. daha yukarı uzandıysa üst üste binmesin: onun da üstüne çık
+        if (state.mask && state.mask.h > 0) bottomEdge = Math.min(bottomEdge, state.mask.y * 1080 - 6);
         top = bottomEdge - h;
-        if (top < minTop) top = origBottom - h;          // üstte yer yoksa orijinalin üzerine (zemin opak)
+        // Üstte yer kalmazsa İngilizcenin ÜZERİNE inmek yerine biraz daha yukarı çıkılır (en çok ekranın yarısına)
+        if (top < minTop) minTop = Math.max(1080 * 0.5, top);
       } else if (place === 'below') {
         top = origBottom + 10;
         if (top + h > 1072) top = origBottom - h;        // altta yer yoksa orijinalin üzerine
@@ -416,9 +434,9 @@
 
   function handle(m) {
     switch (m.t) {
-      case 'sub': state.text = m.text || ''; if (m.cover) { state.cover = m.cover; noteAnchor(m.cover); } if (m.lh) state.lineH = m.lh; armStale(); render(); break;
+      case 'sub': state.text = m.text || ''; if (m.cover) { state.cover = m.cover; noteAnchor(m.cover); } if (m.lh) { state.lineH = m.lh; noteLine(m.lh); } armStale(); render(); break;
       case 'clear': state.text = ''; state.lastMask = state.mask; armStale(); render(); break;
-      case 'mask': state.mask = { x: m.x, y: m.y, w: m.w, h: m.h }; state.lastMask = state.mask; if (m.lh) state.lineH = m.lh; noteAnchor(state.mask); drawMask(); render(); break;
+      case 'mask': state.mask = { x: m.x, y: m.y, w: m.w, h: m.h }; state.lastMask = state.mask; if (m.lh) { state.lineH = m.lh; noteLine(m.lh); } noteAnchor(state.mask); drawMask(); render(); break;
       case 'unmask': state.mask = null; drawMask(); if (!state.text) state.lastMask = null; render(); break;
       case 'notice': notice(m.text || '', m.ms || 2000); break;
       case 'mute': state.muted = !!m.on; render(); if (state.pieces) renderPieces(); else renderScreen(); break;

@@ -1,5 +1,21 @@
 # Altyazı+ – Geliştirme geçmişi
 
+## v2.34 – Altyazı yerinde durur, İngilizceyle üst üste binmez, boşta kalmaz
+
+Videodaki (GTA VI ara sahnesi) sorunlar:
+- **Yer değiştirme / zıplama:** Türkçenin yeri her okumada biraz farklı ölçülen İngilizce satır yüksekliğine
+  bağlıydı; her yeni satırda birkaç piksel zıplıyordu (videoda bir karede iki Türkçe üst üste görünüyor). Satır
+  yüksekliği de artık kararlı tutuluyor (yalnız %20'den büyük ve 4 kez üst üste görülen değişiklik kabul edilir).
+  İngilizce 1 ya da 2 satır olsa da Türkçe aynı yerde durur.
+- **Orijinalle üst üste binme:** Türkçe için 2 satırlık İngilizcenin üstü ayrılıyor; İngilizce bundan da yukarı
+  uzanırsa Türkçe onun üstüne çıkar. Önceden üstte yer kalmayınca Türkçe İngilizcenin üzerine iniyordu, bu kaldırıldı.
+- **İngilizce gidince Türkçenin boşta kalması:** İngilizce kalktıktan sonra Türkçe 2 sn yerine 0,7 sn kalıyor.
+- **Yeni İngilizcenin altında eski satırın Türkçesi:** ("Bu da ne böyle?" + "Kind of cocktail…") yeni satırın
+  çevirisi gelmemişse eski Türkçe 0,8 sn yerine 0,4 sn sonra kaldırılıyor.
+- **Aniden gitme:** altyazı yerindeyken arkadan parlak bir şey geçip iki kare okunamayınca Türkçe kalkıyordu; artık
+  üst üste 3 okunamayan kare gerekiyor. Kısa altyazılar en az 1 sn görünür.
+- TV uygulaması 1.0.19.
+
 ## v2.33 – Ayar sayfaları yeni tasarımda
 
 - Ana pencerede açılan ayar sayfaları (Altyazı görünümü, Çeviri, PS5 bağlantısı, TV kurulumu, Tema, Genel, oyun

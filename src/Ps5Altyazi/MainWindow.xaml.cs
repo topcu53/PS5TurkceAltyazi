@@ -178,7 +178,7 @@ public partial class MainWindow : Window
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        Log.Info("══════ Altyazı+ v2.33 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
+        Log.Info("══════ Altyazı+ v2.34 – PS5 oyunları için canlı Türkçe çeviri • Yapımcı: Burak Topcu ══════");
         Log.Info($"İşletim sistemi: {Environment.OSVersion} | .NET {Environment.Version} | 64 bit: {Environment.Is64BitProcess}");
         Log.Info($"Günlük dosyası: {Log.CurrentFile}");
 
@@ -1146,7 +1146,8 @@ public partial class MainWindow : Window
                 // Tek bir bozuk okuma (solma, arkadan geçen araba) yetmesin: bir sonraki karede yeniden oku,
                 // üst üste iki kez okunamazsa İngilizce gerçekten kalkmıştır.
                 _lastSkippedText = text;
-                if (++_junkWhileShown >= 2) { _junkWhileShown = 0; EndSubtitle(); }
+                // 3 okuma: arkadan parlak bir şey geçince altyazı yerindeyken Türkçe aniden kaybolmasın
+                if (++_junkWhileShown >= 3) { _junkWhileShown = 0; EndSubtitle(); }
                 else _lastOcrFp = null;
                 return;
             }
@@ -1231,9 +1232,12 @@ public partial class MainWindow : Window
     }
 
     /// <summary>Kısa altyazılar da okunabilsin diye Türkçe en az bu kadar ekranda kalır.</summary>
-    private static readonly TimeSpan MinTurkishDisplay = TimeSpan.FromSeconds(1.5);
-    /// <summary>İngilizce altyazı tamamen kalktıktan sonra Türkçe bu kadar daha ekranda kalır, sonra kesin kalkar.</summary>
-    private static readonly TimeSpan LingerAfterEnglish = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan MinTurkishDisplay = TimeSpan.FromSeconds(1.0);
+    /// <summary>
+    /// İngilizce altyazı tamamen kalktıktan sonra Türkçe bu kadar daha ekranda kalır, sonra kesin kalkar.
+    /// (2 sn fazlaydı: İngilizce gittikten sonra Türkçe boşta asılı kalıyordu.)
+    /// </summary>
+    private static readonly TimeSpan LingerAfterEnglish = TimeSpan.FromSeconds(0.7);
     private readonly DispatcherTimer _hideTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private DateTime _hideAt, _turkishShownAt;
     private bool _turkishVisible;
@@ -1561,9 +1565,13 @@ public partial class MainWindow : Window
     private long _trReq, _trShown;
     private bool _offlineHintShown;
 
+    /// <summary>
+    /// Yeni İngilizce satır geldi ama çevirisi henüz yok: eski Türkçe kısa süre sonra kaldırılır, yeni İngilizcenin
+    /// altında eski satırın çevirisi durmasın ("Bu da ne böyle?" ile "Kind of cocktail…" gibi yanlış eşleşme).
+    /// </summary>
     private async Task ClearStaleAfterAsync(long seq)
     {
-        await Task.Delay(800);
+        await Task.Delay(400);
         if (_trSeq == seq && _trShown < seq && _turkishVisible)
         {
             ShowTurkish("");
